@@ -3,7 +3,20 @@ from __future__ import annotations
 import random
 from typing import Literal
 import Module1_txt
+import json
+import os
 
+class Voices:
+    file_path = os.path.join('resources', 'voices.json')
+    with open(file_path, 'r', encoding='utf-8') as f:
+        voices:dict[str:dict[str:list[str]]] = json.load(f)
+
+    @classmethod
+    def report(cls,who:str,theme:str):
+        try:
+            Module1_txt.printplus(random.choice(cls.voices[who][theme]))
+        except KeyError:
+            pass
 
 class Dice:
     """
@@ -125,7 +138,6 @@ class My_ship:
             case _:
                 Module1_txt.printplus("你跳过了这一天！")
 
-
 class Enemy_ship:
     def __init__(self):
         self.shelter = 0
@@ -149,4 +161,4 @@ class Enemy_ship:
 
 
 if __name__ == "__main__":
-    ...
+    Voices.report("导弹","上弹")
