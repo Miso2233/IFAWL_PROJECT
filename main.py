@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import random
 from typing import Literal
+import Module1_txt
 
 
 class Dice:
@@ -111,14 +112,18 @@ class My_ship:
         :return: 无
         """
         operation = input(">>>")
+        if self.missile < 1 and operation == "1":
+            operation = "0"
         match operation:
-            case 0:
+            case "0":
                 self.load(1)
-            case 1:
+            case "1":
                 self.attack(1,enemy)
                 self.load(-1)
-            case 2:
+            case "2":
                 self.heal(1)
+            case _:
+                Module1_txt.printplus("你跳过了这一天！")
 
 
 class Enemy_ship:
