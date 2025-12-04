@@ -75,14 +75,19 @@ class Al_manager:
         al_meta_data: dict[str:any] = json.load(f)
 
 class Al_general:
+    #Apocalypse-Linked 明日尘埃装备体系
+
     def __init__(self,index:int):
-        self.len_name:str           = Al_manager.al_meta_data[str(index)]["len_name"]
-        self.short_name:str         = Al_manager.al_meta_data[str(index)]["short_name"]
-        self.description_txt: str   = Al_manager.al_meta_data[str(index)]["description_txt"]
-        self.index:int              = index
-        self.type:Literal["q","w","e"] = Al_manager.al_meta_data[str(index)]["type"]
-        self.rank:str               = Al_manager.al_meta_data[str(index)]["rank"]
-        self.rank_num:int           = Al_manager.al_meta_data[str(index)]["rank_num"]
+        # metadata 字段
+        self.index:int                  = index
+        self.short_name:str             = Al_manager.al_meta_data[str(index)]["short_name"]
+        self.len_name:str               = Al_manager.al_meta_data[str(index)]["len_name"]
+        self.type:Literal["q","w","e"]  = Al_manager.al_meta_data[str(index)]["type"]
+        self.rank_num:int               = Al_manager.al_meta_data[str(index)]["rank_num"]
+        self.metadata:dict[str:str|int] = Al_manager.al_meta_data[str(index)]
+
+        # operation 字段
+        self.state = 0
 
     def report(self, theme:str):
         """
@@ -92,6 +97,27 @@ class Al_general:
         """
         Voices.report(self.short_name,theme)
 
+    def add_atk(self,atk:int):
+        """
+        为atk提供加成
+        :param atk: 加成前atk
+        :return: 加成后atk
+        """
+        return atk
+
+    def add_atk(self,hp:int):
+        """
+        为hp提供加成
+        :param hp: 加成前hp
+        :return: 加成后hp
+        """
+        return hp
+
+    def operate_morning(self):
+        pass
+
+    def operate_afternoon(self):
+        pass
 class Al3(Al_general):
 
     def react(self):
@@ -265,9 +291,17 @@ class Main_loops:
     @classmethod
     def fight_mainloop(cls):
         while 1:
+            # dawn
             time.sleep(0.4)
             Txt.printplus(f"指挥官，今天是战线展开的第{cls.days}天。")
             Printer.print_for_fight(my_ship, enemy)
+
+            # morning
+            for al in my_ship.al_list:
+                if al:
+                    al.operate_morning()
+
+            # noon
             who = Dice.decide_who()
             if who==1:
                 Txt.printplus("今天由我方行动")
@@ -275,6 +309,13 @@ class Main_loops:
             else:
                 Txt.printplus("今天由敌方行动")
                 enemy.react()
+
+            # afternoon
+            for al in my_ship.al_list:
+                if al:
+                    al.operate_afternoon()
+
+            # dusk
             if (result := cls.is_over()) != 0:
                 if result == 1:
                     Txt.printplus("我方胜利")
