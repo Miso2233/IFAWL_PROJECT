@@ -30,6 +30,7 @@
     "type": "q",
     "rank": "II",
     "rank_num": 2,
+    "skin_list": ["","[x]准备中","[~]汞弹就绪·加成生效中"],
     "origin": "",
     "platform": "导弹"
   },

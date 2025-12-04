@@ -108,6 +108,11 @@ class MyShip:
         :param atk: 原始伤害
         :return: 无
         """
+        for al in self.al_list:
+            try:
+                atk = al.add_atk(atk)
+            except AttributeError:
+                pass
         enemy.shelter -= atk
 
     def heal(self,hp:int):
@@ -116,6 +121,11 @@ class MyShip:
         :param hp: 原始回血量
         :return: 无
         """
+        for al in self.al_list:
+            try:
+                hp = al.add_hp(hp)
+            except AttributeError:
+                pass
         self.shelter += hp
 
     def load(self,num:int):
@@ -124,6 +134,11 @@ class MyShip:
         :param num: 原始上弹量
         :return: 无
         """
+        for al in self.al_list:
+            try:
+                num = al.add_num(num)
+            except AttributeError:
+                pass
         self.missile += num
 
     def react(self):
@@ -250,11 +265,19 @@ class Al_general:
 
     def add_hp(self,hp:int):
         """
-        为hp提供加成
+        为heal提供加成
         :param hp: 加成前hp
         :return: 加成后hp
         """
         return hp
+
+    def add_load(self,num:int):
+        """
+        为load提供加成
+        :param num: 加成前num
+        :return: 加成后num
+        """
+        return num
 
     def operate_in_morning(self):
         pass
@@ -326,9 +349,38 @@ class Al4(Al_general):
          "[自动攻击中]回流系统正在生效"][self.state]
 al4 = Al4(4)
 
-class Al30(Al_general):  # 湾区铃兰
+class Al5(Al_general):#水银
 
-    description_txt = "-爆发力与续航皆臻高位的大型粒子炮武器\n-在航行日输入30发射粒子炮，输出2伤害并进入冷却\n-冷却期间，有概率消耗一个粒子匣为我方任何伤害提供伤害加成\n-[风中盛夏]在冷却期间输入30，牺牲两层护盾，仍能正常输出造成伤害"
+    def react(self):
+        if self.state == 0:
+            self.state+=1
+            self.report("收到")
+        elif self.state == 1:
+            self.state+=1
+            self.report("准备好")
+        else:
+            self.state=0
+            if random.randint(0,9)>-1:
+                my_ship.attack(2)
+                self.report("命中")
+            else:
+                self.report("未命中")
+
+    def add_load(self,num) -> int:
+        if self.state == 2 and Dice.probability(0.5):
+            self.report("协助上弹")
+            return num + 1
+        else:
+            return num
+
+    def suggest(self):
+        return \
+        ["[q]建立汞弹推进器 1/2",
+         "[q]加注液态汞 2/2",
+         "[q]发射汞弹|[0/space]上弹效率加成中"][self.state]
+al5 = Al5(5)
+
+class Al30(Al_general):  # 湾区铃兰
 
     def react(self):
         if self.state == 0:
@@ -390,7 +442,7 @@ class FieldPrinter:
             me.al_list[0].print_self()
         except AttributeError:
             pass
-        print("\n")
+        print("\n\n")
 
     @classmethod
     def print_basic_info(cls,days):
@@ -458,8 +510,6 @@ class MainLoops:
         enemy.initialize()
         cls.days = 1
 
-
-
     @classmethod
     def fight_mainloop(cls):
         while 1:
@@ -501,6 +551,6 @@ class MainLoops:
             cls.days += 1
 
 if __name__ == "__main__":
-    my_ship.al_list = [al30,None,al3]
+    my_ship.al_list = [al4,None,al3]
     MainLoops.initialize_before_fight()
     MainLoops.fight_mainloop()
