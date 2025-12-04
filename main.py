@@ -343,8 +343,8 @@ class Al4(Al_general):
 
     def suggest(self) -> str|None:
         return \
-        ["[q] 部署发射台",
-         "[q] 挂载铜芯导弹 2/2",
+        ["[q]部署发射台",
+         "[q]挂载铜芯导弹 2/2",
          "[自动攻击中]回流系统正在生效",
          "[自动攻击中]回流系统正在生效"][self.state]
 al4 = Al4(4)
@@ -379,6 +379,60 @@ class Al5(Al_general):#水银
          "[q]加注液态汞 2/2",
          "[q]发射汞弹|[0/space]上弹效率加成中"][self.state]
 al5 = Al5(5)
+
+class Al6(Al_general):
+    def react(self):
+        if self.state == 0:
+            if my_ship.shelter > 0:
+                self.state += 1
+                self.report("收到")
+            else:
+                self.state = 2
+                self.report("生之帝国")
+        elif self.state == 1:
+            self.state += 1
+            self.report("准备好")
+
+    def operate_in_afternoon(self):
+        if self.state == 2 and my_ship.shelter <= 0:
+            self.state = 0
+            my_ship.heal(3)
+            self.report("急救")
+
+    def suggest(self):
+        return ["[w]建立安全屋1/2", "[w]派遣维修小队2/2", "[保护中]急救已就绪"][self.state]
+al6 = Al6(6)
+
+class Al7(Al_general):
+    def react(self):
+        if self.state == 0:
+            if Dice.probability(0.7):
+                if enemy.missile > 0:
+                    self.state = 1
+                    enemy.missile -= 1
+                    self.report("骇入成功")
+            else:
+                self.report("骇入失败")
+
+    def operate_in_morning(self):
+        if self.state == 1:
+            if Dice.probability(0.6):
+                my_ship.attack(1)
+                self.state-=1
+                time.sleep(0.4)
+                self.report("引爆成功")
+            else:
+                self.state-=1
+                time.sleep(0.4)
+                self.report("引爆失败")
+        self.state = 0
+
+    def suggest(self):
+        if enemy.missile == 0:
+            return "[休息中]对面没有导弹"
+        else:
+            return "[e]入侵敌方导弹让他们倒大霉"
+al7 = Al7(7)
 
 class Al30(Al_general):  # 湾区铃兰
 
@@ -551,6 +605,6 @@ class MainLoops:
             cls.days += 1
 
 if __name__ == "__main__":
-    my_ship.al_list = [al4,None,al3]
+    my_ship.al_list = [al4,al6,al7]
     MainLoops.initialize_before_fight()
     MainLoops.fight_mainloop()
