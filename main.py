@@ -273,8 +273,8 @@ class Al_general:
             except IndexError:
                 pass
 
-    def suggest(self) -> str:
-        return ""
+    def suggest(self) -> str|None:
+        return None
 class Al3(Al_general):
 
     def react(self):
@@ -283,6 +283,13 @@ class Al3(Al_general):
             self.report("命中")
         else:
             self.report("未命中")
+
+    def suggest(self) -> str|None:
+        prob=enemy.shelter*30
+        if prob != 0:
+            return f"[e]发射巡飞弹|命中率{prob}%"
+        else:
+            return "[无命中率]不建议发射巡飞弹"
 al3 = Al3(3)
 
 class Al4(Al_general):
@@ -307,6 +314,13 @@ class Al4(Al_general):
                 self.report("未命中")
                 my_ship.load(1)
                 self.report("回流")
+
+    def suggest(self) -> str|None:
+        return \
+        ["[q] 部署发射台",
+         "[q] 挂载铜芯导弹 2/2",
+         "[自动攻击中]回流系统正在生效",
+         "[自动攻击中]回流系统正在生效"][self.state]
 al4 = Al4(4)
 
 class FieldPrinter:
@@ -355,6 +369,21 @@ class FieldPrinter:
             Txt.print_plus("当前舰船位置>>敌方腹地危险区域")
 
     @classmethod
+    def print_suggestion(cls):
+        suggestion_list = []
+        for al in my_ship.al_list:
+            try:
+                suggest = al.suggest()
+                if not suggest:
+                    continue
+                suggestion_list.append(suggest)
+            except AttributeError:
+                pass
+        if not suggestion_list:
+            suggestion_list.append("空闲")
+        Txt.Tree("战斗辅助面板", suggestion_list).print_self()
+
+    @classmethod
     def print_key_prompt(cls):
         key_prompt = "0/space 装弹  1 发射  2 上盾  "
         for al in my_ship.al_list:
@@ -396,6 +425,7 @@ class MainLoops:
             time.sleep(0.4)
             FieldPrinter.print_basic_info(cls.days)
             FieldPrinter.print_for_fight(my_ship, enemy)
+            FieldPrinter.print_suggestion()
             FieldPrinter.print_key_prompt()
 
             # morning

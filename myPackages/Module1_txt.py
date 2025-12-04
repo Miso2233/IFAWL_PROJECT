@@ -71,7 +71,7 @@ class Tree:#打印用tree对象
                 for j in i.body:
                     self.body.append(f" -{j}")
 
-    def tree_print(self, can_be_folded=False):
+    def print_self(self, can_be_folded=False):
         print(self.topic)
         if can_be_folded and len(self.body) > 3:
             for i in self.body[0:3]:
