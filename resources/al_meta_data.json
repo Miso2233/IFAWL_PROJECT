@@ -44,7 +44,7 @@
     "rank_num": 2,
     "skin_list": ["","[-]准备中","[+]白金就绪"],
     "origin": "",
-    "platform": ""
+    "platform": "通用"
   },
   "7": {
     "len_name": "“奶油”黑客老姐",
@@ -77,7 +77,7 @@
     "rank": "IV",
     "rank_num": 4,
     "origin": "",
-    "platform": ""
+    "platform": "通用"
   },
   "10": {
     "len_name": "“离人”牺牲式能量转化反应堆小组",
@@ -99,7 +99,7 @@
     "rank": "I",
     "rank_num": 1,
     "origin": "",
-    "platform": ""
+    "platform": "通用"
   },
   "12": {
     "len_name": "“晴空”大功率粒子炮集群",
@@ -132,7 +132,7 @@
     "rank": "VIII",
     "rank_num": 8,
     "origin": "岩河军工",
-    "platform": ""
+    "platform": "通用"
   },
   "15": {
     "len_name": "“暴雨”全自动射手导弹发射台",
@@ -154,7 +154,7 @@
     "rank": "VI",
     "rank_num": 6,
     "origin": "浅草寺重工",
-    "platform": ""
+    "platform": "通用"
   },
   "17": {
     "len_name": "“白夜”钨金外壳重型反物质穿甲弹",
@@ -176,7 +176,7 @@
     "rank": "I",
     "rank_num": 0,
     "origin": "联邦海军",
-    "platform": ""
+    "platform": "通用"
   },
   "19": {
     "len_name": "“苍穹”浅草寺战术快递发射炮",
@@ -209,7 +209,7 @@
     "rank": "VII",
     "rank_num": 7,
     "origin": "岩河军工",
-    "platform": ""
+    "platform": "通用"
   },
   "22": {
     "len_name": "“迫害妄想”点射式战术阳极激光炮",
@@ -253,7 +253,7 @@
     "rank": "V",
     "rank_num": 5,
     "origin": "源氏电气",
-    "platform": ""
+    "platform": "通用"
   },
   "26": {
     "len_name": "“眠雀”麻醉性致幻剂发射器",
@@ -297,11 +297,11 @@
     "rank": "VI",
     "rank_num": 6,
     "origin": "浅草寺重工",
-    "platform": ""
+    "platform": "通用"
   },
   "30": {
     "len_name": "“湾区铃兰”饱和式蜂巢突击粒子炮",
-    "short_name": "湾区铃兰",
+    "short_name": "湾铃",
     "description_txt": "-爆发力与续航皆臻高位的大型粒子炮武器\n-在航行日输入30发射粒子炮，输出2伤害并进入冷却\n-冷却期间，有概率消耗一个粒子匣为我方任何伤害提供伤害加成\n-[风中盛夏]在冷却期间输入30，牺牲两层护盾，仍能正常输出造成伤害",
     "index": 30,
     "type": "q",
@@ -319,7 +319,7 @@
     "rank": "III",
     "rank_num": 3,
     "origin": "源氏电气",
-    "platform": ""
+    "platform": "通用"
   },
   "32": {
     "len_name": "“普罗旺斯”高能粒子点火平台",
@@ -352,7 +352,7 @@
     "rank": "VIII",
     "rank_num": 8,
     "origin": "岩河军工",
-    "platform": ""
+    "platform": "通用"
   },
   "35": {
     "len_name": "“青鹄”时空连续体空洞构造反应堆",
@@ -396,7 +396,7 @@
     "rank": "I",
     "rank_num": 0,
     "origin": "浅草寺重工",
-    "platform": ""
+    "platform": "通用"
   }
 }
 

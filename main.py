@@ -231,6 +231,27 @@ class Al_manager:
     with open(file_path, 'r', encoding='utf-8') as f:
         al_meta_data: dict[str:dict[str:str|int]] = json.load(f)
 
+    all_al_list:dict[str,Al_general] = {}
+
+    @classmethod
+    def choose_al(cls,type_choosing:Literal["q","w","e","all"]):
+        for al in cls.all_al_list.values():
+            if al.type == type_choosing:
+                al.print_description()
+        while 1:
+            inp = Txt.input_plus("\n指挥官，请输入数字选择本场战斗的主武器（对局中输入q来使用）[-1=不使用主武器]>>>")
+            if inp not in cls.al_meta_data or cls.al_meta_data[inp]["type"] != type_choosing:
+                if inp == "":
+                    break
+                print("请在武器库中进行选择")
+                pass
+            else:
+                print(f"{cls.al_meta_data[inp]['short_name']}#{cls.al_meta_data[inp]['index']}", "已确认装备")
+                my_ship.al_list[0] = cls.all_al_list[inp]
+                print("")
+                time.sleep(0.4)
+                break
+
 class Al_general:
     #Apocalypse-Linked 明日尘埃装备体系
 
@@ -242,7 +263,9 @@ class Al_general:
         self.type:Literal["q","w","e"]  = Al_manager.al_meta_data[str(index)]["type"]
         self.rank_num:int               = Al_manager.al_meta_data[str(index)]["rank_num"]
         self.skin_list:list[str]        = Al_manager.al_meta_data[str(index)].get("skin_list",[])
+        self.platform:str               = Al_manager.al_meta_data[str(index)]["platform"]
         self.metadata:dict[str:str|int] = Al_manager.al_meta_data[str(index)]
+        Al_manager.all_al_list[str(self.index)] = self
 
         # operation 字段
         self.state = 0
@@ -254,6 +277,18 @@ class Al_general:
         :return: 无
         """
         Voices.report(self.short_name,theme)
+
+    def print_description(self):
+
+        tag0: str = self.metadata["origin"]
+        tag1: str = self.platform
+
+        print(
+            f"[{self.index}] {tag0}{self.len_name + ' ' * (40 - Txt.get_shell_len(self.len_name + tag0 + str(self.index)))}[{tag1}平台] [{self.metadata['rank']}]")
+        print(f">>>>\"{self.short_name}\"")
+        print(self.metadata["description_txt"])
+        # [30] 岩河军工“湾区铃兰”饱和式蜂巢突击粒子炮      [粒子炮平台] [VIII] 1在仓库 >>[可以离站使用]<<
+        print()
 
     def add_atk(self,atk:int):
         """
@@ -606,5 +641,6 @@ class MainLoops:
 
 if __name__ == "__main__":
     my_ship.al_list = [al4,al6,al7]
+    Al_manager.choose_al("q")
     MainLoops.initialize_before_fight()
     MainLoops.fight_mainloop()
