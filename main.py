@@ -457,7 +457,7 @@ class Al6(Al_general):
     def operate_in_afternoon(self):
         if self.state == 2 and my_ship.shelter <= 0:
             self.state = 0
-            my_ship.heal(3)
+            my_ship.heal(2)
             self.report("急救")
 
     def suggest(self):
@@ -612,6 +612,7 @@ class FieldPrinter:
         except AttributeError:
             pass
         me.print_self()
+        print()
         try:
             me.al_list[2].print_self()
         except AttributeError:
@@ -620,7 +621,7 @@ class FieldPrinter:
             me.al_list[0].print_self()
         except AttributeError:
             pass
-        print("\n\n")
+        print()
 
     @classmethod
     def print_basic_info(cls,days):
