@@ -113,7 +113,7 @@ class MyShip:
     def initialize(self):
         self.missile = 1
         self.shelter = 1
-        for al in self.al_list:
+        for al in al_manager.all_al_list.values():
             try:
                 al.initialize()
             except AttributeError:
@@ -535,6 +535,59 @@ class Al8(Al_general):
     def suggest(self):
         return ["[q]建造发射架基础 1/2","[q]建成发射架炮管 2/2","[q]续杯|导弹伤害加成中","[已建立]导弹伤害加成中"][self.state]
 al8 = Al8(8)
+
+class Al9(Al_general):
+
+    def react(self):
+        if self.state == 0:
+            if my_ship.shelter <= 1:
+                my_ship.heal(1)
+                self.report("护盾学急救")
+            self.state += 1
+            self.report("收到")
+
+    def add_hp(self,hp):
+        if self.state == 1:
+            hp += 2
+            self.state = 0
+            self.report("急救")
+        return hp
+
+    def suggest(self):
+        if self.state == 0:
+            if my_ship.shelter <= 1:
+                return "[w]建立吊舱|护盾学急救就绪"
+            else:
+                return "[w]建立吊舱"
+        else:
+            return "[已就绪]|[2]释放护盾"
+al9 = Al9(9)
+
+class Al10(Al_general):
+
+    def react(self):
+        if my_ship.shelter >= 2:
+            my_ship.shelter -= 1
+            my_ship.missile += 2
+            self.report("牺牲护盾")
+        elif my_ship.shelter <= 1:
+            if my_ship.missile != 0:
+                my_ship.heal(2)
+                my_ship.missile -= 1
+                self.report("拆解导弹")
+            else:
+                my_ship.heal(1)
+                self.report("护盾不足")
+
+    def suggest(self):
+        if my_ship.shelter >= 2:
+            return "[e]拆除护盾|获取2枚导弹"
+        elif my_ship.shelter <= 1:
+            if my_ship.missile != 0:
+                return "[e]拆除导弹|获取2层护盾"
+            else:
+                return "[资源耗竭]|[2]回充护盾|[0]回充导弹"
+al10 = Al10(10)
 
 class Al30(Al_general):  # 湾区铃兰
 
