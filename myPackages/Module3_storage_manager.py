@@ -20,14 +20,28 @@ class StorageManager:
         for key in self.template:
             for item in self.template[key]:
                 self.item_to_key_table[item] = key
+        # 建立统计字段
+        self.total_materials_num = 0
+        self.total_als_num = 0
         # 启动主仓库
         self.repository_for_all_users = shelve.open('userdata/game_save',writeback=True)
+        # 更新统计字段
+        self.update_statistical_data()
+
+    def update_statistical_data(self):
+        """
+        更新统计字段
+        :return: 无
+        """
+        self.total_materials_num = sum(self.repository_for_all_users[self.username]["materials"].values())
+        self.total_als_num = sum(self.repository_for_all_users[self.username]["als"].values())
 
     def sync(self):
         """
         将仓库同步至硬盘
         :return: 无
         """
+        self.update_statistical_data()
         self.repository_for_all_users.sync()
 
     def login(self):
