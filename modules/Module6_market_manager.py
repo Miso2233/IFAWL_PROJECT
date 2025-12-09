@@ -1,6 +1,6 @@
 import random
 
-from core.Module1_txt import Tree,adjust
+from core.Module1_txt import Tree,adjust,n_column_print
 from core.Module2_json_loader import json_loader
 
 ALL_MATERIALS:list[str] = list(
@@ -23,6 +23,8 @@ AL_NAME_LIST:dict[str,int]
 """
 for key in AL_META_DATA:
     AL_NAME_LIST = AL_META_DATA[key]["short_name"] + f"#{key}"
+
+TOTAL_CONTRACT_NUM = 24
 
 class Tools:
 
@@ -70,7 +72,7 @@ tools = Tools()
 
 class Contract:
 
-    def __init__(self,index):
+    def __init__(self,index,storage_manager):
         self.index = index
         self.title = ""
         self.rank = random.randint(1,8)
@@ -79,14 +81,23 @@ class Contract:
         self.give_list = {}
         self.give_tree:Tree = Tree("")
         self.get_tree:Tree = Tree("")
+        self.storage_manager = storage_manager
+
+    def is_affordable(self):
+        return tools.is_affordable(self.give_list,self.storage_manager.show_assets())
+
+    def refresh_affordable_tag(self):
+        aff_tag = " [●]" if self.is_affordable() else ""
+        self.give_tree.title = f"你将支付>>>{aff_tag}"
 
     def print_self(self):
         print("┌──────────┐")
-        print(adjust(f"丨{self.title}",22)+"丨")
+        print(adjust(f"│{self.title}",22)+"│")
+        print(adjust(f"│", 22) + "│")
         for line in self.give_tree.generate_line_list():
-            print(adjust(f"丨{line}",22)+"丨")
+            print(adjust(f"│{line}",22)+"│")
         for line in self.get_tree.generate_line_list():
-            print(adjust(f"丨{line}",22)+"丨")
+            print(adjust(f"│{line}",22)+"│")
         print("└──────────┘")
 
     def generate_line_list(self) -> list[str]:
@@ -94,17 +105,17 @@ class Contract:
         生成Contract对象的行切片
         :return: 一个字符串列表，包含Contract的每一行
         """
-        line_list = ["┌──────────┐", adjust(f"丨{self.title}", 22) + "丨"]
+        line_list = ["┌──────────┐", adjust(f"│{self.title}", 22) + "│",adjust(f"│", 22) + "│"]
         if self.is_traded:
             for _ in self.give_tree.generate_line_list():
-                line_list.append(adjust(f"丨", 22) + "丨")
+                line_list.append(adjust(f"│", 22) + "│")
             for _ in self.get_tree.generate_line_list():
-                line_list.append(adjust(f"丨", 22) + "丨")
+                line_list.append(adjust(f"│", 22) + "│")
         else:
             for line in self.give_tree.generate_line_list():
-                line_list.append(adjust(f"丨{line}", 22) + "丨")
+                line_list.append(adjust(f"│{line}", 22) + "│")
             for line in self.get_tree.generate_line_list():
-                line_list.append(adjust(f"丨{line}", 22) + "丨")
+                line_list.append(adjust(f"│{line}", 22) + "│")
         line_list.append("└──────────┘")
         return line_list
 
@@ -112,9 +123,9 @@ class MaterialContract(Contract):
     """
     易物合同
     """
-    def __init__(self,index):
-        super().__init__(index)
-        self.title = f"{self.index} 易物合同 [{self.rank}级]"
+    def __init__(self,index,storage_manager):
+        super().__init__(index,storage_manager)
+        self.title = f"[{self.index}] 易物合同 [{self.rank}]级"
 
         # 生成交接物品列表
         self.give_list = tools.create_material_list(25 * self.rank)
@@ -141,14 +152,14 @@ class GoodsContract(Contract):
     货品合同
     """
 
-    def __init__(self, index):
-        super().__init__(index)
-        self.title = f"{self.index} 货品合同 [{self.rank}级]"
+    def __init__(self, index,storage_manager):
+        super().__init__(index,storage_manager)
+        self.title = f"[{self.index}] 货品合同 [{self.rank}]级"
 
         # 生成支付物品列表（25倍rank）
         self.give_list = tools.create_material_list(25 * self.rank)
 
-        # 生成获取的信用点（1000倍rank，有±100浮动）
+        # 生成获取的信用点（1100倍rank，有±100浮动）
         self.get_list = {
             "联邦信用点": random.randint(
                 1100 * self.rank - 100,
@@ -168,6 +179,74 @@ class GoodsContract(Contract):
         self.get_tree = Tree("你将得到>>>", self.get_list)
         self.give_tree = Tree("你将支付>>>", self.give_list)
 
+class FinanceContract(Contract):
+    """
+    金融合同
+    """
+
+    def __init__(self, index,storage_manager):
+        super().__init__(index,storage_manager)
+        self.title = f"[{self.index}] 金融合同 [{self.rank}]级"
+
+        # 生成支付的信用点
+        self.give_list = {
+            "联邦信用点": random.randint(
+                1100 * self.rank - 100,
+                1100 * self.rank + 100
+            )
+        }
+
+        # 生成获取的信用点（1100倍rank，有±1000浮动）
+        self.get_list = {
+            "联邦信用点": random.randint(
+                1100 * self.rank - 1000,
+                1100 * self.rank + 1000
+            )
+        }
+
+        # 50%概率交换give和get列表
+        if random.random() < 0.5:
+            self.give_list, self.get_list = self.get_list, self.give_list
+
+        # 打印树构建
+        self.get_tree = Tree("你将得到>>>", "?")
+        self.give_tree = Tree("你将支付>>>", self.give_list)
+
+class Contract_manager:
+
+    def __init__(self,storage_manager):
+        self.storage_manager = storage_manager
+        self.contract_type_list = [
+            MaterialContract,
+            GoodsContract,
+            FinanceContract
+        ]
+        self.all_contracts_list = []
+
+    def generate_all_contracts(self):
+        self.all_contracts_list.clear()
+        for i in range(TOTAL_CONTRACT_NUM):
+            self.all_contracts_list.append(
+                random.choice(
+                    self.contract_type_list
+                )(i,self.storage_manager)
+            )
+
+    def print_all_contracts(self):
+        for contract in self.all_contracts_list:
+            contract.refresh_affordable_tag()
+        line_list = [[] for _ in range(6)]
+        for contract in self.all_contracts_list:
+            line_list[contract.index%6] += contract.generate_line_list()
+        n_column_print(line_list,24)
+
+    def transaction(self,contract:Contract):
+        if tools.is_affordable(contract.give_list,self.storage_manager.show_assets()):
+            self.storage_manager.transaction(contract.give_list,contract.get_list)
+        else:
+            print("物品不足-交易失败")
+
+
+
 if __name__ == "__main__":
-    test = GoodsContract(0)
-    test.print_self()
+    ...

@@ -66,6 +66,28 @@ class StorageManager:
         Txt.print_plus("登出完毕")
         self.repository_for_all_users.close()
 
+    def show_assets(self) -> dict[str:int]:
+        """
+        展示现有仓库资产
+        :return: 字典，键为所有的materials|currency|Als，值为它们的数目
+        """
+        out = {}
+        for key in ["materials","als","currency"]:
+            for item in self.repository_for_all_users[self.username][key]:
+                out[item] = self.repository_for_all_users[self.username][key][item]
+        return out
+
+    def show_assets_except_al(self) -> dict[str:int]:
+        """
+        展示现有仓库资产,Als除外
+        :return: 字典，键为所有的materials|currency，值为它们的数目
+        """
+        out = {}
+        for key in ["materials","currency"]:
+            for item in self.repository_for_all_users[self.username][key]:
+                out[item] = self.repository_for_all_users[self.username][key][item]
+        return out
+
     def modify(self,item:str,delta:int):
         """
         增减仓库物品数量|核心业务封装
@@ -101,6 +123,13 @@ class StorageManager:
             print(f"[战利品收集] {item}x{num}")
         self.sync()
 
+    def transaction(self,give_list:dict[str,int],get_list:dict[str,int]):
+        for item in give_list:
+            self.modify(item,-give_list[item])
+        for item in get_list:
+            self.modify(item,get_list[item])
+        self.sync()
+
     def clear(self):
         """
         清空当前登录玩家的仓库
@@ -110,7 +139,13 @@ class StorageManager:
         self.sync()
 
     def save_al_on_ship(self,al_on_ship):
-        self.repository_for_all_users[self.username]["metadata"]["al_on_ship"] = al_on_ship
+        al_str_list = ["","",""]
+        for position in range(len(al_on_ship)):
+            try:
+                al_str_list[position] = str(al_on_ship[position].index)
+            except AttributeError:
+                al_str_list[position] = ""
+        self.repository_for_all_users[self.username]["metadata"]["al_on_ship"] = al_str_list
         self.sync()
 
     def get_al_on_ship(self):

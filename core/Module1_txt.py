@@ -175,3 +175,28 @@ def n_column_print(columns: list[list[str]], di_list: tuple[int]|int = ()):
             column_index += 1
         line_str += columns[-1][line_index]
         print(line_str)
+
+
+def dict_give_and_get_print(father: dict, get: dict, give: dict):
+    def print_main(zoom):
+        print(i,end=" "*(12-get_shell_len(i)))
+        if i in get:
+            print("-"*(father[i]//zoom),end="")
+            print(">"*(get[i]//zoom),end="")
+            print(f"  {father[i]}+{get[i]}")
+        elif i in give:
+            print("-"*((father[i]-give[i])//zoom),end="")
+            print("<"*(give[i]//zoom),end="")
+            print(f"  {father[i]}-{give[i]}")
+        else:
+            print("-"*(father[i]//zoom),end="")
+            print(f"  {father[i]}")
+
+    for i in father:
+        if i not in ["联邦信用点","合约纪念点","保险点"]:
+            print_main(5)
+        elif i == "联邦信用点":
+            print_main(400)
+        elif i == "保险点":
+            print_main(1)
+    print()

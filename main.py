@@ -9,6 +9,9 @@ from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
 from modules.Module4_voices import voices
 from core.Module5_dice import dice
+from modules.Module6_market_manager import Contract_manager, Contract
+
+contract_manager = Contract_manager(storage_manager)
 
 DMG_TYPE_LIST:dict[int,str] = {
     0:"missile_launch", # 导弹射击
@@ -26,7 +29,9 @@ class MyShip:
         self.total_al_rank = 0
 
     def load_al(self):
-        self.al_list = storage_manager.get_al_on_ship()
+        al_str_list = storage_manager.get_al_on_ship()
+        for position in range(len(al_str_list)):
+            self.al_list[position] = al_manager.all_al_list.get(al_str_list[position],None)
         self.total_al_rank = al_manager.get_total_al_rank()
 
     def print_self(self):
@@ -200,6 +205,7 @@ class Al_manager:
     def __init__(self):
         self.al_meta_data: dict[str,dict[str,str|int]] = json_loader.load("al_meta_data")
         self.all_al_list:dict[str,Al_general] = {}
+        # TODO 添加my_ship和enemy_ship字段并抽离所有的AL
 
     def choose_al(self,type_choosing:str|Literal["q","w","e","all"]):
         if type_choosing == "all":
@@ -979,7 +985,42 @@ class MainLoops:
                     al_manager.choose_al("all")
                 case "q"|"w"|"e":
                     al_manager.choose_al(go_to)
+                case "g1":
+                    main_loops.contract_market_mainloop()
                 case _:
+                    pass
+
+    @staticmethod
+    def contract_market_mainloop():
+        contract_manager.generate_all_contracts()
+        while 1:
+            contract_manager.print_all_contracts()
+            print()
+            Txt.dict_give_and_get_print(storage_manager.show_assets_except_al(),{},{})
+            inp=input("[数字] 选择合同|[r/refresh] 刷新市场|[e/exit] 退出>>>")
+            if inp == "exit" or inp == "e":
+                break
+            elif inp == "refresh" or inp == "r":
+                contract_manager.generate_all_contracts()
+            elif inp.isdigit():
+                try:
+                    contract:Contract=contract_manager.all_contracts_list[int(inp)]
+                    contract.print_self()
+                    Txt.dict_give_and_get_print(
+                        storage_manager.show_assets_except_al(),
+                        contract.get_list,
+                        contract.give_list
+                    )
+                    inp1=input("check=签署并交易 [enter]=退出>>>")
+                    if inp1 == "check":
+                        if not contract.is_traded:
+                            storage_manager.transaction(
+                                contract.give_list,
+                                contract.get_list
+                            )
+                            contract.is_traded = True
+                            Txt.print_plus("交易成功")
+                except IndexError:
                     pass
 main_loops = MainLoops()
 
