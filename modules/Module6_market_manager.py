@@ -1,6 +1,6 @@
 import random
 
-from core.Module1_txt import Tree,adjust,n_column_print
+from core.Module1_txt import print_plus,Tree,adjust,n_column_print
 from core.Module2_json_loader import json_loader
 
 ALL_MATERIALS:list[str] = list(
@@ -89,6 +89,18 @@ class Contract:
     def refresh_affordable_tag(self):
         aff_tag = " [●]" if self.is_affordable() else ""
         self.give_tree.title = f"你将支付>>>{aff_tag}"
+
+    def transaction(self):
+        if not self.is_affordable():
+            print("物品不足-交易失败")
+            return
+        if self.is_traded:
+            print("合同已被交易")
+            return
+        else:
+            self.storage_manager.transaction(self.give_list, self.get_list)
+            self.is_traded = True
+            print_plus("交易成功")
 
     def print_self(self):
         print("┌──────────┐")
@@ -209,7 +221,7 @@ class FinanceContract(Contract):
             self.give_list, self.get_list = self.get_list, self.give_list
 
         # 打印树构建
-        self.get_tree = Tree("你将得到>>>", "?")
+        self.get_tree = Tree("你将得到>>>", "[风险投资回报]ISK")
         self.give_tree = Tree("你将支付>>>", self.give_list)
 
 class Contract_manager:
@@ -240,11 +252,6 @@ class Contract_manager:
             line_list[contract.index%6] += contract.generate_line_list()
         n_column_print(line_list,24)
 
-    def transaction(self,contract:Contract):
-        if tools.is_affordable(contract.give_list,self.storage_manager.show_assets()):
-            self.storage_manager.transaction(contract.give_list,contract.get_list)
-        else:
-            print("物品不足-交易失败")
 
 
 

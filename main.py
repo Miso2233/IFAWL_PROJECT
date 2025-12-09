@@ -1013,15 +1013,9 @@ class MainLoops:
                     )
                     inp1=input("check=签署并交易 [enter]=退出>>>")
                     if inp1 == "check":
-                        if not contract.is_traded:
-                            storage_manager.transaction(
-                                contract.give_list,
-                                contract.get_list
-                            )
-                            contract.is_traded = True
-                            Txt.print_plus("交易成功")
+                        contract.transaction()
                 except IndexError:
-                    pass
+                    print("合同不存在")
 main_loops = MainLoops()
 
 if __name__ == "__main__":

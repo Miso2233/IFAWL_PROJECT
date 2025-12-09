@@ -180,14 +180,14 @@ def n_column_print(columns: list[list[str]], di_list: tuple[int]|int = ()):
 def dict_give_and_get_print(father: dict, get: dict, give: dict):
     def print_main(zoom):
         print(i,end=" "*(12-get_shell_len(i)))
-        if i in get:
-            print("-"*(father[i]//zoom),end="")
-            print(">"*(get[i]//zoom),end="")
-            print(f"  {father[i]}+{get[i]}")
-        elif i in give:
+        if i in give:
             print("-"*((father[i]-give[i])//zoom),end="")
             print("<"*(give[i]//zoom),end="")
             print(f"  {father[i]}-{give[i]}")
+        elif i in get:
+            print("-"*(father[i]//zoom),end="")
+            print(">"*(get[i]//zoom),end="")
+            print(f"  {father[i]}+{get[i]}")
         else:
             print("-"*(father[i]//zoom),end="")
             print(f"  {father[i]}")
