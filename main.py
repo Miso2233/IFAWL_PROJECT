@@ -287,7 +287,10 @@ class Al_general:
         tag1: str = self.platform
 
         print(
-            f"[{self.index}] {tag0}{self.len_name + ' ' * (40 - Txt.get_shell_len(self.len_name + tag0 + str(self.index)))}[{tag1}平台] [{self.metadata['rank']}]")
+            Txt.adjust(f"[{self.index}] {tag0}{self.len_name}",60),
+            Txt.adjust(f"[{tag1}平台] [{self.metadata['rank']}]",20),
+            f"{storage_manager.get_value_of(str(self.index))}在仓库"
+        )
         print(f">>>>\"{self.short_name}\"")
         print(self.metadata["description_txt"])
         # [30] 岩河军工“湾区铃兰”饱和式蜂巢突击粒子炮      [粒子炮平台] [VIII] 1在仓库 >>[可以离站使用]<<
@@ -640,7 +643,7 @@ class Al12(Al_general):
 al12 = Al12(12)
 
 class Al13(Al_general):
-    
+
     def react(self):
         if my_ship.missile == 0:
             my_ship.missile += 1
@@ -776,7 +779,7 @@ class FieldPrinter:
 
     def print_for_fight(self, me:MyShip, opposite:EnemyShip):
         """
-        打印双方护盾和导弹，以及我方Al
+        打印fight模式下双方护盾和导弹，以及我方Al
         :param me:
         :param opposite:
         :return: 无
@@ -892,9 +895,18 @@ class StationTreesManager:
                 if storage_manager.get_value_of("保险点")<my_ship.total_al_rank \
                 else ">>保险点已覆盖当前舰船<<",
             "ssg_num": storage_manager.get_value_of("保险点"),
-            "q_information": my_ship.al_list[0].len_name if my_ship.al_list[0] else "[No Info]",
-            "w_information": my_ship.al_list[1].len_name if my_ship.al_list[1] else "[No Info]",
-            "e_information": my_ship.al_list[2].len_name if my_ship.al_list[2] else "[No Info]"
+            "q_information": my_ship.al_list[0].len_name \
+                + f"[{storage_manager.get_value_of(str(my_ship.al_list[0].index))}]"\
+                if my_ship.al_list[0] \
+                else "[No Info]",
+            "w_information": my_ship.al_list[1].len_name \
+                + f"[{storage_manager.get_value_of(str(my_ship.al_list[1].index))}]"\
+                if my_ship.al_list[1] \
+                else "[No Info]",
+            "e_information": my_ship.al_list[2].len_name \
+                + f"[{storage_manager.get_value_of(str(my_ship.al_list[2].index))}]"\
+                if my_ship.al_list[2] \
+                else "[No Info]"
         })
 
     def generate_all_line_list(self):
@@ -979,8 +991,13 @@ class MainLoops:
             Txt.n_column_print(station_trees_manager.generate_all_line_list(),50)
             go_to = input(">>>")
             match go_to:
+                case "z":
+                    storage_manager.print_storage()
                 case "x":
-                    break
+                    if storage_manager.have_all_al_on_ship(my_ship.al_list):
+                        break
+                    else:
+                        Txt.print_plus("并非所有终焉结都有存货|你将不能离站")
                 case "p2":
                     al_manager.choose_al("all")
                 case "q"|"w"|"e":

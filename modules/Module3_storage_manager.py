@@ -5,6 +5,8 @@ from copy import deepcopy
 from core import Module1_txt as Txt
 from core.Module2_json_loader import json_loader
 
+AL_META_DATA = json_loader.load("al_meta_data")
+
 class StorageManager:
 
     def __init__(self):
@@ -150,4 +152,31 @@ class StorageManager:
 
     def get_al_on_ship(self):
         return self.repository_for_all_users[self.username]["metadata"]["al_on_ship"]
+
+    def print_storage(self):
+        Txt.Tree("基本物资",self.repository_for_all_users[self.username]["materials"]).print_self()
+        al_list = {}
+        for al,num in self.repository_for_all_users[self.username]["als"].items():
+            al_list[AL_META_DATA[al]["len_name"]] = num
+        Txt.Tree("终焉结", al_list).print_self()
+        input("[enter]离开仓库>>>")
+
+    def have_all_al_on_ship(self,al_on_ship:list) -> bool:
+        """
+        判断是否拥有船上所有的终焉结
+        :param al_on_ship: list[Al_general|None]，my_ship对象的属性
+        :return: True表示船上所有终焉结在仓库里都有存货
+        """
+        count = 0
+        for al in al_on_ship:
+            if not al:
+                count += 1
+                continue
+            if al.rank_num == 0:
+                count += 1
+                continue
+            al_str = str(al.index)
+            if self.get_value_of(al_str) > 0:
+                count += 1
+        return count == len(al_on_ship)
 storage_manager = StorageManager()

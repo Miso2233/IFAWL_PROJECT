@@ -10,7 +10,7 @@ class JsonLoader:
             # 获取当前模块文件所在目录
             module_dir = Path(__file__).parent
             # 假设resources目录在项目根目录，即core目录的父目录下
-            self.dir = module_dir.parent / "resources"
+            self.dir = module_dir.parent / "resources" / "json"
         else:
             self.dir = Path(base_dir)
 

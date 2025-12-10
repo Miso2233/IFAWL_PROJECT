@@ -10,19 +10,19 @@ ALL_MATERIALS:list[str] = list(
 AL_META_DATA = json_loader.load("al_meta_data")
 """所有AL的元数据"""
 
-AL_RANK_LIST:dict[str,int]
+AL_RANK_LIST:dict[str,int] = {}
 """
 从AL的字符串序号获取其级数
 """
 for key in AL_META_DATA:
-    AL_RANK_LIST = AL_META_DATA[key]["rank_num"]
+    AL_RANK_LIST[key] = AL_META_DATA[key]["rank_num"]
 
-AL_NAME_LIST:dict[str,int]
+AL_NAME_LIST:dict[str,int] = {}
 """
 从AL的字符串序号获取其短名称
 """
 for key in AL_META_DATA:
-    AL_NAME_LIST = AL_META_DATA[key]["short_name"] + f"#{key}"
+    AL_NAME_LIST[key] = AL_META_DATA[key]["short_name"] + f"#{key}"
 
 TOTAL_CONTRACT_NUM = 24
 
@@ -84,13 +84,25 @@ class Contract:
         self.storage_manager = storage_manager
 
     def is_affordable(self):
+        """
+        判断这个合同是否和支付
+        :return: True表示该合同可支付，False反之
+        """
         return tools.is_affordable(self.give_list,self.storage_manager.show_assets())
 
     def refresh_affordable_tag(self):
+        """
+        刷新该合同的可支付标签
+        :return: 无
+        """
         aff_tag = " [●]" if self.is_affordable() else ""
         self.give_tree.title = f"你将支付>>>{aff_tag}"
 
     def transaction(self):
+        """
+        尝试交易这个合同，需要满足：合同可支付&&合同未被支付
+        :return: 无
+        """
         if not self.is_affordable():
             print("物品不足-交易失败")
             return
@@ -121,8 +133,9 @@ class Contract:
         if self.is_traded:
             for _ in self.give_tree.generate_line_list():
                 line_list.append(adjust(f"│", 22) + "│")
-            for _ in self.get_tree.generate_line_list():
+            for _ in range(len(self.get_tree.generate_line_list())-1):
                 line_list.append(adjust(f"│", 22) + "│")
+            line_list.append(adjust(f"│[已交易]", 22) + "│")
         else:
             for line in self.give_tree.generate_line_list():
                 line_list.append(adjust(f"│{line}", 22) + "│")
@@ -224,6 +237,48 @@ class FinanceContract(Contract):
         self.get_tree = Tree("你将得到>>>", "[风险投资回报]ISK")
         self.give_tree = Tree("你将支付>>>", self.give_list)
 
+    def transaction(self):
+        """
+        尝试交易这个合同，需要满足：合同可支付&&合同未被支付
+        :return: 无
+        """
+        if not self.is_affordable():
+            print("物品不足-交易失败")
+            return
+        if self.is_traded:
+            print("合同已被交易")
+            return
+        else:
+            self.storage_manager.transaction(self.give_list, self.get_list)
+            self.is_traded = True
+            print_plus("交易成功>>>")
+            di = self.get_list["联邦信用点"] - self.give_list["联邦信用点"]
+            if di > 0:
+                print_plus(f"净赚{di} ISK，优秀的投资")
+            else:
+                print_plus(f"净亏{-di} ISK，投资有风险")
+
+class IndustryContract(Contract):
+    """
+    工业合同
+    """
+
+    def __init__(self, index,storage_manager):
+        super().__init__(index,storage_manager)
+        al = random.choice(list(AL_META_DATA.keys()))
+        while AL_META_DATA[al]["rank_num"] == 0:
+            al = random.choice(list(AL_META_DATA.keys()))
+        self.rank = AL_META_DATA[al]["rank_num"]
+        self.title = f"[{self.index}] 工业合同 [{self.rank}]级"
+
+        self.get_list = {al:1}
+        self.give_list = tools.create_material_list(20*self.rank)
+        self.give_list["联邦信用点"] = random.randint(1000*self.rank-300,1000*self.rank+100)
+
+        # 打印树构建
+        self.get_tree = Tree("你将得到>>>", {AL_NAME_LIST[al]:1})
+        self.give_tree = Tree("你将支付>>>", self.give_list)
+
 class Contract_manager:
 
     def __init__(self,storage_manager):
@@ -231,7 +286,8 @@ class Contract_manager:
         self.contract_type_list = [
             MaterialContract,
             GoodsContract,
-            FinanceContract
+            FinanceContract,
+            IndustryContract
         ]
         self.all_contracts_list = []
 
