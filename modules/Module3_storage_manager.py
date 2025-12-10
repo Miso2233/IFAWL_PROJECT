@@ -54,10 +54,12 @@ class StorageManager:
         self.username = Txt.input_plus("指挥官，请输入您的代号")
         if self.username in self.repository_for_all_users.keys():
             for key in self.repository_for_all_users[self.username]:
-                if key in self.template:
-                    for item in self.repository_for_all_users[self.username][key]:
-                        if item in self.template[key]:
-                            self.template[key][item] = self.repository_for_all_users[self.username][key][item]
+                if key not in self.template:
+                    continue
+                for item in self.repository_for_all_users[self.username][key]:
+                    if item not in self.template[key]:
+                        continue
+                    self.template[key][item] = self.repository_for_all_users[self.username][key][item]
         else:
             Txt.print_plus("初次登录|欢迎指挥官")
         self.repository_for_all_users[self.username] = self.template
@@ -179,4 +181,21 @@ class StorageManager:
             if self.get_value_of(al_str) > 0:
                 count += 1
         return count == len(al_on_ship)
+
+    def destroy_al(self, al_on_ship:list):
+        """
+        损毁船上所有的终焉结
+        :param al_on_ship: list[Al_general|None]，my_ship对象的属性
+        :return: 无
+        """
+        for al in al_on_ship:
+            if not al:
+                continue
+            if al.rank_num == 0:
+                continue
+            al_str = str(al.index)
+            self.modify(al_str,-1)
+            print(f"{al.len_name} 已损毁")
+            self.sync()
+
 storage_manager = StorageManager()

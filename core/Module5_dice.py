@@ -18,7 +18,7 @@ class Dice:
     def decide_who(self) -> Literal[0,1]:
         """
         决定谁来进行下一回合，并进行马尔科夫链变化
-        :return:
+        :return: 1表示我方，0表示敌方
         """
         if random.random()<self.probability_current:
             self.probability_current -= self.di

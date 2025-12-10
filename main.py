@@ -5,6 +5,7 @@ import time
 from typing import Literal
 
 from core import Module1_txt as Txt
+from core.Module1_txt import input_plus
 from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
 from modules.Module4_voices import voices
@@ -33,6 +34,14 @@ class MyShip:
         for position in range(len(al_str_list)):
             self.al_list[position] = al_manager.all_al_list.get(al_str_list[position],None)
         self.total_al_rank = al_manager.get_total_al_rank()
+
+    def update_total_al_rank(self):
+        self.total_al_rank = 0
+        for al in self.al_list:
+            try:
+                self.total_al_rank += al.rank_num
+            except AttributeError:
+                pass
 
     def print_self(self):
         for _ in range(self.shelter):
@@ -234,12 +243,17 @@ class Al_manager:
                 time.sleep(0.4)
                 break
         storage_manager.save_al_on_ship(my_ship.al_list)
-        my_ship.total_al_rank = 0
-        for al in my_ship.al_list:
-            try:
-                my_ship.total_al_rank += al.rank_num
-            except AttributeError:
-                pass
+        my_ship.update_total_al_rank()
+
+    def clear_al(self):
+        for index in range(len(my_ship.al_list)):
+            if my_ship.al_list[index] is None:
+                continue
+            if my_ship.al_list[index].rank_num == 0:
+                continue
+            my_ship.al_list[index] = None
+        storage_manager.save_al_on_ship(my_ship.al_list)
+        my_ship.update_total_al_rank()
 
     def get_total_al_rank(self):
         out = 0
@@ -588,6 +602,8 @@ class Al11(Al_general):
             self.report("为了身后的苍生")
 
     def reduce_enemy_heal(self,hp):
+        if self.state == 0:
+            return hp
         my_ship.heal(1)
         self.state -= 1
         self.report("汲取成功")
@@ -981,6 +997,9 @@ class MainLoops:
                     storage_manager.drop_for_fight()
                 else:
                     Txt.print_plus("敌方胜利")
+                    storage_manager.destroy_al(my_ship.al_list)
+                    al_manager.clear_al()
+                input_plus("[enter]回站")
                 return
             self.days += 1
 
