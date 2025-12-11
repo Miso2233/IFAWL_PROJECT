@@ -112,21 +112,30 @@ class MyShip:
                 self.load(1)
                 voices.report("导弹","上弹")
             case "1":
-                if al15.state == 0:
+                if al15.state != 0:
+                    voices.report("暴雨", "常规发射器离线")
+                else:
                     self.attack(1,DMG_TYPE_LIST[0])
                     self.load(-1)
                     voices.report("导弹","发射")
-                else:
-                    voices.report("暴雨","常规发射器离线")
             case "2":
                 self.heal(1)
                 voices.report("护盾","上盾")
             case "q":
-                self.al_list[0].react()
+                try:
+                    self.al_list[0].react()
+                except AttributeError:
+                    Txt.print_plus("注意·船上没有q系终焉结")
             case "w":
-                self.al_list[1].react()
+                try:
+                    self.al_list[1].react()
+                except AttributeError:
+                    Txt.print_plus("注意·船上没有w系终焉结")
             case "e":
-                self.al_list[2].react()
+                try:
+                    self.al_list[2].react()
+                except AttributeError:
+                    Txt.print_plus("注意·船上没有e系终焉结")
             case _:
                 Txt.print_plus("你跳过了这一天！")
         if al12.state != 0 and  operation != "q":
