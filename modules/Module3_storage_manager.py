@@ -1,5 +1,6 @@
 import random
 import shelve
+import os
 from copy import deepcopy
 
 from core import Module1_txt as Txt
@@ -26,9 +27,9 @@ class StorageManager:
         self.total_materials_num = 0
         self.total_als_num = 0
         # 启动主仓库
+        if not os.path.exists('userdata'):
+            os.makedirs('userdata')
         self.repository_for_all_users = shelve.open('userdata/game_save',writeback=True)
-        # 更新统计字段
-        self.update_statistical_data()
 
     def update_statistical_data(self):
         """
@@ -63,6 +64,8 @@ class StorageManager:
         else:
             Txt.print_plus("初次登录|欢迎指挥官")
         self.repository_for_all_users[self.username] = self.template
+        # 更新统计字段
+        self.update_statistical_data()
         self.sync()
 
     def logout(self):
