@@ -107,17 +107,21 @@ class MyShip:
         operation = input(">>>")
         if self.missile < 1 and operation == "1":
             operation = "0"
+        if self.al_list[1] == al18 and operation == "2":
+            operation = "w"
+        if al12.state != 0 and  operation != "q":
+            al12.attack()
+        if al15.state != 0 and operation == "1":
+            voices.report("暴雨", "常规发射器离线")
+            operation = ""
         match operation:
             case "0"|" " :
                 self.load(1)
                 voices.report("导弹","上弹")
             case "1":
-                if al15.state != 0:
-                    voices.report("暴雨", "常规发射器离线")
-                else:
-                    self.attack(1,DMG_TYPE_LIST[0])
-                    self.load(-1)
-                    voices.report("导弹","发射")
+                self.attack(1,DMG_TYPE_LIST[0])
+                self.load(-1)
+                voices.report("导弹","发射")
             case "2":
                 self.heal(1)
                 voices.report("护盾","上盾")
@@ -138,8 +142,6 @@ class MyShip:
                     Txt.print_plus("注意·船上没有e系终焉结")
             case _:
                 Txt.print_plus("你跳过了这一天！")
-        if al12.state != 0 and  operation != "q":
-            al12.attack()
 my_ship = MyShip()
 
 class EnemyShip:
@@ -761,7 +763,49 @@ class Al15(Al_general):
                 "[自动攻击中]次日发射|[q]发射台关机"][self.state]
 al15 = Al15(15)
 
-class Al30(Al_general):  # 湾区铃兰
+class Al17(Al_general):
+
+    def react(self):
+        if my_ship.missile == 0:
+            my_ship.missile += 1
+            self.report("无导弹")
+        elif my_ship.shelter <= 0:
+            my_ship.heal(1)
+            self.report("护盾不足")
+        else:
+            enemy.attack(1)
+            my_ship.attack(2,DMG_TYPE_LIST[0])
+            my_ship.missile -= 1
+            self.report("攻击成功")
+
+    def suggest(self):
+        if my_ship.missile == 0:
+            return "[资源耗竭][0]装填弹药"
+        elif my_ship.shelter <= 0:
+            return "[资源耗竭][2/w]回复护盾"
+        else:
+            return "[q]发射白夜装甲弹"
+al17 = Al17(17)
+        
+class Al18(Al_general):
+    def react(self):
+        if dice.probability(0.6) or self.state == 1:
+            my_ship.heal(2)
+            self.state = 0
+            self.report("成功")
+        else:
+            my_ship.heal(1)
+            self.state = 1
+            self.report("失败")
+
+    def suggest(self):
+        if self.state == 0:
+            return "[2/w]回充护盾|概率回充2层"
+        else:
+            return "[2/w]回充护盾|回充2层"
+al18 = Al18(18)
+
+class Al30(Al_general):
 
     def react(self):
         if self.state == 0:
