@@ -73,6 +73,18 @@ class StorageManager:
         Txt.print_plus("登出完毕")
         self.repository_for_all_users.close()
 
+    def set_ship_name(self):
+        """
+        设置舰船名字
+        :return: 无
+        """
+        new_name = Txt.input_plus("请输入舰船的新名称|[enter]取消")
+        if new_name == "":
+            return
+        self.repository_for_all_users["metadata"]["ship_name"] = new_name
+        self.sync()
+
+
     def show_assets(self) -> dict[str:int]:
         """
         展示现有仓库资产

@@ -1017,6 +1017,8 @@ class MainLoops:
                         break
                     else:
                         Txt.print_plus("并非所有终焉结都有存货|你将不能离站")
+                case "p3":
+                    storage_manager.set_ship_name()
                 case "p2":
                     al_manager.choose_al("all")
                 case "q"|"w"|"e":
