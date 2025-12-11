@@ -129,7 +129,7 @@ class StorageManager:
 
     def drop_for_fight(self):
         """
-        单局战斗后掉落物结算|1100信用点|2种物品各13.5个
+        单局战斗后掉落物结算|1100信用点|2种物品各12.5个
         :return: 无
         """
         money = random.randint(1000, 1200)
@@ -137,7 +137,7 @@ class StorageManager:
         print(f"[赏金到账]信用点x{money}")
         items = random.sample(list(self.template["materials"].keys()),2)
         for item in items:
-            num = random.randint(11,16)
+            num = random.randint(10,15)
             self.modify(item,num)
             print(f"[战利品收集] {item}x{num}")
         self.sync()

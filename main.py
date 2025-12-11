@@ -110,11 +110,13 @@ class MyShip:
             operation = "0"
         if self.al_list[1] == al18 and operation == "2":
             operation = "w"
-        if al12.state != 0 and operation != "q":
+        if al12.state != 0 and operation != "q" and not (self.al_list[1]==al16 and operation in ["w","2"]):
             al12.attack()
         if al15.state != 0 and operation == "1":
             voices.report("暴雨", "常规发射器离线")
             operation = ""
+        if al16.state != 0 and operation == "2":
+            al16.heal()
         match operation:
             case "0" | " ":
                 self.load(1)
@@ -689,7 +691,7 @@ class Al12(Al_general):
             self.report("攻击")
         elif self.atk_list[self.state] == 0:
             self.state = 0
-            self.report("晴空粒子炮充能失效·集群阵列回收中")
+            self.report("十四行赞美诗与一首绝望的歌")
             my_ship.heal(1)
 
     def print_self(self):
@@ -813,6 +815,41 @@ class Al15(Al_general):
 
 
 al15 = Al15(15)
+
+
+class Al16(Al_general):
+    cure_list = [0, 3, 6, 8, 10]
+
+    def react(self):
+        if self.state < 4:
+            self.state += 1
+            self.report("收到")
+        else:
+            my_ship.heal(self.cure_list[4]-1)
+            self.report("超载")
+            self.state = 0
+
+    def heal(self):
+        if self.state != 0:  # 情诗
+            my_ship.heal(self.cure_list[self.state]-1)
+            self.report("释放")
+            self.state = 0
+
+    def print_self(self):
+        if self.state != 0:
+            print(self.skin_list[self.state // 2], end="")
+            print(f"[情诗]大规模护盾存量：{self.cure_list[self.state]}")
+
+    def suggest(self):
+        if self.state == 0:
+            return "[w]开始充能"
+        elif self.state == 4:
+            return f"[w/2]极限存量护盾|{self.cure_list[self.state]}层"
+        else:
+            return f"[w]继续充能|[2]释放大规模护盾|{self.cure_list[self.state]}层"
+
+
+al16 = Al16(16)
 
 
 class Al17(Al_general):
@@ -962,10 +999,10 @@ class FieldPrinter:
         Txt.Tree("战斗辅助面板", suggestion_list).print_self()
 
     def print_key_prompt(self):
-        key_prompt = "0/space 装弹  1 发射  2 上盾  "
+        key_prompt = "[0/space] 装弹  [1] 发射  [2] 上盾  "
         for al in my_ship.al_list:
             try:
-                key_prompt += f"{al.type} {al.short_name}#{al.index}  "
+                key_prompt += f"[{al.type}] {al.short_name}#{al.index}  "
             except AttributeError:
                 key_prompt += "[NO INFO]  "
         print(key_prompt)
