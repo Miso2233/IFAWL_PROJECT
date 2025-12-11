@@ -115,6 +115,8 @@ class MyShip:
         if al15.state != 0 and operation == "1":
             voices.report("暴雨", "常规发射器离线")
             operation = ""
+        if al16.state != 0 and operation == "2":
+            al16.heal()
         match operation:
             case "0" | " ":
                 self.load(1)
@@ -813,6 +815,41 @@ class Al15(Al_general):
 
 
 al15 = Al15(15)
+
+
+class Al16(Al_general):
+    cure_list = [0, 4, 6, 8, 10]
+
+    def react(self):
+        if self.state < 4:
+            self.state += 1
+            self.report("收到")
+        else:
+            my_ship.heal(self.cure_list[4]-1)
+            self.report("超载")
+            self.state = 0
+
+    def heal(self):
+        if self.state != 0:  # 情诗
+            my_ship.heal(self.cure_list[self.state]-1)
+            self.report("释放")
+            self.state = 0
+
+    def print_self(self):
+        if self.state != 0:
+            print(self.skin_list[self.state // 2], end="")
+            print(f"[情诗]大规模护盾存量：{self.cure_list[self.state]}")
+
+    def suggest(self):
+        if self.state == 0:
+            return "[w]开始充能"
+        elif self.state == 4:
+            return f"[w/2]极限存量护盾|{self.cure_list[self.state]}层"
+        else:
+            return f"[w]继续充能|[2]释放大规模护盾|{self.cure_list[self.state]}层"
+
+
+al16 = Al16(16)
 
 
 class Al17(Al_general):
