@@ -50,13 +50,13 @@ class Auto_pilot_manager:#自动驾驶
         print(self.to_do_list_spc)
         print(self.memory)
 
-    def react(self,n,ocp):
+    def react(self,n):
 
         PS=n[0]
         PM=n[1]
         CS=n[2]
         CM=n[3]
-        F=ocp
+        F=n[4]
 
 
         output=""
@@ -99,16 +99,16 @@ class Auto_pilot_manager:#自动驾驶
         self.to_do_list_spc=[] 
         self.memory=[]      
 
-    def get(self,n,ocp):
+    def get(self,n):
         if self.to_do_list==[]:
             i=input(">>>")
             if "-"in i:
                 self.read(i)
                 print("已录入，准备接管")
-                i = self.react(n,ocp)
+                i = self.react(n)
         else:
             print("自动驾驶进行中")
-            i = self.react(n,ocp)
+            i = self.react(n)
         return i
 
 auto_pilot=Auto_pilot_manager()
