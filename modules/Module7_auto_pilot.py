@@ -104,14 +104,10 @@ class Auto_pilot_manager:#自动驾驶
             if output == ")":
                 self.to_do_list_normal,self.to_do_list_special,self.condition_list=self.memory
 
-            try:
-                self.condition_list= self.condition_list[1:]
-                self.to_do_list_normal= self.to_do_list_normal[1:]
-                self.to_do_list_special= self.to_do_list_special[1:]
-            except:
-                self.condition_list=[]
-                self.to_do_list_normal=[]
-                self.to_do_list_special=[]
+            self.condition_list = self.condition_list[1:]
+            self.to_do_list_normal = self.to_do_list_normal[1:]
+            self.to_do_list_special = self.to_do_list_special[1:]
+
         return output
 
     def refresh(self):
