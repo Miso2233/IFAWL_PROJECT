@@ -1,24 +1,31 @@
 class Auto_pilot_manager:#自动驾驶
 
-    to_do_list=[]
-    to_do_list_spc=[]
-    if_list=[]
-    memory=[]
-
-    def read(self,txt:str):
-        txt=txt.replace("(","(-")
-        txt=txt.replace("])","]);p")
+    def __init__(self):
         self.to_do_list=[]
         self.to_do_list_spc=[]
         self.if_list=[]
-        raw_list=txt.split("-")     #["2","2","[True]2;1,1"]
-        for i in range(len(raw_list)):
-            raw=raw_list[i]
-            if ";" in raw:          #"[True]2;1,1"
-                pre_to_do=raw[raw.find("]")+1:raw.find(";")]#"2"
-                pre_to_do_spc=raw[raw.find(";")+1:]#"1,1"
-                pre_if=[]
-                pre_if.append(raw[raw.find("[")+1:raw.find("]")])
+        self.memory=[]
+
+    def read(self,txt:str):
+        """
+        读取并分析AP代码
+        :param txt: AP代码
+        :return: 无
+        """
+        # 代码预处理
+        txt=txt.replace("(","(-")
+        txt=txt.replace("])","]);p") # 把循环判定解释为条件语句。去往")"之后去"("，还是去往"p"之后去下一操作
+        # 清空三大列表
+        self.to_do_list=[]
+        self.to_do_list_spc=[]
+        self.if_list=[]
+        # 按照减号分割token
+        raw_token_list = txt.split("-")     #["2","2","[True]2;1,1"]
+        for token in raw_token_list:
+            if ";" in token:          #"[True]2;1,1"
+                pre_to_do=token[token.find("]")+1:token.find(";")]#"2"
+                pre_to_do_spc=token[token.find(";")+1:]#"1,1"
+                pre_if = [token[token.find("[") + 1:token.find("]")]]
 
                 if "," in pre_to_do or "," in pre_to_do_spc:        #"[True]2;1,1"
 
@@ -36,11 +43,11 @@ class Auto_pilot_manager:#自动驾驶
                         self.to_do_list_spc.append(pre_to_do_spc[i])
                         self.if_list.append(pre_if[i])
                 else:
-                    self.to_do_list.append(raw[raw.find("]")+1:raw.find(";")])
-                    self.to_do_list_spc.append(raw[raw.find(";")+1:])
-                    self.if_list.append(raw[raw.find("[")+1:raw.find("]")])
+                    self.to_do_list.append(token[token.find("]")+1:token.find(";")])
+                    self.to_do_list_spc.append(token[token.find(";")+1:])
+                    self.if_list.append(token[token.find("[")+1:token.find("]")])
             else:
-                self.to_do_list.append(raw)
+                self.to_do_list.append(token)
                 self.to_do_list_spc.append("2")
                 self.if_list.append("True")
         
@@ -50,13 +57,13 @@ class Auto_pilot_manager:#自动驾驶
         print(self.to_do_list_spc)
         print(self.memory)
 
-    def react(self,n):
+    def react(self, field_state):
 
-        PS=n[0]
-        PM=n[1]
-        CS=n[2]
-        CM=n[3]
-        F=n[4]
+        PS=field_state[0]
+        PM=field_state[1]
+        CS=field_state[2]
+        CM=field_state[3]
+        F=field_state[4]
 
 
         output=""
@@ -100,7 +107,7 @@ class Auto_pilot_manager:#自动驾驶
         self.memory=[]      
 
     def get(self,n):
-        if self.to_do_list==[]:
+        if not self.to_do_list:
             i=input(">>>")
             if "-"in i:
                 self.read(i)
