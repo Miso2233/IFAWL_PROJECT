@@ -11,6 +11,7 @@ from modules.Module3_storage_manager import storage_manager
 from modules.Module4_voices import voices
 from core.Module5_dice import dice
 from modules.Module6_market_manager import Contract_manager, Contract
+from modules.Module7_auto_pilot import auto_pilot
 
 contract_manager = Contract_manager(storage_manager)
 
@@ -105,7 +106,8 @@ class MyShip:
         进行回合中响应
         :return: 无
         """
-        operation = input(">>>")
+        operation = auto_pilot.get([self.shelter,self.missile,enemy.shelter,enemy.missile],0)
+        print(operation)
         if self.missile < 1 and operation == "1":
             operation = "0"
         if self.al_list[1] == al18 and operation == "2":
