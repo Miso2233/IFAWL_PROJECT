@@ -31,7 +31,18 @@ class VoiceManager:
 
     _instance = None
 
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, sounds_folder: str = "assets/sounds"):
+
+        self.sound_cooldowns = {}  # play_music中用到
+        self.min_cooldown = 0.1    # play_music中用到
+        self.sound_mappings = {}   # load_sound中用到
+        self.sound_groups = {}     # load_sound中用到
+
         if not hasattr(self,'initialized'):
             # 这一步是初始化pygame的mixer（如果没有的话）
             if not pygame.mixer.get_init():
@@ -45,10 +56,10 @@ class VoiceManager:
 
             self.master_volume = 1.0  # 主音量 [0.0, 1.0]
             self.volume_groups = {
-                SoundType.SFX: 1.0,
-                SoundType.MUSIC: 0.7,  # 背景音乐通常比音效轻一点
-                SoundType.UI: 1.0,
-                SoundType.VOICE: 1.0
+                SoundType.sfx: 1.0,
+                SoundType.music: 0.7,  # 背景音乐通常比音效轻一点
+                SoundType.ui_sound: 1.0,
+                SoundType.voice: 1.0
             }
 
             self.supported_formats = {'.wav', '.mp3', '.ogg', '.flac'}
@@ -205,7 +216,7 @@ class VoiceManager:
                 return None
             
         if sound_name not in self.sounds_cache: # 确保音效正常加载
-            if not self._load_sound_to_cache(sound_name):
+            if not self._load_sound_cache(sound_name):
                 return None
             
         sound_info = self.sounds_cache[sound_name]
@@ -233,3 +244,16 @@ class VoiceManager:
         except Exception as e:
             print(f"音乐播放错误：{e}")
             return None
+        
+    def preload_all(self):
+        """预加载所有的音效文件备用"""
+        sound_files = []
+        for root, dirs, files in os.walk(self.sounds_folder):
+            for file in files:
+                if any(file.endswith(ext) for ext in self.supported_formats):
+                    sound_name = os.path.splitext(file)[0]
+                    sound_files.append(sound_name)
+        
+        print(f"Preloading {len(sound_files)} sounds...")
+        for sound_name in sound_files:
+            self.preload_sound(sound_name)
