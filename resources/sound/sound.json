@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0",
+  "description": "游戏音效配置文件 - 用于VoiceManager模块",
+  "last_modified": "2025-12-12",
+  
+  "settings": {
+    "master_volume": 0.8,
+    "min_cooldown": 0.05,
+    "preload_all": false,
+    "enable_logging": true
+  },
+  
+  "volumes": {
+    "sfx": 1.0,
+    "music": 0.6,
+    "ui_sound": 0.8,
+    "voice": 1.0
+  },
+  
+  "preload（和sound_mapping相连）": [
+    "发射"
+  ],
+  
+  "sound_mappings": {
+    "事件系统": "这些映射将逻辑事件名映射到实际音效文件，下面是一个例子",
+    "导弹发射": "发射"
+  },
+  
+  "sound_groups": {
+    "说明": "音效组允许随机或顺序播放一组音效，下面是例子",
+    "攻击音效": ["蛊炸到", "导弹炸到", "粒子炮炸到", "机枪炸到"]
+  },
+  
+  "sound_categories": {
+    "说明": "这里需要按照游戏使用场景来放置我们音效文件的名字，包含路径也不会出错，但最好是名字"
+  },
+  
+  "loop_configs": {
+    "说明": "配置需要循环播放的音效，下面这个是例子",
+    "背景音乐_1": {
+      "fade_in": 2000,
+      "fade_out": 3000,
+      "crossfade": true
+    }
+  },
+  
+  "sound_properties": {
+    "说明": "为特定音效设置特殊属性，下面这个是例子",
+    "殷红狂怒": {
+      "volume": 0.7,
+      "priority": 10,
+      "exclusive": true
+    }
+  }
+}
