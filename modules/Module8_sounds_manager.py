@@ -59,6 +59,7 @@ class VoiceManager:
 
     def load_sound(self, config_file: str = "sound_config.json"):
         """功能是加载音效设置"""
+        
         config_path = os.path.join(self.sounds_folder, config_file)
         
         # 确保文件存在，这是谨慎的表现
@@ -112,12 +113,14 @@ class VoiceManager:
 
     def preload_sound(self, sound_name: str):
         """预加载音效到缓存"""
+
         if sound_name not in self.sounds_cache:
             return self._load_sound_cache(sound_name)
         return True
     
     def _load_sound_cache(self, sound_name: str):
         """正式加载音效到缓存，防止卡顿"""
+
         file_path = self._get_sound_path(sound_name)
         if not file_path:
             print(f"没有找到{sound_name}对应的音乐文件") # 避免因为没有那首歌而放不了，但是又没显示，导致被误判为程序bug的情况
@@ -144,6 +147,7 @@ class VoiceManager:
         
     def _get_sound_path(self, sound_name: str):
         """找到路径，这玩意load没写"""
+
         if '.' in sound_name:
             potential_path = os.path.join(self.sounds_folder, sound_name)
             if os.path.exists(potential_path):
@@ -164,6 +168,7 @@ class VoiceManager:
     
     def _find_sound_type(self, sound_name: str):
         """根据文件名推断音效类型"""
+
         name_lower = sound_name.lower()
         
         if any(word in name_lower for word in ['music', 'bgm', 'theme']):
@@ -175,5 +180,56 @@ class VoiceManager:
         else:
             return SoundType.SFX
         
-    def _get_sound_duration(self, sound): # sound来自Sound（）
-        """"""
+    def _get_sound_duration(self, sound: pygame.mixer.Sound): # sound来自Sound（）
+        """获取音乐时长（不要觉得多余）"""
+
+        try:
+            return sound.get_length()
+        except AttributeError:
+            return 0
+        
+    def play_music(self, 
+                   sound_name: str, 
+                   volume: float = 1.0, 
+                   loop: bool = True, 
+                   channel: Optional[int] = None
+                   ) -> Optional[pygame.mixer.Channel]:
+        """最中心的方法！！
+        异步播放的核心在这里，return的是pygame.mixer.Channel对象，可用于后续控制
+        按照需要，loop的值是True，这样我们应该是可以循环播放了
+        """
+
+        current_time = time.time() # 检查冷却时间
+        if sound_name in self.sound_cooldowns:
+            if current_time - self.sound_cooldowns[sound_name] < self.min_cooldown:
+                return None
+            
+        if sound_name not in self.sounds_cache: # 确保音效正常加载
+            if not self._load_sound_to_cache(sound_name):
+                return None
+            
+        sound_info = self.sounds_cache[sound_name]
+        final_volume = self.master_volume * self.volume_groups[sound_info.sound_type] * volume # 计算最终音量
+        sound_info.sound.set_volume(final_volume)
+
+        loops = -1 if loop else 0 # 开始播放
+
+        try:
+            if self.music_channel is None:
+                sound_channel = pygame.mixer.Channel(channel)
+            else:
+                if sound_info.sound_type == SoundType.music:
+                    if self.music_channel is None or not self.music_channel.get_busy:
+                        self.music_channel = pygame.mixer.find_channel(True)
+                    sound_channel = self.music_channel
+                else:
+                    sound_channel = pygame.mixer.find_channel(True)
+
+            sound_channel.play(sound_info.sound, loops = loops)
+            self.sound_cooldowns[sound_name] = current_time
+
+            return sound_channel
+        
+        except Exception as e:
+            print(f"音乐播放错误：{e}")
+            return None
