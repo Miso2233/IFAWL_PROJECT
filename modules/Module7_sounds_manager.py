@@ -173,4 +173,4 @@ class VoiceManager:
         elif any(word in name_lower for word in ['voice', 'narrator', 'dialogue']):
             return SoundType.VOICE
         else:
-            return SoundType.SFX        
+            return SoundType.SFX
