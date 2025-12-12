@@ -174,3 +174,6 @@ class VoiceManager:
             return SoundType.VOICE
         else:
             return SoundType.SFX
+        
+    def _get_sound_duration(self, sound): # sound来自Sound（）
+        """"""
