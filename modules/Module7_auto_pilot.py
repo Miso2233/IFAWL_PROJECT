@@ -117,18 +117,19 @@ class Auto_pilot_manager:#自动驾驶
         self.condition_list=[]
         self.to_do_list_normal=[]
         self.to_do_list_special=[]
-        self.memory=[]      
+        self.memory=[]
 
     def get_operation(self, n):
-        if not self.to_do_list_normal:
-            i = input_plus("请输入你的操作>>>")
-            if "-" in i:
-                self.read(i)
-                print_plus("自动驾驶数据已录入，准备接管舰船<<<")
-                i = self.react(n)
-        else:
+        if self.to_do_list_normal:
             print("自动驾驶接管中<<<")
-            i = self.react(n)
-        return i
+            return self.react(n)
+
+        operation_input = input_plus("请输入你的操作>>>")
+        if "-" in operation_input:
+            self.read(operation_input)
+            print_plus("自动驾驶数据已录入，准备接管舰船<<<")
+            return self.react(n)
+
+        return operation_input
 
 auto_pilot=Auto_pilot_manager()
