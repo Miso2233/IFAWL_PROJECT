@@ -161,3 +161,16 @@ class VoiceManager:
                     return os.path.join(root, file)
         
         return None
+    
+    def _find_sound_type(self, sound_name: str):
+        """根据文件名推断音效类型"""
+        name_lower = sound_name.lower()
+        
+        if any(word in name_lower for word in ['music', 'bgm', 'theme']):
+            return SoundType.MUSIC
+        elif any(word in name_lower for word in ['ui', 'menu', 'button', 'select']):
+            return SoundType.UI
+        elif any(word in name_lower for word in ['voice', 'narrator', 'dialogue']):
+            return SoundType.VOICE
+        else:
+            return SoundType.SFX        
