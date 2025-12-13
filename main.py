@@ -118,7 +118,7 @@ class MyShip:
         if self.al_list[1] == al18 and operation == "2":
             operation = "w"
         if self.al_list[1] == al21 and operation == "2":
-            al21.press_two()
+            al21.heal()
             operation = "pass"
         if al12.state != 0 and operation != "q" and not (self.al_list[1]==al16 and operation in ["w","2"]):
             al12.attack()
@@ -939,7 +939,7 @@ al18 = Al18(18)
 
 class Al21(Al_general):
 
-    def press_two(self):
+    def heal(self):
         if self.state>2 and dice.probability(0.5):
             al21.react()
         else:
