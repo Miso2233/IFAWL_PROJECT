@@ -240,26 +240,21 @@ class FinanceContract(Contract):
         self.get_tree = Tree("你将得到>>>", "[风险投资回报]ISK")
         self.give_tree = Tree("你将支付>>>", self.give_list)
 
-    def transaction(self):
-        """
-        尝试交易这个合同，需要满足：合同可支付&&合同未被支付
-        :return: 无
-        """
-        if not self.is_affordable():
-            print("物品不足-交易失败")
-            return
-        if self.is_traded:
-            print("合同已被交易")
-            return
-        else:
-            self.storage_manager.transaction(self.give_list, self.get_list)
-            self.is_traded = True
-            print_plus("交易成功>>>")
-            di = self.get_list["联邦信用点"] - self.give_list["联邦信用点"]
-            if di > 0:
-                print_plus(f"净赚{di} ISK，优秀的投资")
-            else:
-                print_plus(f"净亏{-di} ISK，投资有风险")
+class SsdContract(Contract):
+    """
+    保险合同
+    """
+
+    def __init__(self, index, storage_manager):
+        super().__init__(index, storage_manager)
+        self.title = f"[{self.index}] 保险合同 [{self.rank}]级"
+
+        self.get_list = {"保险点": self.rank}
+        self.give_list = {"联邦信用点": self.rank * 1100 + random.randint(-50, 50)}
+
+        # 打印树构建
+        self.get_tree = Tree("你将得到>>>", self.get_list)
+        self.give_tree = Tree("你将支付>>>", self.give_list)
 
 class IndustryContract(Contract):
     """
@@ -290,7 +285,8 @@ class Contract_manager:
             MaterialContract,
             GoodsContract,
             FinanceContract,
-            IndustryContract
+            IndustryContract,
+            SsdContract
         ]
         self.all_contracts_list = []
 

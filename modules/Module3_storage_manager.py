@@ -197,6 +197,24 @@ class StorageManager:
                 count += 1
         return count == len(al_on_ship)
 
+    def has_enough_ssd(self,total_rank:int):
+        """
+        判断是否有足够的保险点，一并打印结果。
+        :param total_rank: 舰船终焉结总级数
+        :return: True表示信用点足够，False反之。
+        """
+        ssd = self.get_value_of("保险点")
+        if ssd >= total_rank:
+            print("当前信用点已覆盖所有终焉结>所有终焉结已保全")
+            return True
+        else:
+            print("当前信用点未覆盖舰船")
+            return False
+
+    def cost_ssd(self,total_rank:int):
+        self.modify("保险点",-total_rank)
+        print(f"{total_rank}保险点从账户扣除·感谢使用星际保险服务")
+
     def destroy_al(self, al_on_ship:list):
         """
         损毁船上所有的终焉结

@@ -1178,16 +1178,22 @@ class MainLoops:
 
             # dusk
             if (result := self.is_over()) != 0:
-                if result == 1:
-                    Txt.print_plus("我方胜利")
-                    storage_manager.drop_for_fight()
-                else:
-                    Txt.print_plus("敌方胜利")
-                    storage_manager.destroy_al(my_ship.al_list)
-                    al_manager.clear_al()
-                input_plus("[enter]回站")
-                return
+                break
             self.days += 1
+        if result == 1:
+            Txt.print_plus("我方胜利")
+            storage_manager.drop_for_fight()
+            input_plus("[enter]回站")
+            return
+        Txt.print_plus("敌方胜利")
+        if storage_manager.has_enough_ssd(my_ship.total_al_rank):
+            storage_manager.cost_ssd(my_ship.total_al_rank)
+            input_plus("[enter]回站")
+            return
+        storage_manager.destroy_al(my_ship.al_list)
+        al_manager.clear_al()
+        input_plus("[enter]回站")
+        return
 
     @staticmethod
     def station_mainloop():
