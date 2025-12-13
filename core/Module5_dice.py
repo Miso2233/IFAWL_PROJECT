@@ -4,8 +4,8 @@ from typing import Literal
 class Dice:
 
     def __init__(self):
-        self.probability_current = 0.5
-        self.di = 0.2
+        self.probability_current = 0.2
+        self.di = 0.3
 
     def set_probability(self,val:float):
         """

@@ -53,9 +53,11 @@ class MyShip:
             return
         self.platform = self.al_list[0].platform
 
-    def print_self(self):
+    def print_self_shelter(self):
         for _ in range(self.shelter):
             print("-----")
+
+    def print_self_missile(self):
         ammunition_type = {
             "导弹": "[]",
             "粒子炮": "|| "
@@ -253,7 +255,6 @@ class Al_manager:
     def __init__(self):
         self.al_meta_data: dict[str, dict[str, str | int]] = json_loader.load("al_meta_data")
         self.all_al_list: dict[str, Al_general] = {}
-        # TODO 添加my_ship和enemy_ship字段并抽离所有的AL
 
     def choose_al(self, type_choosing: str | Literal["q", "w", "e", "all"]):
         if type_choosing == "all":
@@ -371,7 +372,7 @@ class Al_general:
         # [30] 岩河军工“湾区铃兰”饱和式蜂巢突击粒子炮      [粒子炮平台] [VIII] 1在仓库 >>[可以离站使用]<<
         print()
 
-    def in_choi(self):
+    def is_on_my_ship(self):
         return self in my_ship.al_list
 
     def add_atk(self, atk: int, type: str):
@@ -431,6 +432,9 @@ class Al_general:
                 print()
             except IndexError:
                 pass
+
+    def print_self_behind_shelter(self):
+        pass
 
     def suggest(self) -> str | None:
         return None
@@ -966,8 +970,8 @@ class Al21(Al_general):
                 my_ship.shelter=1
                 self.report("急救")
 
-    def print_self(self):
-        if self.in_choi():
+    def print_self_behind_shelter(self):
+        if self.is_on_my_ship():
             if self.state <= 6:
                 print("/-/-/-/\n"*self.state)
             else:
@@ -1039,7 +1043,12 @@ class FieldPrinter:
             me.al_list[1].print_self()
         except AttributeError:
             pass
-        me.print_self()
+        me.print_self_shelter()
+        try:
+            me.al_list[1].print_self_behind_shelter()
+        except AttributeError:
+            pass
+        me.print_self_missile()
         print()
         try:
             me.al_list[2].print_self()
@@ -1195,6 +1204,7 @@ class MainLoops:
     def initialize_before_fight(self):
         my_ship.initialize()
         enemy.initialize()
+        auto_pilot.refresh()
         self.days = 1
 
     def fight_mainloop(self):
