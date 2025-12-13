@@ -991,18 +991,18 @@ al21 = Al21(21)
 
 class Al24(Al_general):
 
-    def upint(self,a,b):#向上取整
-        if a%b != 0:
+    def find_the_quotient_rounded_up(self, a, b):#向上取整
+        if a % b != 0:
             return (a//b)+1
         else:
             return a//b
 
     def react(self):
         if self.state == 0:
-            enemy.missile+=5
-            self.state+=5
+            enemy.missile += 5
+            self.state += 5
             while self.state:
-                enemy.missile-=1
+                enemy.missile -= 1
                 my_ship.attack(1,DMG_TYPE_LIST[2])
                 self.report("攻击成功")#
                 self.state-=1
@@ -1011,27 +1011,27 @@ class Al24(Al_general):
         elif self.state != 0:
             self.report("主动入侵")#            
             al7.react()
-            self.state-=1
+            self.state -= 1
 
     def reduce_enemy_attack(self, atk):
         if self.state == 0:
             return atk
         if dice.probability(0.99):
-            self.state-=self.upint(atk,2)
-            atk=0
-            my_ship.missile+=1
+            self.state -= self.find_the_quotient_rounded_up(atk, 2)
+            atk = 0
+            my_ship.missile += 1
             self.report("拦截成功")
-            if self.state<0:
-                self.state=0
+            if self.state < 0:
+                self.state = 0
         return atk
 
-    def print_self(self):##祖师爷
-        if self.in_choi:
-            print("奶油的工作流")
-            if self.state>0:
-                print(f"|当前-解析保护中|可入侵敌方导弹[q]|『密钥』：{self.state}")
-            else:
-                print("|当前-空闲|电子进攻就绪[q]")
+#    def print_self(self):##祖师爷
+#        if self.is_on_my_ship():
+#            print("奶油的工作流")
+#            if self.state>0:
+#                print(f"|当前-解析保护中|可入侵敌方导弹[q]|『密钥』：{self.state}")
+#            else:
+#                print("|当前-空闲|电子进攻就绪[q]")
 
     def suggest(self):
         if self.state>0:
