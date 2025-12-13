@@ -53,9 +53,11 @@ class MyShip:
             return
         self.platform = self.al_list[0].platform
 
-    def print_self(self):
+    def print_self_shelter(self):
         for _ in range(self.shelter):
             print("-----")
+
+    def print_self_missile(self):
         ammunition_type = {
             "导弹": "[]",
             "粒子炮": "|| "
@@ -430,6 +432,9 @@ class Al_general:
                 print()
             except IndexError:
                 pass
+
+    def print_self_behind_shelter(self):
+        pass
 
     def suggest(self) -> str | None:
         return None
@@ -965,7 +970,7 @@ class Al21(Al_general):
                 my_ship.shelter=1
                 self.report("急救")
 
-    def print_self(self):
+    def print_self_behind_shelter(self):
         if self.is_on_my_ship():
             if self.state <= 6:
                 print("/-/-/-/\n"*self.state)
@@ -1038,7 +1043,12 @@ class FieldPrinter:
             me.al_list[1].print_self()
         except AttributeError:
             pass
-        me.print_self()
+        me.print_self_shelter()
+        try:
+            me.al_list[1].print_self_behind_shelter()
+        except AttributeError:
+            pass
+        me.print_self_missile()
         print()
         try:
             me.al_list[2].print_self()
