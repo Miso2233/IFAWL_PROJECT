@@ -463,6 +463,11 @@ class Al_general:
         self.is_craftable = tools.is_affordable(self.recipe,storage_manager.show_assets())
 
     def print_recipe(self,assets:dict[str,int]):
+        """
+        打印合成配方
+        :param assets: 当前仓库资产
+        :return: 无
+        """
         if self.rank_num == 0:
             return
         # 基本信息
@@ -483,6 +488,13 @@ class Al_general:
             print(Txt.adjust(str0,22), end="")
         print()
         print()
+
+    def craft_self(self):
+        """
+        制造自己
+        :return: 无
+        """
+        storage_manager.transaction(self.recipe,{str(self.index):1})
 
 class Al3(Al_general):
 
@@ -1519,6 +1531,8 @@ class MainLoops:
                     al_manager.choose_al(go_to)
                 case "g1":
                     main_loops.contract_market_mainloop()
+                case "a1" | "c":
+                    main_loops.industry_mainloop()
                 case _:
                     pass
 
@@ -1551,7 +1565,30 @@ class MainLoops:
 
     @staticmethod
     def industry_mainloop():
-        
+        while 1:
+            for al in al_manager.all_al_list.values():
+                al.refresh_craftable_tag()
+            assets = storage_manager.show_assets()
+            for al in al_manager.all_al_list.values():
+                al.print_recipe(assets)
+            inp = Txt.input_plus("工业流程正常运转中·请输入要合成的装备代码·[enter]退出>>>")
+            if inp == "": # 退出
+                Txt.print_plus("正在退出……")
+                break
+            if inp not in al_manager.all_al_list: # 输入无效
+                Txt.print_plus("请输入有效的装备编号")
+                Txt.input_plus("")
+                continue
+            current_al = al_manager.all_al_list[inp]
+            if not current_al.is_craftable: # 资源不足
+                Txt.print_plus("仓库资源不足·合成失败")
+                Txt.input_plus("")
+                continue
+            current_al.craft_self()
+            Txt.print_plus(f"{current_al.len_name}*1 合成完成·已送至装备仓库并铭刻您的代号")
+            Txt.input_plus("")
+
+
 
 main_loops = MainLoops()
 
