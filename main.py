@@ -10,7 +10,7 @@ from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
 from modules.Module4_voices import voices
 from core.Module5_dice import dice
-from modules.Module6_market_manager import Contract_manager, Contract
+from modules.Module6_market_manager import Contract_manager, Contract,tools
 from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 
@@ -347,7 +347,13 @@ class Al_general:
         self.skin_list: list[str] = al_manager.al_meta_data[str(index)].get("skin_list", [])
         self.platform: str = al_manager.al_meta_data[str(index)]["platform"]
         self.metadata: dict[str, str | int] = al_manager.al_meta_data[str(index)]
+
+        # industry字段
         self.recipe = recipe_for_all_al[str(self.index)]
+        self.recipe["联邦信用点"] = 1100 * self.rank_num
+        self.is_craftable = False
+
+        # 签名
         al_manager.all_al_list[str(self.index)] = self
 
         # operation 字段
@@ -449,6 +455,46 @@ class Al_general:
     def operate_in_our_turn(self):
         pass
 
+    def refresh_craftable_tag(self):
+        """
+        刷新自己能否被合成
+        :return: 无
+        """
+        self.is_craftable = tools.is_affordable(self.recipe,storage_manager.show_assets())
+
+    def print_recipe(self,assets:dict[str,int]):
+        """
+        打印合成配方
+        :param assets: 当前仓库资产
+        :return: 无
+        """
+        if self.rank_num == 0:
+            return
+        # 基本信息
+        str1 = f"[{self.index}]" + self.len_name + f" [{self.metadata['rank']}]"
+        print((Txt.adjust(str1,45)), end="")
+        # 可合成性
+        if self.is_craftable:
+            craftable_tag = "[可合成●]"
+        else:
+            craftable_tag = "[不可合成]"
+        print(Txt.adjust(craftable_tag,12), end="")
+        # 本终焉结存货
+        print(f"现有 {assets[str(self.index)]} 在仓库")
+        # 物品存货
+        for item in self.recipe:
+            note = "[▲]" if self.recipe[item] > assets[item] else ""
+            str0 = f"|-{item}x{self.recipe[item]}/{assets[item]}{note}"
+            print(Txt.adjust(str0,22), end="")
+        print()
+        print()
+
+    def craft_self(self):
+        """
+        制造自己
+        :return: 无
+        """
+        storage_manager.transaction(self.recipe,{str(self.index):1})
 
 class Al3(Al_general):
 
@@ -1485,6 +1531,8 @@ class MainLoops:
                     al_manager.choose_al(go_to)
                 case "g1":
                     main_loops.contract_market_mainloop()
+                case "a1" | "c":
+                    main_loops.industry_mainloop()
                 case _:
                     pass
 
@@ -1514,6 +1562,32 @@ class MainLoops:
                         contract.transaction()
                 except IndexError:
                     print("合同不存在")
+
+    @staticmethod
+    def industry_mainloop():
+        while 1:
+            for al in al_manager.all_al_list.values():
+                al.refresh_craftable_tag()
+            assets = storage_manager.show_assets()
+            for al in al_manager.all_al_list.values():
+                al.print_recipe(assets)
+            inp = Txt.input_plus("工业流程正常运转中·请输入要合成的装备代码·[enter]退出>>>")
+            if inp == "": # 退出
+                Txt.print_plus("正在退出……")
+                break
+            if inp not in al_manager.all_al_list: # 输入无效
+                Txt.print_plus("请输入有效的装备编号")
+                Txt.input_plus("")
+                continue
+            current_al = al_manager.all_al_list[inp]
+            if not current_al.is_craftable: # 资源不足
+                Txt.print_plus("仓库资源不足·合成失败")
+                Txt.input_plus("")
+                continue
+            current_al.craft_self()
+            Txt.print_plus(f"{current_al.len_name}*1 合成完成·已送至装备仓库并铭刻您的代号")
+            Txt.input_plus("")
+
 
 
 main_loops = MainLoops()
