@@ -12,6 +12,7 @@ from modules.Module4_voices import voices
 from core.Module5_dice import dice
 from modules.Module6_market_manager import Contract_manager, Contract
 from modules.Module7_auto_pilot import auto_pilot
+from modules.Module8_al_industry import recipe_for_all_al
 
 DMG_TYPE_LIST: dict[int, str] = {
     0: "missile_launch",  # 导弹射击
@@ -327,7 +328,7 @@ al_manager = Al_manager()
 
 
 class Al_general:
-    # Apocalypse-Linked 终焉结套件
+    # Apocalypse-Linked 终焉结
 
     def __init__(self, index: int):
         # metadata 字段
@@ -339,6 +340,7 @@ class Al_general:
         self.skin_list: list[str] = al_manager.al_meta_data[str(index)].get("skin_list", [])
         self.platform: str = al_manager.al_meta_data[str(index)]["platform"]
         self.metadata: dict[str, str | int] = al_manager.al_meta_data[str(index)]
+        self.recipe = recipe_for_all_al[str(self.index)]
         al_manager.all_al_list[str(self.index)] = self
 
         # operation 字段
