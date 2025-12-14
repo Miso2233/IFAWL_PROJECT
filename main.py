@@ -12,6 +12,7 @@ from modules.Module4_voices import voices
 from core.Module5_dice import dice
 from modules.Module6_market_manager import Contract_manager, Contract
 from modules.Module7_auto_pilot import auto_pilot
+from modules.Module8_al_industry import recipe_for_all_al
 
 DMG_TYPE_LIST: dict[int, str] = {
     0: "missile_launch",  # 导弹射击
@@ -230,7 +231,14 @@ class EnemyShip:
         self.shelter = 2
 
     def react(self):
-        operation = random.choice(["0", "1", "2"])
+        if self.shelter < 1:  # 如果护盾已被削弱
+            operation = "2"  # 优先治疗
+        elif self.missile < 1:  # 如果导弹没有了
+            operation = "0"  # 优先上弹
+        elif self.shelter < 2:  # 如果护盾不满
+            operation = random.choice(["1", "2"])  # 有一定概率进行攻击或治疗
+        else:
+            operation = random.choice(["0", "1", "2"])  # 正常情况下随机选择操作
         if self.missile < 1 and operation == "1":
             operation = "0"
         match operation:
@@ -327,7 +335,7 @@ al_manager = Al_manager()
 
 
 class Al_general:
-    # Apocalypse-Linked 终焉结套件
+    # Apocalypse-Linked 终焉结
 
     def __init__(self, index: int):
         # metadata 字段
@@ -339,6 +347,7 @@ class Al_general:
         self.skin_list: list[str] = al_manager.al_meta_data[str(index)].get("skin_list", [])
         self.platform: str = al_manager.al_meta_data[str(index)]["platform"]
         self.metadata: dict[str, str | int] = al_manager.al_meta_data[str(index)]
+        self.recipe = recipe_for_all_al[str(self.index)]
         al_manager.all_al_list[str(self.index)] = self
 
         # operation 字段
