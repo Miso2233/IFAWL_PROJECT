@@ -1142,6 +1142,49 @@ class Al24(Al_general):
 al24 = Al24(24)
 
 
+class Al25(Al_general):
+    def react(self):
+        if self.state == 0:
+            self.state=3
+            self.report("启动报告")
+        
+    def reduce_enemy_attack(self, atk):
+        if atk == 0:
+            return atk
+        if self.state>0:
+            self.report("拦截")
+            self.state-=1
+            if dice.probability(0.3):
+                my_ship.attack(1,DMG_TYPE_LIST[3])#
+                self.report("反击")
+            if self.state == 0:
+                self.state=-5
+                self.report("冷却")
+            return 0
+        else:
+            return atk
+
+    def operate_in_afternoon(self):
+        if self.state<0:
+            self.state+=1
+
+    def print_self(self):
+        if self.state<0:
+            print(self.skin_list[4])
+        elif self.is_on_my_ship:
+            print(self.skin_list[self.state])
+
+    def suggest(self):
+        if self.state<0:
+            return f"[冷却中]剩余{-self.state}天"
+        elif self.state == 0:
+            return f"[w]启动贾氏无人机群"
+        else:
+            return f"[防御进行中]剩余{self.state}次"
+
+
+al25 = Al25(25)
+
 class Al30(Al_general):
 
     def react(self):
