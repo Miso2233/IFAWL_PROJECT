@@ -950,7 +950,6 @@ class Al19(Al_general):
         if self.state==0:
             self.state=3
             self.report("收到")
-            time.sleep(0.4)
             self.report("准备好")
 
     def operate_in_afternoon(self):
@@ -960,7 +959,7 @@ class Al19(Al_general):
                 my_ship.heal(1)
                 self.report("补给护盾")
             else:
-                my_ship.missile+=1
+                my_ship.load(1)
                 self.report("补给弹药")
             if dice.probability(0.5):
                 al3.react()
