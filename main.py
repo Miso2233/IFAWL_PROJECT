@@ -944,6 +944,32 @@ class Al18(Al_general):
 
 al18 = Al18(18)
 
+class Al19(Al_general):
+    
+    def react(self):
+        if self.state==0:
+            self.state=3
+            self.report("收到")
+            time.sleep(0.4)
+            self.report("准备好")
+
+    def operate_in_afternoon(self):
+        if self.state>0:
+            self.state-=1
+            if dice.probability(0.5):
+                my_ship.heal(1)
+                self.report("补给护盾")
+            else:
+                my_ship.missile+=1
+                self.report("补给弹药")
+            if dice.probability(0.5):
+                al3.react()
+
+    def suggest(self):
+        return ["[e]呼叫浅草寺战术补给","[补给中]剩余一次","[补给中]剩余两次","[补给中]剩余三次"][self.state]
+
+al19 = Al19(19)
+
 class Al21(Al_general):
 
     def heal(self):
