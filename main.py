@@ -967,6 +967,28 @@ class Al19(Al_general):
 
 al19 = Al19(19)
 
+class Al20(Al_general):
+    def react(self):
+        if self.state == 0:
+            dice.probability_current+=0.6
+            self.state=-5
+            self.report("扫描")
+        else:
+            self.report("冷却中")
+
+    def operate_in_morning(self):
+        if self.state<0:
+            self.state+=1
+    
+    def suggest(self):
+        if self.state == 0:
+            return f"[e]压制敌方行动|次日仍为我方航行日的概率：{dice.probability_current:.1f}"
+        else:
+            return f"[冷却中]剩余{-self.state}天|次日仍为我方航行日的概率：{dice.probability_current:.1f}"
+
+
+al20 = Al20(20)
+
 class Al21(Al_general):
 
     def heal(self):
@@ -1011,6 +1033,60 @@ class Al21(Al_general):
 
 al21 = Al21(21)
 
+class Al22(Al_general):
+    def react(self):
+        if self.state == 0:
+            my_ship.attack(1,DMG_TYPE_LIST[3])
+            self.state=-3
+            self.report("攻击")
+        else:
+            self.report("冷却中")
+
+    def operate_in_afternoon(self):
+        if self.state == -3 and enemy.shelter<=0:
+            my_ship.attack(1,DMG_TYPE_LIST[3])
+            self.report("处决")
+        if self.state == -1:
+            self.report("就绪")
+
+        if self.state<0:
+            self.state+=1
+
+    def suggest(self):
+        if self.state == 0:          
+            if enemy.shelter<=1:
+                return "[e]处决敌方"
+            else:
+                return "[e]造成1伤害"
+        else:
+            return f"[冷却中]剩余{-self.state}天"
+
+
+
+al22 = Al22(22)
+
+class Al23(Al_general):
+
+    def react(self):
+        for i in range(3):
+            if my_ship.missile>0:
+                my_ship.load(-1)
+                my_ship.attack(1,DMG_TYPE_LIST[0])
+                self.report("攻击成功")
+            else:
+                my_ship.load(1)
+                self.report("导弹耗尽")
+                break
+    
+
+    def suggest(self):
+        if my_ship.missile>=3:
+            return "[q]浮游炮全功率开火"
+        else:
+            return ["[无导弹]不能使用浮生|[0]上弹","[q]浮游炮开火|导弹不足 1/3|[0]上弹","[q]浮游炮开火|导弹不足 2/3|[0]上弹"][my_ship.missile]
+
+
+al23 = Al23(23)
 
 class Al24(Al_general):
 
