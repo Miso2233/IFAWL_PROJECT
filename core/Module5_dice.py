@@ -19,6 +19,7 @@ class Dice:
     def decide_who(self,force_advance:Literal[-1,0,1]=0) -> Literal[0,1]:
         """
         决定谁来进行下一回合，并进行马尔科夫链变化
+        :param force_advance: 强制决定行动，1表示我方，-1表示敌方，0表示无强制
         :return: 1表示我方，0表示敌方
         """
         match force_advance:
