@@ -1288,28 +1288,28 @@ al26 = Al26(26)
 class Al27(Al_general):#瞳猫
 
     def react(self):
-        if self.state<9:
-            self.state+=1
+        if self.state < 9:
+            self.state += 1
             self.report("充能")
 
     def operate_in_morning(self):
-        if self.is_on_my_ship and dice.current_who == 1 and self.state<9:
-            self.state+=1
+        if self.is_on_my_ship and dice.current_who == 1 and self.state < 9:
+            self.state += 1
 
     def add_atk(self, atk, type):
         """
         瞳猫只是一只小猫，他不会对你的攻击造成加成
         只是我需要写在这里方便在atk时调用罢了
         """
-        if self.is_on_my_ship and self.state>0:
-            self.state=0
+        if self.is_on_my_ship and self.state > 0:
+            self.state = 0
             self.report("层数清空")
         return atk
 
     def reduce_enemy_attack(self, atk):
         if self.is_on_my_ship and atk > 0:
             if dice.probability(self.state*0.1-(my_ship.shelter+al14.state-1)*0.12):
-                atk=0
+                atk = 0
                 self.report("喵")
         return atk
 
