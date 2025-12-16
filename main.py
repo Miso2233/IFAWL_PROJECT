@@ -15,6 +15,8 @@ from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 
+__VERSION__ = "IFAWL 1.0.0 'STARS OFFSHORE'"
+
 class DamageType:
     """伤害类型枚举"""
     MISSILE_LAUNCH = "missile_launch"            # 导弹射击
@@ -1735,7 +1737,12 @@ class MainLoops:
 
 main_loops = MainLoops()
 
+def hello():
+    Txt.print_plus(f"\n{__VERSION__} > 工程启动中 > \n")
+    Txt.input_plus("按任意键开始游戏|输入后请回车>>>")
+
 if __name__ == "__main__":
+    hello()
     storage_manager.login()
     my_ship.load_al()
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
