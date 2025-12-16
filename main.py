@@ -1341,38 +1341,38 @@ class Al28(Al_general):#鹘鸮
 
    
     def print_self_before_shelter(self):
-        if self.state>0:
+        if self.state > 0:
             print(r"/===\鹘鸮招架中")
             print("~~~~~\n"*max(0,4-self.state))
 
 
     def react(self):
         if self.state == 0 :
-            self.state=1
+            self.state = 1
             self.report("启动报告")
 
     def reduce_enemy_attack(self, atk):
         if self.state>0 and self.state<4:
             while atk:
-                atk-=1
-                self.state+=1
+                atk -= 1
+                self.state += 1
                 if self.state == 4:
                     break
-        if self.state>=4:
-            self.state+=atk
-        if self.state>0:
+        if self.state >= 4:
+            self.state += atk
+        if self.state > 0:
             print(f"[鹘鸮]当前层数：{self.state}")
         return atk
 
     def operate_in_afternoon(self):
         if self.state<0:
-            self.state+=1
+            self.state += 1
             return
         if dice.current_who == 0:
             if self.state == 1:
                 my_ship.load(2)
                 self.report("冷却")
-                self.state=-4
+                self.state = -4
             elif self.state>1:
                 if my_ship.missile>1:
                     my_ship.load(-1)
@@ -1386,12 +1386,12 @@ class Al28(Al_general):#鹘鸮
                     print(f"[鹘鸮]造成伤害：{random.randint(2,self.state)}")
                 if enemy.shelter<0:
                     Txt.print_plus("[鹘鸮]勘破灭！",2)
-                self.state=0
+                self.state = 0
     
     def suggest(self):
-        if self.state==0:
+        if self.state == 0:
             return "[q]进入招架状态"
-        elif self.state>0:
+        elif self.state > 0:
             return f"[招架中]临时护盾剩余{max(0,4-self.state)}点"
         else:
             return f"[冷却中]剩余{-self.state}天"
