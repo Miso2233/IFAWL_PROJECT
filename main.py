@@ -22,6 +22,12 @@ class DamageType:
     ENEMY_MISSILE_BOOM = "enemy_missile_boom"    # 敌方导弹殉爆
     ORDINARY_ATTACK = "ordinary_attack"          # 杂项攻击
 
+class Modes:
+    """游戏模式枚举"""
+    FIGHT = "FIGHT"
+    DISASTER = "DISASTER"
+    INFINITY = "INFINITY"
+
 class MyShip:
 
     def __init__(self):
@@ -74,19 +80,21 @@ class MyShip:
             except AttributeError:
                 pass
 
-    def attack(self, atk: int, type: str):
+    def attack(self, atk: int, type: str) -> int:
         """
         根据原始伤害进行加减并对目标造成攻击
         :param atk: 原始伤害
         :param type: 伤害种类
-        :return: 无
+        :return: 经过加成减弱后的atk
         """
         for al in self.al_list:
             try:
                 atk = al.add_atk(atk, type)
             except AttributeError:
                 pass
+        atk = entry_manager.check_and_reduce_atk(atk)
         enemy.shelter -= atk
+        return atk
 
     def heal(self, hp: int):
         """
@@ -140,9 +148,10 @@ class MyShip:
                 self.load(1)
                 voices.report(self.platform, "上弹")
             case "1":
-                self.attack(1, DamageType.MISSILE_LAUNCH)
+                result =  self.attack(1, DamageType.MISSILE_LAUNCH)
                 self.load(-1)
-                voices.report(self.platform, "发射")
+                if result > 0:
+                    voices.report(self.platform, "发射")
             case "2":
                 self.heal(1)
                 voices.report("护盾", "上盾")
@@ -193,6 +202,7 @@ class EnemyShip:
                 atk = al.reduce_enemy_attack(atk)
             except AttributeError:
                 pass
+        atk = entry_manager.check_and_add_atk(atk)
         my_ship.shelter -= atk
         if atk <= 0:
             voices.report("护盾", "未受伤")
@@ -239,6 +249,8 @@ class EnemyShip:
             operation = random.choice(["1", "2"])  # 有一定概率进行攻击或治疗
         else:
             operation = random.choice(["0", "1", "2"])  # 正常情况下随机选择操作
+        if dice.probability(0.4):
+            operation = random.choice(["0", "1", "2"])
         if self.missile < 1 and operation == "1":
             operation = "0"
         operation = al26.get_controlled_operation(operation) # 眠雀控制
@@ -1541,6 +1553,8 @@ class MainLoops:
         enemy.initialize()
         dice.set_probability(0.8)
         auto_pilot.refresh()
+        entry_manager.set_mode(Modes.FIGHT)
+        entry_manager.clear_all_flow()
         self.days = 1
 
     @staticmethod
@@ -1557,6 +1571,8 @@ class MainLoops:
         while 1:
             # dawn
             who = dice.decide_who(force_advance=self.get_force_advance())
+            if self.days != 0 and self.days % 5 == 0:
+                entry_manager.push_up()
             time.sleep(0.4)
             field_printer.print_basic_info(self.days)
             field_printer.print_for_fight(my_ship, enemy)
@@ -1692,7 +1708,7 @@ class MainLoops:
             print()
             match inp_index:
                 case "0":
-                    entry_manager.clear_all()
+                    entry_manager.clear_all_selected()
                     Txt.print_plus("所有词条已被清空")
                     continue
                 case "all":
@@ -1709,7 +1725,7 @@ class MainLoops:
                 inp_rank = Txt.input_plus("请输入词条难度等级")
                 print()
                 entry.set_rank(int(inp_rank))
-                Txt.print_plus(f"[{entry.index}]{entry.title}{entry.RANK_STR_LIST[entry.current_rank]} 已激活")
+                Txt.print_plus(f"[{entry.index}]{entry.title}{entry.RANK_STR_LIST[entry.selected_rank]} 已激活")
             except KeyError:
                 Txt.print_plus("请输入有效的词条编号")
             except ValueError:
