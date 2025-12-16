@@ -1554,6 +1554,7 @@ class MainLoops:
         dice.set_probability(0.8)
         auto_pilot.refresh()
         entry_manager.set_mode(Modes.FIGHT)
+        entry_manager.clear_all_flow()
         self.days = 1
 
     @staticmethod
@@ -1707,7 +1708,7 @@ class MainLoops:
             print()
             match inp_index:
                 case "0":
-                    entry_manager.clear_all()
+                    entry_manager.clear_all_selected()
                     Txt.print_plus("所有词条已被清空")
                     continue
                 case "all":

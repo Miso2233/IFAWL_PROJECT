@@ -81,7 +81,7 @@ class EntryManager:
         for entry in self.all_entries.values():
             entry.print_description()
 
-    def clear_all(self):
+    def clear_all_selected(self):
         for entry in self.all_entries.values():
             entry.selected_rank = 0
 
@@ -108,6 +108,8 @@ class EntryManager:
             return self.all_entries[index].selected_rank
         return self.all_entries[index].flow_rank
 
+    # 动态词条方法
+
     def push_up(self):
         """
         将词条库中的某个词条上推一级
@@ -120,6 +122,10 @@ class EntryManager:
                 entry.flow_rank += 1
                 print_plus(f"[警告]{entry.title} 等级{entry.RANK_STR_LIST[entry.flow_rank]} 已被激活 >>> {entry.description_list[entry.flow_rank]}")
                 break
+
+    def clear_all_flow(self):
+        for entry in self.all_entries.values():
+            entry.flow_rank = 0
 
     # 战斗方法
 
