@@ -59,4 +59,12 @@ class EntryManager:
     def push_all_full(self):
         for entry in self.all_entries.values():
             entry.current_rank = entry.max_rank
+
+    def set_all_rank(self,all_entry_rank:dict[str,int]):
+        for entry_index,rank in all_entry_rank.items():
+            self.all_entries[entry_index].current_rank = rank
+
+    def get_all_rank(self) -> dict[str,int]:
+        return {entry_index: entry.current_rank for entry_index, entry in self.all_entries.items()}
+
 entry_manager = EntryManager()

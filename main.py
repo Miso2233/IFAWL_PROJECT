@@ -1626,6 +1626,8 @@ class MainLoops:
                     main_loops.contract_market_mainloop()
                 case "a1" | "c":
                     main_loops.industry_mainloop()
+                case "c1":
+                    main_loops.entry_choosing_mainloop()
                 case _:
                     pass
 
@@ -1712,17 +1714,16 @@ class MainLoops:
                 Txt.print_plus("请输入有效的词条编号")
             except ValueError:
                 Txt.print_plus("请输入有效的词条等级")
+        storage_manager.save_entry_rank(entry_manager.get_all_rank())
 
 main_loops = MainLoops()
 
-#if __name__ == "__main__":
-#    storage_manager.login()
-#    my_ship.load_al()
-#    while 1:
-#        main_loops.station_mainloop()
-#
-#        main_loops.initialize_before_fight()
-#        main_loops.fight_mainloop()
-
 if __name__ == "__main__":
-    main_loops.entry_choosing_mainloop()
+    storage_manager.login()
+    my_ship.load_al()
+    entry_manager.set_all_rank(storage_manager.get_entry_rank())
+    while 1:
+        main_loops.station_mainloop()
+
+        main_loops.initialize_before_fight()
+        main_loops.fight_mainloop()

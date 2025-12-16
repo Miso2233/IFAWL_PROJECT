@@ -7,15 +7,18 @@ from core import Module1_txt as Txt
 from core.Module2_json_loader import json_loader
 
 AL_META_DATA = json_loader.load("al_meta_data")
+ENTRY_META_DATA = json_loader.load("entries_meta_data")
 
 class StorageManager:
 
     def __init__(self):
         self.username:str = ""
         # 建立模板
-        self.template:dict[str,dict[str,str|int]] = json_loader.load("storage_template")
-        for al_index_str in json_loader.load("al_meta_data").keys():
+        self.template:dict[str,dict[str,str|int|dict[str,int]]] = json_loader.load("storage_template")
+        for al_index_str in AL_META_DATA.keys():
             self.template["als"][al_index_str] = 0
+        for entry_index in ENTRY_META_DATA:
+            self.template["metadata"]["entry_rank"][entry_index] = 0
         # 建立空模板
         self.template_empty = deepcopy(self.template)
         # 建立映射表
@@ -230,5 +233,12 @@ class StorageManager:
             self.modify(al_str,-1)
             print(f"{al.len_name} 已损毁")
             self.sync()
+
+    def save_entry_rank(self,all_entry_rank:dict[str,int]):
+        self.repository_for_all_users[self.username]["metadata"]["entry_rank"] = all_entry_rank
+        self.sync()
+
+    def get_entry_rank(self) -> dict[str,int]:
+        return self.repository_for_all_users[self.username]["metadata"]["entry_rank"]
 
 storage_manager = StorageManager()
