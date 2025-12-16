@@ -1,4 +1,5 @@
 import random
+import math
 from typing import Literal
 
 class Dice:
@@ -53,4 +54,17 @@ class Dice:
             return True
         else:
             return False
+
+    @staticmethod
+    def sample_from_distribution(self,distribution:dict[int,float]) -> int:
+        standard = random.random()
+        total = sum(distribution.values())
+        if not math.isclose(total, 1.0, rel_tol=1e-9):
+            distribution = {k: v / total for k, v in distribution.items()}
+        current = 0
+        for val in distribution:
+            current += distribution[val]
+            if current >= standard:
+                return val
+        return 0
 dice = Dice()
