@@ -1354,7 +1354,7 @@ class Al28(Al_general):#鹘鸮
             self.report("启动报告")
 
     def reduce_enemy_attack(self, atk):
-        if self.state>0 and self.state<4:
+        if 0 < self.state < 4:
             while atk:
                 atk -= 1
                 self.state += 1
@@ -1414,13 +1414,10 @@ class Al29(Al_general):#酒师
         self.report("建立治疗塔")
 
     def operate_in_morning(self):
-        if self.state != []:
+        if self.state:
 
-            while True:
-                try:
-                    self.state.remove(0)
-                except:
-                    break
+            while 0 in self.state:
+                self.state.remove(0)
                 
             my_ship.heal(
                 len(self.state)
@@ -1430,11 +1427,8 @@ class Al29(Al_general):#酒师
             
             Txt.print_plus(f"[酒师]工作中|救治{len(self.state)}次")
 
-            while True:
-                try:
-                    self.state.remove(0)
-                except:
-                    break
+            while 0 in self.state:
+                self.state.remove(0)
 
     def print_self(self):
         if self.is_on_my_ship:
@@ -1443,7 +1437,7 @@ class Al29(Al_general):#酒师
             print()
 
     def suggest(self):
-        if self.state == []:
+        if not self.state:
             return "[2/w]建立治疗塔"
         else:
             return f"[2/w]建立治疗塔|工作中|预计维持{max(self.state)}天|总治疗量{sum(self.state)}层" 
