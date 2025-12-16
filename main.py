@@ -253,9 +253,9 @@ class EnemyShip:
             operation = random.choice(["0", "1", "2"])  # 正常情况下随机选择操作
         if dice.probability(0.4):
             operation = random.choice(["0", "1", "2"])
+        operation = al26.get_controlled_operation(operation) # 眠雀控制
         if self.missile < 1 and operation == "1":
             operation = "0"
-        operation = al26.get_controlled_operation(operation) # 眠雀控制
         match operation:
             case "0":
                 self.load(1)
@@ -462,6 +462,9 @@ class Al_general:
                 pass
 
     def print_self_behind_shelter(self):
+        pass
+
+    def print_self_before_shelter(self):
         pass
 
     def suggest(self) -> str | None:
@@ -1336,6 +1339,117 @@ class Al27(Al_general):#瞳猫
 
 al27 = Al27(27)
 
+class Al28(Al_general):#鹘鸮
+
+   
+    def print_self_before_shelter(self):
+        if self.state > 0:
+            print(r"/===\鹘鸮招架中")
+            print("~~~~~\n"*max(0,4-self.state))
+
+
+    def react(self):
+        if self.state == 0 :
+            self.state = 1
+            self.report("启动报告")
+
+    def reduce_enemy_attack(self, atk):
+        if self.state>0 and self.state<4:
+            while atk:
+                atk -= 1
+                self.state += 1
+                if self.state == 4:
+                    break
+        if self.state >= 4:
+            self.state += atk
+        if self.state > 0:
+            print(f"[鹘鸮]当前层数：{self.state}")
+        return atk
+
+    def operate_in_afternoon(self):
+        if self.state<0:
+            self.state += 1
+            return
+        if dice.current_who == 0:
+            if self.state == 1:
+                my_ship.load(2)
+                self.report("冷却")
+                self.state = -4
+            elif self.state>1:
+                if my_ship.missile>1:
+                    my_ship.load(-1)
+                    my_ship.attack(self.state+1,DamageType.ORDINARY_ATTACK)                    
+                    self.report("反击")
+                    self.report("反击")
+                    print(f"[鹘鸮]造成伤害：{random.randint(3,self.state+1)}")
+                else:
+                    my_ship.attack(self.state,DamageType.ORDINARY_ATTACK)
+                    self.report("反击")
+                    print(f"[鹘鸮]造成伤害：{random.randint(2,self.state)}")
+                if enemy.shelter<0:
+                    Txt.print_plus("[鹘鸮]勘破灭！",2)
+                self.state = 0
+    
+    def suggest(self):
+        if self.state == 0:
+            return "[q]进入招架状态"
+        elif self.state > 0:
+            return f"[招架中]临时护盾剩余{max(0,4-self.state)}点"
+        else:
+            return f"[冷却中]剩余{-self.state}天"
+        
+al28=Al28(28)
+
+class Al29(Al_general):#酒师
+
+    state = []
+
+    def initialize(self):
+        self.state = []
+
+    def react(self):
+        self.state.append(
+            random.choices([0,1,2,3], weights=[0,3,3,2])[0]
+        )
+        self.report("建立治疗塔")
+
+    def operate_in_morning(self):
+        if self.state != []:
+
+            while True:
+                try:
+                    self.state.remove(0)
+                except:
+                    break
+                
+            my_ship.heal(
+                len(self.state)
+            ) 
+            for i in range(len(self.state)):
+                self.state[i] -= 1
+            
+            Txt.print_plus(f"[酒师]工作中|救治{len(self.state)}次")
+
+            while True:
+                try:
+                    self.state.remove(0)
+                except:
+                    break
+
+    def print_self(self):
+        if self.is_on_my_ship:
+            for i in self.state:
+                print(self.skin_list[i],end=" ")
+            print()
+
+    def suggest(self):
+        if self.state == []:
+            return "[2/w]建立治疗塔"
+        else:
+            return f"[2/w]建立治疗塔|工作中|预计维持{max(self.state)}天|总治疗量{sum(self.state)}层" 
+
+al29=Al29(29)
+
 class Al30(Al_general):
 
     def react(self):
@@ -1389,6 +1503,10 @@ class FieldPrinter:
         print("\n\n\n")
         try:
             me.al_list[1].print_self()
+        except AttributeError:
+            pass
+        try:
+            me.al_list[0].print_self_before_shelter()
         except AttributeError:
             pass
         me.print_self_shelter()
