@@ -63,7 +63,7 @@ class MyShip:
     def print_self_shelter(self,blind=False):
         if blind:
             print("[No Info]")
-            return 
+            return
         for _ in range(self.shelter):
             print("-----")
 
@@ -1513,7 +1513,7 @@ class FieldPrinter:
         :param opposite:
         :return: 无
         """
-        opposite.print_self_missile()
+        opposite.print_self_missile(entry_manager.get_rank_of("2")>=1)
         print()
         opposite.print_self_shelter()
         print("\n\n\n")
@@ -1525,7 +1525,7 @@ class FieldPrinter:
             me.al_list[0].print_self_before_shelter()
         except AttributeError:
             pass
-        me.print_self_shelter()
+        me.print_self_shelter(entry_manager.get_rank_of("2")>=2)
         try:
             me.al_list[1].print_self_behind_shelter()
         except AttributeError:
