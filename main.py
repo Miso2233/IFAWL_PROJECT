@@ -60,11 +60,17 @@ class MyShip:
             return
         self.platform = self.al_list[0].platform
 
-    def print_self_shelter(self):
+    def print_self_shelter(self,blind=False):
+        if blind:
+            print("[No Info]")
+            return 
         for _ in range(self.shelter):
             print("-----")
 
-    def print_self_missile(self):
+    def print_self_missile(self,blind=False):
+        if blind:
+            print("[No Info]")
+            return
         ammunition_type = {
             "导弹": "[]",
             "粒子炮": "|| "
@@ -186,10 +192,17 @@ class EnemyShip:
         self.shelter = 0
         self.missile = 0
 
-    def print_self(self):
+    def print_self_missile(self,blind=False):
+        if blind:
+            print("[No Info]")
+            return
         for _ in range(self.missile):
             print("[]", end="")
-        print()
+
+    def print_self_shelter(self,blind=False):
+        if blind:
+            print("[No Info]")
+            return
         for _ in range(self.shelter):
             print("-----")
 
@@ -1500,7 +1513,9 @@ class FieldPrinter:
         :param opposite:
         :return: 无
         """
-        opposite.print_self()
+        opposite.print_self_missile()
+        print()
+        opposite.print_self_shelter()
         print("\n\n\n")
         try:
             me.al_list[1].print_self()
