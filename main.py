@@ -1503,6 +1503,110 @@ class Al30(Al_general):
 
 al30 = Al30(30)
 
+class Al31(Al_general):#白鲟
+
+    def react(self):
+        if self.state == 0:
+            self.state = 6
+            my_ship.load(1)
+            self.report("启动报告")
+
+    def reduce_enemy_attack(self, atk):
+        if self.state > 0:
+            di_atk = min(self.state,atk)
+            self.state -= di_atk
+            atk -= di_atk
+            self.report("保护")
+            if self.state==0:
+                self.state=-5
+                self.report("冷却")
+        return atk
+            
+    def operate_in_afternoon(self):
+        if self.state<0:
+            self.state+=1
+        elif self.state>0 and dice.current_who == 1:
+            self.state-=1
+            self.report("护盾流失")
+            if self.state == 0:
+                self.state=-5
+                self.report("冷却")
+
+    def suggest(self):
+        if self.state==0:
+            return "[w]部署临时护盾并获得一枚弹药"
+        elif self.state>0:
+            return f"[保护中]剩余{self.state}层"
+        else:
+            return f"[冷却中]剩余{-self.state}天"
+
+    def print_self(self):
+        print(".....\n"*self.state)
+
+al31=Al31(31)
+
+class Al34(Al_general):#风间浦
+
+    state = [0,0]
+
+    def initialize(self):
+        self.state = [0,0]
+
+    def react(self):
+        if self.state[0] == 0:
+            self.state[0] = 8
+            my_ship.attack(1,DamageType.ORDINARY_ATTACK)
+            self.report("激进模式启动")
+
+    def add_hp(self, hp):
+        if not self.is_on_my_ship:
+            return hp
+        if self.state[0] == 0 and dice.probability(0.5):
+            self.report("保守模式治疗加成")
+            return hp + 1
+        elif self.state[0] == 0 and my_ship.shelter == 0:
+            self.report("保守模式治疗加成")
+            return hp + 1
+        else:
+            return hp
+
+
+    def operate_in_afternoon(self):
+        if self.state[0] > 5:
+            if my_ship.shelter <= 0:
+                my_ship.shelter = 1
+                self.report("激进模式保护")
+        elif self.state[0] == 5 and self.state[1] != 0:
+            my_ship.heal(self.state[1])
+            self.state[1] = 0
+            self.report("安全港就位")
+
+        if self.state[0] > 5 and dice.current_who == 0:
+            self.state[0] -= 1
+        elif 0 < self.state[0] <= 5 and dice.current_who == 1:
+            self.state[0] -= 1
+
+    def reduce_enemy_attack(self, atk):#实则不然
+        if self.state[0] > 5 and atk > 0:
+            self.state[1] += atk
+            self.inject_and_report("记录伤害",{"atk":atk})
+        return atk
+
+    def print_self(self):
+        pass
+
+    def suggest(self):
+        if self.state[0] > 5:
+            return f"[激进模式]剩余{self.state[0] - 5}天|{self.state[1]}伤害计入"
+        elif self.state[0] == 5:
+            return f"[脱离激进模式]{self.state[1]}护盾即将回充"
+        elif self.state[0] > 0:
+            return f"[充能中]剩余{self.state[0]}天"
+        else:
+            return "[保守模式]回盾加成中|[w]进入激进模式"        
+
+al34=Al34(34)
+
 
 class FieldPrinter:
 
