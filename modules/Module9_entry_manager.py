@@ -75,7 +75,7 @@ class EntryManager:
     def set_mode(self,mode:Literal["FIGHT","DISASTER","INFINITY"]):
         self.current_mode = mode
 
-    # 词条选择方法
+    # 静态词条选择方法
 
     def print_all_descriptions(self):
         for entry in self.all_entries.values():
@@ -154,5 +154,11 @@ class EntryManager:
             atk -= 1
             self.all_entries["3"].print_when_react()
         return atk
+
+    def check_and_reduce_hp(self,hp:int):
+        if dice.probability(self.get_rank_of("6")*0.2):
+            hp -= 1
+            self.all_entries["6"].print_when_react()
+        return hp
 
 entry_manager = EntryManager()

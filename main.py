@@ -104,18 +104,20 @@ class MyShip:
         enemy.shelter -= atk
         return atk
 
-    def heal(self, hp: int):
+    def heal(self, hp: int) -> int:
         """
         根据原始回血量进行加减并进行治疗
         :param hp: 原始回血量
-        :return: 无
+        :return: 经过加成减弱后的hp
         """
         for al in self.al_list:
             try:
                 hp = al.add_hp(hp)
             except AttributeError:
                 pass
+        hp = entry_manager.check_and_reduce_hp(hp)
         self.shelter += hp
+        return hp
 
     def load(self, num: int):
         """
@@ -161,8 +163,9 @@ class MyShip:
                 if result > 0:
                     voices.report(self.platform, "发射")
             case "2":
-                self.heal(1)
-                voices.report("护盾", "上盾")
+                result = self.heal(1)
+                if result > 0:
+                    voices.report("护盾", "上盾")
             case "q":
                 try:
                     self.al_list[0].react()
