@@ -1488,7 +1488,7 @@ class Al30(Al_general):
             # p_c_manager.boom_now()
 
     def add_atk(self, atk: int, type: str) -> int:
-        if self.state < 0 < my_ship.missile and dice.probability(0.8):
+        if self.state < 0 and 1 < my_ship.missile and dice.probability(0.8):
             self.report("增伤")
             my_ship.missile -= 1
             return atk + 1
@@ -1783,6 +1783,8 @@ class MainLoops:
 
     def __init__(self):
         self.days = 0
+        self.entry_begin_day = 0
+        self.entry_delta = 1
 
     @staticmethod
     def is_over() -> Literal[-1, 0, 1]:
@@ -1812,7 +1814,6 @@ class MainLoops:
         my_ship.initialize()
         shelter, missile = self.get_adjusting_shelter_and_missile()
         enemy.initialize(shelter,missile)
-
         # 骰子初始化
         dice.set_probability(0.8)
         dice.set_di(0.3)
@@ -1821,6 +1822,10 @@ class MainLoops:
         # 词条管理器初始化
         entry_manager.set_mode(Modes.FIGHT)
         entry_manager.clear_all_flow()
+        # 确定词条烈度
+        self.entry_begin_day = 20 - al_manager.get_total_al_rank()
+        self.entry_delta = (40 - al_manager.get_total_al_rank()) // 4
+        # 设置天数
         self.days = 1
 
     @staticmethod
@@ -1837,7 +1842,8 @@ class MainLoops:
         while 1:
             # dawn
             who = dice.decide_who(force_advance=self.get_force_advance())
-            if self.days != 0 and self.days % 5 == 0:
+            if self.days >= self.entry_begin_day \
+            and (self.days-self.entry_begin_day) % self.entry_delta == 0:
                 entry_manager.push_up()
             time.sleep(0.4)
             field_printer.print_basic_info(self.days)
