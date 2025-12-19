@@ -1727,6 +1727,11 @@ class Al39(Al_general): # 黎明维多利亚
         if self.state % 2 == 0:
             my_ship.load(1)
             voices.report(my_ship.platform, "上弹")
+        elif self.state in [11,9]:
+            result =  my_ship.attack(1, DamageType.MISSILE_LAUNCH)
+            my_ship.load(-1)
+            if result > 0:
+                voices.report(my_ship.platform, "发射")
         else:
             rest = (self.state-1) // 2
             launch_num = min(rest,my_ship.missile)
