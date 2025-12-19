@@ -406,6 +406,17 @@
     "rank_num": 0,
     "origin": "浅草寺重工",
     "platform": "通用"
+  },
+    "39": {
+    "len_name": "“黎明维多利亚”六冲程混合增压燃烧导弹推进器",
+    "short_name": "黎维",
+    "description_txt": "-\n-\n-\n-\n-",
+    "index": 39,
+    "type": "q",
+    "rank": "FREE",
+    "rank_num": 0,
+    "origin": "浅草寺重工",
+    "platform": "导弹"
   }
 }
 

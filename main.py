@@ -483,6 +483,9 @@ class Al_general:
     def initialize(self):
         self.state = 0
 
+    def react(self):
+        pass
+
     def print_self(self):
         if self.state != 0:
             try:
@@ -704,7 +707,7 @@ class Al8(Al_general):
             self.report("续杯")
 
     def add_atk(self, atk, type):
-        if type != "missile_launch":
+        if type != DamageType.MISSILE_LAUNCH:
             return atk
         if dice.probability(0.8):
             atk += 1
@@ -759,12 +762,12 @@ class Al10(Al_general):
     def react(self):
         if my_ship.shelter >= 2:
             my_ship.shelter -= 1
-            my_ship.missile += 2
+            my_ship.load(2)
             self.report("牺牲护盾")
         elif my_ship.shelter <= 1:
             if my_ship.missile != 0:
                 my_ship.heal(2)
-                my_ship.missile -= 1
+                my_ship.load(-1)
                 self.report("拆解导弹")
             else:
                 my_ship.heal(1)
@@ -1616,6 +1619,57 @@ class Al34(Al_general):#风间浦
 al34=Al34(34)
 
 
+class Al39(Al_general): # 黎明维多利亚
+    """
+    黎明维多利亚的state转移过程是：0 2 4 6 8 10->11 9 7 5 3 1->0
+    """
+
+    def add_num(self, num: int):
+        if self.state % 2 == 1:
+            return num
+        self.state += num * 2
+        if self.state > 10:
+            self.state = 10
+        self.report("建造中")
+        return num
+
+    def operate_in_afternoon(self):
+        if self.state == 10 or self.state > 11:
+            self.state = 11
+            self.report("准备好")
+        if self.state == 1 or self.state < 0:
+            self.state = 0
+            self.report("下线")
+
+    def add_atk(self, atk: int, type: str):
+        if type != DamageType.MISSILE_LAUNCH:
+            return atk
+        if self.state % 2 == 0 or self.state <= 1:
+            return atk
+        atk += 1
+        self.report("增伤")
+        self.state -= 2
+        return atk
+
+    def react(self):
+        if self.state % 2 == 0:
+            pass
+        else:
+            rest = (self.state-1) // 2
+            launch_num = min(rest,my_ship.missile)
+            if launch_num == 0:
+                self.report("导弹不足")
+                return
+            for _ in range(launch_num):
+                my_ship.attack(1,DamageType.MISSILE_LAUNCH)
+                my_ship.load(-1)
+            enemy.attack(launch_num-1)
+
+    def suggest(self):
+        return f"state = {self.state}"
+
+al39 = Al39(39)
+
 class FieldPrinter:
 
     def print_for_fight(self, me: MyShip, opposite: EnemyShip):
@@ -1805,6 +1859,8 @@ class MainLoops:
         :return: 一个元组，包含敌方护盾、导弹的修正值
         """
         total = al_manager.get_total_al_rank() // 3
+        if total < 1:
+            return 0,0
         shelter = random.randint(1,total)
         return shelter, total - shelter
 
