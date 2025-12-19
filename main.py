@@ -14,6 +14,7 @@ from modules.Module6_market_manager import Contract_manager, Contract,tools
 from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
+from modules.Module10_sound_manager import sounds_manager
 
 __VERSION__ = "IFAWL 1.0.0 'STARS OFFSHORE'"
 
@@ -1662,7 +1663,7 @@ class Al35(Al_general):#青鹄
                 if type(al_temp.state)==int and al_temp.state<0:
                     al_temp.state=0
                     self.report_plus(inp,1)
-                    Txt.print_plus(self.short_name,f"[{al_temp.type}] {al_temp.short_name}#{al_temp.index}冷却已重置")
+                    Txt.print_plus(f"[{al_temp.type}] {al_temp.short_name}#{al_temp.index}冷却已重置")
                 else:
                     self.report_plus(inp,0)
                     al_temp.react()
@@ -2149,6 +2150,7 @@ def hello():
 if __name__ == "__main__":
     hello()
     storage_manager.login()
+    sounds_manager.play_async("02_战斗-高难_管弦.wav")
     my_ship.load_al()
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
     while 1:
