@@ -148,6 +148,8 @@ class MyShip:
             operation = "pass"
         if al12.state != 0 and operation != "q" and not (self.al_list[1]==al16 and operation in ["w","2"]):
             al12.attack()
+        if al39.state in [11,9] and operation == "q":
+            operation = "1"
         if al15.state != 0 and operation == "1":
             voices.report("暴雨", "常规发射器离线")
             operation = ""
@@ -259,6 +261,7 @@ class EnemyShip:
         self.shelter = 2 + adj_shelter
 
     def react(self):
+        al35.check_if_extra_act()
         if self.shelter < 1:  # 如果护盾已被削弱
             operation = "2"  # 优先治疗
         elif self.missile < 1:  # 如果导弹没有了
@@ -1618,6 +1621,73 @@ class Al34(Al_general):#风间浦
 
 al34=Al34(34)
 
+class Al35(Al_general):#青鹄
+
+    voi_list={"q":["复道行空，敌盾贯通！","泡影俱散，对面完蛋！"],"w":["固若金汤，有烟无伤！","防微杜渐，护盾无限！"],"e":["",""]}
+
+    def react(self):
+        main_loops.days-=1
+        if self.state<4:
+            self.state+=2
+            self.report("充能")
+        else:
+            if my_ship.missile>1:
+                my_ship.attack(2,DamageType.ORDINARY_ATTACK)
+                my_ship.load(-2)
+                self.state=0
+                self.report("攻击")
+            else:
+                my_ship.load(1)
+                if dice.current_who==0:
+                    my_ship.load(1)
+                self.report("装弹")
+    def operate_in_morning(self):
+        if self.is_on_my_ship:
+            self.state+=1
+        if self.state>=4 and dice.current_who==0:
+            my_ship.heal(1)
+            my_ship.load(1)
+            self.report("准备")
+
+    def check_if_extra_act(self):
+        
+        if self.state>=4 and dice.current_who==0:
+            suggestion_tree = field_printer.generate_suggestion_tree()
+            suggestion_tree.topic = "额外回合操作"
+            suggestion_tree.print_self()
+            inp=Txt.ask_plus("""+[+Extra action+]+>>选择你的操作[q/w/e]立即响应或重置其冷却""",["q","w","e"])
+            d="qwe".find(inp)
+            al_temp:Al_general=my_ship.al_list[d]
+            if al_temp:
+                if type(al_temp.state)==int and al_temp.state<0:
+                    al_temp.state=0
+                    self.report_plus(inp,1)
+                    Txt.print_plus(self.short_name,f"[{al_temp.type}] {al_temp.short_name}#{al_temp.index}冷却已重置")
+                else:
+                    self.report_plus(inp,0)
+                    al_temp.react()
+            if self.state!=0 :
+                self.state-=4
+    
+    def report_plus(self, type, num):
+        txt=self.voi_list[type][num]
+        if txt=="":
+            return
+        if storage_manager.show_assets()["39"]<3:
+            txt="[青鹄]"+txt[0:min(len(txt),4)]+"！"
+            Txt.print_plus(txt)
+
+    def suggest(self):
+        if self.state<1:
+            return f"[e]增加二层充能|充能层数{self.state}/4"
+        elif self.state<4:
+            return f"[e]增加二层充能并进入待命状态|充能层数{self.state}/4"
+        elif my_ship.missile>1:
+            return f"[e]攻击对方并清空充能|[待命中]获得额外回合|充能层数{self.state}/4"
+        else:
+            return f"[e]装弹|[待命中]获得额外回合|充能层数{self.state}/4"
+
+al35=Al35(35)
 
 class Al39(Al_general): # 黎明维多利亚
     """
@@ -1626,6 +1696,8 @@ class Al39(Al_general): # 黎明维多利亚
 
     def add_num(self, num: int):
         if self.state % 2 == 1:
+            return num
+        if num <= 0:
             return num
         self.state += num * 2
         if self.state > 10:
@@ -1653,20 +1725,27 @@ class Al39(Al_general): # 黎明维多利亚
 
     def react(self):
         if self.state % 2 == 0:
-            pass
+            my_ship.load(1)
+            voices.report(my_ship.platform, "上弹")
         else:
             rest = (self.state-1) // 2
             launch_num = min(rest,my_ship.missile)
-            if launch_num == 0:
+            if launch_num <= 0:
                 self.report("导弹不足")
                 return
             for _ in range(launch_num):
                 my_ship.attack(1,DamageType.MISSILE_LAUNCH)
                 my_ship.load(-1)
             enemy.attack(launch_num-1)
+            self.state = 1
 
     def suggest(self):
-        return f"state = {self.state}"
+        if self.state % 2 == 0:
+            return f"[充能中]当前层数：{int(self.state/2)}|任意方式获得弹药以充能"
+        elif self.state in [11,9]:
+            return f"[保守模式]当前层数：{int((self.state-1)/2)}|[1/q]发射"
+        else:
+            return f"[激进模式]当前层数：{int((self.state-1)/2)}|[1]发射|[q]全弹发射但扣除{int(min((self.state-1) // 2,my_ship.missile))}点护盾"
 
 al39 = Al39(39)
 
@@ -1725,7 +1804,7 @@ class FieldPrinter:
         elif days > 20:
             Txt.print_plus("当前舰船位置>>敌方腹地危险区域")
 
-    def print_suggestion(self):
+    def generate_suggestion_tree(self):
         suggestion_list = []
         for al in my_ship.al_list:
             try:
@@ -1737,7 +1816,7 @@ class FieldPrinter:
                 pass
         if not suggestion_list:
             suggestion_list.append("空闲")
-        Txt.Tree("战斗辅助面板", suggestion_list).print_self()
+        return Txt.Tree("战斗辅助面板", suggestion_list)
 
     def print_key_prompt(self):
         key_prompt = "[0/space] 装弹  [1] 发射  [2] 上盾  "
@@ -1902,16 +1981,16 @@ class MainLoops:
             and (self.days-self.entry_begin_day) % self.entry_delta == 0:
                 entry_manager.push_up()
             time.sleep(0.4)
-            field_printer.print_basic_info(self.days)
-            entry_manager.print_all_flow_rank()
-            field_printer.print_for_fight(my_ship, enemy)
-            field_printer.print_suggestion()
-            field_printer.print_key_prompt()
-
-            # morning
             for al in my_ship.al_list:
                 if al:
                     al.operate_in_morning()
+
+            # morning
+            field_printer.print_basic_info(self.days)
+            entry_manager.print_all_flow_rank()
+            field_printer.print_for_fight(my_ship, enemy)
+            field_printer.generate_suggestion_tree().print_self()
+            field_printer.print_key_prompt()
 
             # noon
             if who == 1:
