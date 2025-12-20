@@ -25,7 +25,7 @@ class SoundsManager:
         self.ambient_channel = pygame.mixer.Channel(0)
         self.sfx_channel = pygame.mixer.Channel(1)
 
-    def switch_to_bgm(self, theme, fade_ms=500):
+    def switch_to_bgm(self, theme, fade_ms=1000):
         """
         切换到背景音乐
         :param theme: 主题，对应music下的文件夹名称
@@ -39,7 +39,7 @@ class SoundsManager:
         pygame.mixer.music.load(folder / chosen_music)
         pygame.mixer.music.play(loops=-1,fade_ms=fade_ms)
 
-    def stop_bgm(self, fade_ms=500):
+    def stop_bgm(self, fade_ms=1000):
         """
         停止背景音乐
         :param fade_ms: 淡入淡出毫秒数
@@ -47,7 +47,7 @@ class SoundsManager:
         """
         pygame.mixer.music.fadeout(fade_ms)
 
-    def switch_to_ambient(self,theme, fade_ms=500):
+    def switch_to_ambient(self,theme, fade_ms=1000):
         """
         在音轨上播放环境音
         :param theme: 主题，对应ambient下的文件夹名称
@@ -60,7 +60,7 @@ class SoundsManager:
         sound = pygame.mixer.Sound(folder / chosen_ambient)
         self.ambient_channel.play(sound,loops=-1,fade_ms=fade_ms)
 
-    def stop_ambient(self, fade_ms=500):
+    def stop_ambient(self, fade_ms=1000):
         """
         停止环境音
         :param fade_ms: 淡入淡出毫秒数

@@ -1,5 +1,6 @@
 import random
 
+from core.Module10_sound_manager import sounds_manager
 from core.Module1_txt import print_plus,Tree,adjust,n_column_print
 from core.Module2_json_loader import json_loader
 
@@ -112,6 +113,7 @@ class Contract:
         else:
             self.storage_manager.transaction(self.give_list, self.get_list)
             self.is_traded = True
+            sounds_manager.play_sfx("contract_dealt")
             print_plus("交易成功")
 
     def print_self(self):

@@ -123,6 +123,8 @@ class MyShip:
                 pass
         hp = entry_manager.check_and_reduce_hp(hp)
         self.shelter += hp
+        if hp > 0:
+            sounds_manager.play_sfx("shelter_heal")
         return hp
 
     def load(self, num: int):
@@ -223,12 +225,12 @@ class EnemyShip:
         :param atk: 原始伤害
         :return: 无
         """
+        atk = entry_manager.check_and_add_atk(atk)
         for al in my_ship.al_list:
             try:
                 atk = al.reduce_enemy_attack(atk)
             except AttributeError:
                 pass
-        atk = entry_manager.check_and_add_atk(atk)
         my_ship.shelter -= atk
         if atk <= 0:
             voices.report("护盾", "未受伤")
@@ -1754,11 +1756,11 @@ class Al39(Al_general): # 黎明维多利亚
 
     def suggest(self):
         if self.state % 2 == 0:
-            return f"[充能中]当前层数：{int(self.state/2)}|任意方式获得弹药以充能"
+            return f"[充能中]当前层数>{int(self.state/2)}/5|[0/任意方式]获得弹药以充能"
         elif self.state in [11,9]:
-            return f"[保守模式]当前层数：{int((self.state-1)/2)}|[1/q]发射"
+            return f"[保守状态]剩余层数>{int((self.state-1)/2)}/5|[1/q]发射增强导弹"
         else:
-            return f"[激进模式]当前层数：{int((self.state-1)/2)}|[1]发射|[q]全弹发射但扣除{int(min((self.state-1) // 2,my_ship.missile))}点护盾"
+            return f"[焚城状态]剩余层数>{int((self.state-1)/2)}|[1]发射增强导弹|[q]全弹发射 扣除{int(min((self.state-1) // 2,my_ship.missile))}点护盾"
 
 al39 = Al39(39)
 
@@ -1987,6 +1989,7 @@ class MainLoops:
         return 0
 
     def fight_mainloop(self):
+        sounds_manager.switch_to_bgm("fight")
         while 1:
             # dawn
             who = dice.decide_who(force_advance=self.get_force_advance())
@@ -2024,6 +2027,7 @@ class MainLoops:
             if (result := self.is_over()) != 0:
                 break
             self.days += 1
+        sounds_manager.stop_bgm()
         if result == 1:
             Txt.print_plus("我方胜利")
             storage_manager.drop_for_fight()
@@ -2043,6 +2047,7 @@ class MainLoops:
     def station_mainloop():
         sounds_manager.switch_to_bgm("station")
         while 1:
+            print()
             station_trees_manager.inject_all()
             Txt.n_column_print(station_trees_manager.generate_all_line_list(), 50)
             go_to = input(">>>")
@@ -2158,6 +2163,7 @@ class MainLoops:
 main_loops = MainLoops()
 
 def hello():
+    sounds_manager.switch_to_bgm("login")
     Txt.print_plus(f"\n{__VERSION__} > 工程启动中 > \n")
     Txt.input_plus("按任意键开始游戏|输入后请回车>>>")
 
