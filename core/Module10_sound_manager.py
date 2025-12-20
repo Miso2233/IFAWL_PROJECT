@@ -23,7 +23,6 @@ class SoundsManager:
         self.sfx_dir = Path(__file__).parent.parent / "resources" / "sounds" / "sfx"
         self.ambient_dir = Path(__file__).parent.parent / "resources" / "sounds" / "ambient"
         self.ambient_channel = pygame.mixer.Channel(0)
-        self.sfx_channel = pygame.mixer.Channel(1)
 
     def switch_to_bgm(self, theme, fade_ms=1000):
         """
@@ -78,7 +77,10 @@ class SoundsManager:
         contents = os.listdir(folder)
         chosen_sfx = random.choice(contents)
         sound = pygame.mixer.Sound(folder / chosen_sfx)
-        self.sfx_channel.play(sound)
+        channel = pygame.mixer.find_channel()
+        if channel:
+            channel.play(sound)
+
 
 
 sounds_manager = SoundsManager()
