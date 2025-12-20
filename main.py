@@ -96,6 +96,11 @@ class MyShip:
         :param type: 伤害种类
         :return: 经过加成减弱后的atk
         """
+        match type:
+            case DamageType.MISSILE_LAUNCH:
+                sounds_manager.play_sfx("missile_launch")
+            case _:
+                pass
         for al in self.al_list:
             try:
                 atk = al.add_atk(atk, type)
@@ -2029,9 +2034,8 @@ class MainLoops:
 
     @staticmethod
     def station_mainloop():
-        sounds_manager.switch_to_bgm("station_bgm.mp3")
+        sounds_manager.switch_to_bgm("station")
         while 1:
-            sounds_manager.play_sfx("into_station.mp3")
             station_trees_manager.inject_all()
             Txt.n_column_print(station_trees_manager.generate_all_line_list(), 50)
             go_to = input(">>>")
@@ -2057,6 +2061,7 @@ class MainLoops:
                     main_loops.entry_choosing_mainloop()
                 case _:
                     pass
+        sounds_manager.stop_bgm()
 
     @staticmethod
     def contract_market_mainloop():

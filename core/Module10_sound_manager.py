@@ -1,3 +1,6 @@
+import os
+import random
+
 import pygame
 import threading
 import time
@@ -22,15 +25,18 @@ class SoundsManager:
         self.ambient_channel = pygame.mixer.Channel(0)
         self.sfx_channel = pygame.mixer.Channel(1)
 
-    def switch_to_bgm(self, filename, fade_ms=500):
+    def switch_to_bgm(self, theme, fade_ms=500):
         """
         切换到背景音乐
-        :param filename: 文件名，带后缀
+        :param theme: 主题，对应music下的文件夹名称
         :param fade_ms: 淡入淡出毫秒数
         :return: 无
         """
-        self.stop_bgm()
-        pygame.mixer.music.load(self.music_dir / filename)
+        self.stop_bgm(fade_ms=fade_ms)
+        folder = self.music_dir / theme
+        contents = os.listdir(folder)
+        chosen_music = random.choice(contents)
+        pygame.mixer.music.load(folder / chosen_music)
         pygame.mixer.music.play(loops=-1,fade_ms=fade_ms)
 
     def stop_bgm(self, fade_ms=500):
@@ -41,23 +47,37 @@ class SoundsManager:
         """
         pygame.mixer.music.fadeout(fade_ms)
 
-    def switch_to_ambient(self,filename, fade_ms=500):
+    def switch_to_ambient(self,theme, fade_ms=500):
         """
         在音轨上播放环境音
-        :param filename: 文件名，带后缀
+        :param theme: 主题，对应ambient下的文件夹名称
         :param fade_ms: 淡入淡出毫秒数
         :return: 无
         """
-        sound = pygame.mixer.Sound(self.ambient_dir / filename)
+        folder = self.ambient_dir    / theme
+        contents = os.listdir(folder)
+        chosen_ambient = random.choice(contents)
+        sound = pygame.mixer.Sound(folder / chosen_ambient)
         self.ambient_channel.play(sound,loops=-1,fade_ms=fade_ms)
 
-    def play_sfx(self,filename):
+    def stop_ambient(self, fade_ms=500):
         """
-        在音轨上播放短音效
-        :param filename: 文件名，带后缀
+        停止环境音
+        :param fade_ms: 淡入淡出毫秒数
         :return: 无
         """
-        sound = pygame.mixer.Sound(self.sfx_dir / filename)
+        self.ambient_channel.fadeout(fade_ms)
+
+    def play_sfx(self,theme):
+        """
+        在音轨上播放短音效
+        :param theme: 主题，对应sfx下的文件夹名称
+        :return: 无
+        """
+        folder = self.sfx_dir / theme
+        contents = os.listdir(folder)
+        chosen_sfx = random.choice(contents)
+        sound = pygame.mixer.Sound(folder / chosen_sfx)
         self.sfx_channel.play(sound)
 
 

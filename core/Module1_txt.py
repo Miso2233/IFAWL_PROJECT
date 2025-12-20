@@ -65,7 +65,6 @@ def input_plus(txt:str,sec:float=0.3):
     if not txt.endswith(">>>"):
         print(">>>",end="")
     inp = input("")
-    sounds_manager.play_sfx("click.wav")
     return inp
 
 class Tree:#打印用tree对象
