@@ -2029,6 +2029,7 @@ class MainLoops:
 
     @staticmethod
     def station_mainloop():
+        sounds_manager.switch_to_bgm("station_bgm.mp3")
         while 1:
             sounds_manager.play_sfx("into_station.mp3")
             station_trees_manager.inject_all()
@@ -2151,7 +2152,6 @@ def hello():
 if __name__ == "__main__":
     hello()
     storage_manager.login()
-    #sounds_manager.switch_to_bgm("02_战斗-高难_管弦.wav")
     my_ship.load_al()
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
     while 1:
