@@ -1920,6 +1920,12 @@ class StationTreesManager:
                 if my_ship.al_list[2] \
                 else "[No Info]"
         })
+        self.all_tree_list["词条信息"].inject({
+            "total_points": entry_manager.get_total_points()
+        })
+        self.all_tree_list["词条信息"].rewrite_lines(
+            entry_manager.generate_entry_summary_lines()
+        )
 
     def generate_all_line_list(self):
         all_line_list = [[] for _ in range(self.column)]
@@ -2058,8 +2064,8 @@ class MainLoops:
         sounds_manager.switch_to_bgm("fight")
         while 1:
             # dawn
-            who = dice.decide_who(force_advance=self.get_force_advance())
             time.sleep(0.4)
+            who = dice.decide_who(force_advance=self.get_force_advance())
             for al in my_ship.al_list:
                 if al:
                     al.operate_in_morning()
@@ -2087,6 +2093,9 @@ class MainLoops:
                         al.operate_in_our_turn()
 
             # dusk
+            if entry_manager.get_rank_of("5") != 0 and my_ship.shelter <= 0:
+                result = -1
+                break
             if (result := self.is_over()) != 0:
                 break
             self.days += 1

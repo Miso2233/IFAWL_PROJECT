@@ -95,7 +95,28 @@ class EntryManager:
             self.all_entries[entry_index].selected_rank = rank
 
     def get_all_rank(self) -> dict[str,int]:
+        """
+        取得所有词条的静态等级字典
+        :return: 一个字典，键为词条的字符串编号，值为其等级
+        """
         return {entry_index: entry.selected_rank for entry_index, entry in self.all_entries.items()}
+
+    def get_total_points(self) -> int:
+        """
+        计算所有已选择词条的总分
+        :return: 总分
+        """
+        out = 0
+        for entry in self.all_entries.values():
+            out += entry.points_list[entry.selected_rank]
+        return out
+
+    def generate_entry_summary_lines(self):
+        out = []
+        for entry in self.all_entries.values():
+            if entry.selected_rank != 0:
+                out.append(f"[{entry.index}]{entry.title}{entry.RANK_STR_LIST[entry.selected_rank]}:{entry.description_list[entry.selected_rank]}[{entry.points_list[entry.selected_rank]}分]")
+        return out
 
     # 级别检索
 

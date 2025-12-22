@@ -47,5 +47,12 @@
 		],
 		"col": 1,
 		"row": 1
+	},
+	"词条信息": {
+		"title": "战死之地>当前选择的词条 [总分:{total_points}]",
+		"line_list": [],
+		"col": 1,
+		"row": 2,
+		"can_be_folded": true
 	}
 }

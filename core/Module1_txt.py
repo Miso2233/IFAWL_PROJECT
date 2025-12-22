@@ -140,6 +140,7 @@ class Advanced_tree(Tree):
         self.col:int = metadata["col"]
         self.row:int = metadata["row"]
         self.metadata = metadata
+        self.can_be_folded = metadata.get("can_be_folded",False)
 
     def inject(self,inject_data:dict[str,str|int]):
         self.title = self.title_raw.format_map(inject_data)
@@ -148,6 +149,34 @@ class Advanced_tree(Tree):
                 self.body[i] = self.body_raw[i].format_map(inject_data)
             except KeyError:
                 pass
+
+    def rewrite_lines(self,lines:list[str]):
+        """
+        重写（注入）新的行
+        :param lines: 注入的行
+        :return: 无
+        """
+        self.body = lines
+
+    def generate_line_list(self,can_be_folded=False):
+        """
+        生成Advanced_tree对象的行切片，将读取该树内置的can_be_folded属性
+        :return: 一个字符串列表，包含Tree的每一行
+        """
+        line_list= [self.title]
+        if self.can_be_folded and len(self.body) > 3:
+            for i in self.body[0:3]:
+                line_list.append("|")
+                line_list.append("|-"+str(i))
+            line_list.append("|")
+            line_list.append("|>>[已折叠]")
+            line_list.append("")
+        else:
+            for i in self.body:
+                line_list.append("|")
+                line_list.append("|-"+i)
+            line_list.append("")
+        return line_list
 
 def n_column_print(columns: list[list[str]], di_list: tuple[int]|int = ()):
     """

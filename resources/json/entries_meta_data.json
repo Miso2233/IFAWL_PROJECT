@@ -39,6 +39,18 @@
 		"type": "w",
 		"can_flow": true
 	},
+	"5": {
+		"title": "最终防线",
+		"points": [0,50],
+		"description_txt": [
+			"",
+			"护盾被清空则失败"
+		],
+		"summary": "护盾被清空则失败",
+		"reaction": "我方护盾被清空>>舰船受损不可逆",
+		"type": "e",
+		"can_flow": false
+	},
 	"6": {
 		"title": "灯塔已灭",
 		"points": [0,30,50],
