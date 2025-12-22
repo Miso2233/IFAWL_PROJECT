@@ -447,7 +447,7 @@ class Al_general:
             Txt.adjust(f"[{tag1}平台] [{self.metadata['rank']}]", 20),
             f"{storage_manager.get_value_of(str(self.index))}在仓库"
         )
-        print(f">>>>\"{self.short_name}\"")
+        print(f">>>>\"{self.metadata['short_name_en']}\"")
         print(self.metadata["description_txt"])
         # [30] 岩河军工“湾区铃兰”饱和式蜂巢突击粒子炮      [粒子炮平台] [VIII] 1在仓库 >>[可以离站使用]<<
         print()
