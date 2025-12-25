@@ -1244,6 +1244,8 @@ class Al24(Al_general):
                 self.state-=1
                 if dice.probability(0.4*(4-self.state)):
                     break
+            if self.state<0:
+                self.state = 0
         elif self.state != 0:
             self.report("主动入侵")#            
             al7.react()
@@ -1308,7 +1310,7 @@ class Al25(Al_general):
     def print_self(self):
         if self.state<0:
             print(self.skin_list[4])
-        elif self.is_on_my_ship:
+        elif self.is_on_my_ship():
             print(self.skin_list[self.state])
 
     def suggest(self):
@@ -1375,7 +1377,7 @@ class Al27(Al_general):#瞳猫
             self.report("充能")
 
     def operate_in_morning(self):
-        if self.is_on_my_ship and dice.current_who == 1 and self.state < 9:
+        if self.is_on_my_ship() and dice.current_who == 1 and self.state < 9:
             self.state += 1
 
     def add_atk(self, atk, type):
@@ -1383,13 +1385,13 @@ class Al27(Al_general):#瞳猫
         瞳猫只是一只小猫，他不会对你的攻击造成加成
         只是我需要写在这里方便在atk时调用罢了
         """
-        if self.is_on_my_ship and self.state > 0:
+        if self.is_on_my_ship() and self.state > 0:
             self.state = 0
             self.report("层数清空")
         return atk
 
     def reduce_enemy_attack(self, atk):
-        if self.is_on_my_ship and atk > 0:
+        if self.is_on_my_ship() and atk > 0:
             if dice.probability(self.state*0.1-(my_ship.shelter+al14.state-1)*0.12):
                 atk = 0
                 self.report("喵")
@@ -1493,7 +1495,7 @@ class Al29(Al_general):#酒师
             self.state = [x for x in self.state if x != 0]
 
     def print_self(self):
-        if self.is_on_my_ship:
+        if self.is_on_my_ship():
             for i in self.state:
                 print(self.skin_list[i],end=" ")
             print()
@@ -1554,7 +1556,7 @@ class Al31(Al_general):#白鲟
             self.report("启动报告")
 
     def reduce_enemy_attack(self, atk):
-        if self.state > 0:
+        if self.state > 0 and atk > 0:
             di_atk = min(self.state,atk)
             self.state -= di_atk
             atk -= di_atk
@@ -1601,7 +1603,7 @@ class Al34(Al_general):#风间浦
             self.report("激进模式启动")
 
     def add_hp(self, hp):
-        if not self.is_on_my_ship:
+        if not self.is_on_my_ship():
             return hp
         if self.state[0] == 0 and dice.probability(0.5):
             self.report("保守模式治疗加成")
@@ -1645,11 +1647,11 @@ class Al34(Al_general):#风间浦
         elif self.state[0] > 0:
             return f"[充能中]剩余{self.state[0]}天"
         else:
-            return "[保守模式]回盾加成中|[w]进入激进模式"        
+            return "[w]进入激进模式|[保守模式]回盾加成中"        
 
 al34=Al34(34)
 
-class Al35(Al_general):#青鹄
+class Al35(Al_general): # 青鹄
 
     voi_list={"q":["复道行空，敌盾贯通！","泡影俱散，对面完蛋！"],"w":["固若金汤，有烟无伤！","防微杜渐，护盾无限！"],"e":["",""]}
 
@@ -1670,7 +1672,7 @@ class Al35(Al_general):#青鹄
                     my_ship.load(1)
                 self.report("装弹")
     def operate_in_morning(self):
-        if self.is_on_my_ship:
+        if self.is_on_my_ship():
             self.state+=1
         if self.state>=4 and dice.current_who==0:
             my_ship.heal(1)
@@ -1716,6 +1718,67 @@ class Al35(Al_general):#青鹄
             return f"[e]装弹|[待命中]获得额外回合|充能层数{self.state}/4"
 
 al35=Al35(35)
+
+class Al38(Al_general): # 澈
+
+    def initialize(self):
+        self.state=[0,False]
+
+    def react(self):
+        self.state[0]+=3
+        self.report("获得锋镝")
+        enemy.attack(1) # todo:禁用烈风
+        enemy.attack(1)
+
+    def reduce_enemy_attack(self, atk):
+        """
+        其实并不会reduce
+        """
+        if self.is_on_my_ship() and self.state[1]==False and dice.probability(0.5):
+            self.state[0]+=1
+            self.report("收到")
+            
+        return atk
+    
+    def operate_in_afternoon(self):
+        if self.state[0]>0 and my_ship.shelter<1:
+            cure = min(self.state[0],2-my_ship.shelter)
+            self.state[0]-=cure
+            my_ship.heal(cure)
+            self.report("护盾补充")
+
+    
+    def operate_in_morning(self):
+        if self.state[0]>9 and self.state[1]==False:
+            self.state[1]=True
+            self.report("激进模式开启")
+        elif self.state[0]<5 and self.state[1]==True:
+            self.state[1]=False
+            self.report("激进模式关闭")
+
+    def add_atk(self, atk, type):
+        if self.state[1]==False and self.is_on_my_ship() and dice.probability(0.5):
+            self.state[0]+=1
+            self.report("收到")
+        if self.state[1] and self.state[0]>0:
+            self.state[0]-=1
+            self.report("牺牲加成")
+            return atk+1
+        return atk
+
+    def print_self(self):
+        if self.state[0] <= 5:
+            print("--X--\n"*self.state[0])
+        else:
+            print(f"--X-- x{self.state[0]}")
+
+    def suggest(self):
+        if self.state[1]:
+            return f"[w]自伤并获得三点锋镝|[寂]伤害加成中|[锋镝]>{self.state[0]}"
+        else:
+            return f"[w]自伤并获得三点锋镝|[澄]敌我攻击概率获得锋镝|[锋镝]>{self.state[0]}"
+
+al38=Al38(38)
 
 class Al39(Al_general): # 黎明维多利亚
     """
