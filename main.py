@@ -16,7 +16,7 @@ from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
 
-__VERSION__ = "IFAWL 1.1.0 'DISASTER APPROACHING'"
+__VERSION__ = "IFAWL 1.1.0 'TOWARDS DAWN'"
 
 class DamageType:
     """伤害类型枚举"""
@@ -1841,7 +1841,7 @@ class Al39(Al_general): # 黎明维多利亚
         elif self.state in [11,9]:
             return f"[保守状态]剩余层数>{int((self.state-1)/2)}/5|[1/q]发射增强导弹"
         else:
-            return f"[焚城状态]剩余层数>{int((self.state-1)/2)}|[1]发射增强导弹|[q]全弹发射 扣除{int(min((self.state-1) // 2,my_ship.missile))}点护盾"
+            return f"[爆发状态]剩余层数>{int((self.state-1)/2)}|[1]发射增强导弹|[q]全弹发射 扣除{int(min((self.state-1) // 2,my_ship.missile))}点护盾"
 
 al39 = Al39(39)
 
