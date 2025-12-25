@@ -203,8 +203,11 @@ class EntryManager:
 
     def check_and_attack_me(self,atk:int,enemy):
         """极限爆发"""
+        if self.get_rank_of("9") == 0:
+            return atk
         if atk >= enemy.shelter:
             enemy.attack(self.get_rank_of("9"))
+            self.all_entries["9"].print_when_react()
         return atk
 
     def check_and_add_num(self,num:int):
