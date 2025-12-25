@@ -222,7 +222,7 @@ class EntryManager:
         return atk
 
     def check_and_get_launch_num(self,enemy):
-        """烛燃"""
+        """狂怒"""
         if (rank := self.get_rank_of("14")) == 0:
             num = 1
         elif enemy.missile > 4 - rank:
