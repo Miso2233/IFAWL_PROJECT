@@ -237,7 +237,7 @@ class EnemyShip:
         :return: 无
         """
         atk = entry_manager.check_and_add_atk(atk)
-        atk = entry_manager.check_and_reduce_missile(atk)
+        atk = entry_manager.check_and_reduce_missile(atk,my_ship)
         for al in my_ship.al_list:
             try:
                 atk = al.reduce_enemy_attack(atk)
