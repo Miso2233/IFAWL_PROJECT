@@ -1531,9 +1531,8 @@ class Al30(Al_general):
             # p_c_manager.boom_now()
 
     def add_atk(self, atk: int, type: str) -> int:
-        if self.state < 0 and 1 < my_ship.missile and dice.probability(0.8):
+        if self.state < 0 and dice.probability(0.8):
             self.report("增伤")
-            my_ship.missile -= 1
             return atk + 1
         else:
             return atk
