@@ -76,7 +76,7 @@ class EntryManager:
     def set_mode(self,mode:Literal["FIGHT","DISASTER","INFINITY"]):
         self.current_mode = mode
 
-    # 静态词条选择方法
+    # 静态词条方法
 
     def print_all_descriptions(self):
         for entry in self.all_entries.values():
@@ -126,6 +126,16 @@ class EntryManager:
                 out.append(f"[{entry.index}]{entry.title}{entry.RANK_STR_LIST[entry.selected_rank]}:{entry.description_list[entry.selected_rank]}[{entry.points_list[entry.selected_rank]}分]")
         return out
 
+    def print_all_selected_rank(self):
+        out = ""
+        for entry in self.all_entries.values():
+            if entry.selected_rank != 0:
+                out += f"{entry.title}[{entry.RANK_STR_LIST[entry.selected_rank]}]  "
+        if not out:
+            out = "[无激活词条]"
+        print(out)
+        print()
+
     # 级别检索
 
     def get_rank_of(self,index:str) -> int:
@@ -158,7 +168,6 @@ class EntryManager:
             entry.flow_rank = 0
 
     def print_all_flow_rank(self):
-        print()
         out = ""
         for entry in self.all_entries.values():
             if entry.flow_rank != 0:

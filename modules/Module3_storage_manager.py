@@ -174,11 +174,16 @@ class StorageManager:
         return self.repository_for_all_users[self.username]["metadata"]["al_on_ship"]
 
     def print_storage(self):
-        Txt.Tree("基本物资",self.repository_for_all_users[self.username]["materials"]).print_self()
         al_list = {}
         for al,num in self.repository_for_all_users[self.username]["als"].items():
-            al_list[AL_META_DATA[al]["len_name"]] = num
-        Txt.Tree("终焉结", al_list).print_self()
+            if num != 0:
+                al_list[AL_META_DATA[al]["len_name"]] = num
+        Txt.n_column_print(
+            [
+                Txt.Tree("基本物资", self.repository_for_all_users[self.username]["materials"]).generate_line_list(),
+                Txt.Tree("终焉结", al_list).generate_line_list()
+            ]
+        )
         input("[enter]离开仓库>>>")
 
     def have_all_al_on_ship(self,al_on_ship:list) -> bool:

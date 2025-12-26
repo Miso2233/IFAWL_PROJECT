@@ -326,9 +326,15 @@ class Al_manager:
             self.choose_al("w")
             self.choose_al("e")
             return
-        for al in self.all_al_list.values():
-            if al.type == type_choosing:
-                al.print_description()
+#        for key,al in self.all_al_list.items():
+#            if al.type == type_choosing:
+#                al.print_description()
+        # 打印Al的描述
+        al_list = [al for al in self.all_al_list.values() if al.type == type_choosing]
+        al_list.sort(key=lambda al: al.rank_num)
+        for al in al_list:
+            al.print_description()
+        # Al的选择
         cn_type = {"q": "主武器", "w": "生存位", "e": "战术装备"}[type_choosing]
         al_position = {"q": 0, "w": 1, "e": 2}[type_choosing]
         while 1:
@@ -1899,6 +1905,7 @@ class FieldPrinter:
             Txt.print_plus("当前舰船位置>>边境核心战场")
         elif days > 20:
             Txt.print_plus("当前舰船位置>>敌方腹地危险区域")
+        print()
 
     def generate_suggestion_tree(self):
         suggestion_list = []
@@ -2139,6 +2146,30 @@ class MainLoops:
         input_plus("[enter]回站")
         return
 
+    def initialize_before_disaster(self):
+        # 舰船初始化
+        my_ship.initialize()
+        shelter, missile = self.get_adjusting_shelter_and_missile()
+        enemy.initialize(shelter,missile)
+        # 骰子初始化
+        dice.set_probability(0.8)
+        dice.set_di(0.3)
+        dice.set_additional_di(0)
+        # 自动驾驶初始化
+        auto_pilot.refresh()
+        # 词条管理器初始化
+        entry_manager.set_mode(Modes.DISASTER)
+        entry_manager.clear_all_flow()
+        # 词条触发
+        if (rank := entry_manager.get_rank_of("7")) != 0:
+            enemy.shelter += rank * 3
+            entry_manager.all_entries["7"].print_when_react()
+        if (rank := entry_manager.get_rank_of("11")) != 0:
+            dice.set_additional_di(rank * 0.1)
+            entry_manager.all_entries["11"].print_when_react()
+        # 设置天数
+        self.days = 1
+
     def disaster_mainloop(self):
         sounds_manager.switch_to_bgm("fight")
         while 1:
@@ -2151,7 +2182,7 @@ class MainLoops:
 
             # morning
             field_printer.print_basic_info(self.days)
-            #entry_manager.print_all_flow_rank() # TODO 写一个适当的函数展示选择的词条难度
+            entry_manager.print_all_selected_rank()
             field_printer.print_for_fight(my_ship, enemy)
             field_printer.generate_suggestion_tree().print_self()
             field_printer.print_key_prompt()
@@ -2199,30 +2230,6 @@ class MainLoops:
         al_manager.clear_al()
         input_plus("[enter]回站")
         return
-
-    def initialize_before_disaster(self):
-        # 舰船初始化
-        my_ship.initialize()
-        shelter, missile = self.get_adjusting_shelter_and_missile()
-        enemy.initialize(shelter,missile)
-        # 骰子初始化
-        dice.set_probability(0.8)
-        dice.set_di(0.3)
-        dice.set_additional_di(0)
-        # 自动驾驶初始化
-        auto_pilot.refresh()
-        # 词条管理器初始化
-        entry_manager.set_mode(Modes.DISASTER)
-        entry_manager.clear_all_flow()
-        # 词条触发
-        if (rank := entry_manager.get_rank_of("7")) != 0:
-            enemy.shelter += rank * 3
-            entry_manager.all_entries["7"].print_when_react()
-        if (rank := entry_manager.get_rank_of("11")) != 0:
-            dice.set_additional_di(rank * 0.1)
-            entry_manager.all_entries["11"].print_when_react()
-        # 设置天数
-        self.days = 1
 
     @staticmethod
     def station_mainloop():
