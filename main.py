@@ -15,6 +15,7 @@ from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
+from core.Module11_damage_previewer import damage_previewer
 
 __VERSION__ = "IFAWL 1.1.0 'TOWARDS DAWN'"
 
@@ -1863,6 +1864,7 @@ class FieldPrinter:
         opposite.print_self_missile(entry_manager.get_rank_of("2")>=1)
         print()
         opposite.print_self_shelter()
+        damage_previewer.print_enemy_dmg(opposite.shelter)
         print("\n\n\n")
         try:
             me.al_list[1].print_self()
@@ -1872,6 +1874,7 @@ class FieldPrinter:
             me.al_list[0].print_self_before_shelter()
         except AttributeError:
             pass
+        damage_previewer.print_my_ship_dmg(me.shelter)
         me.print_self_shelter(entry_manager.get_rank_of("2")>=2)
         try:
             me.al_list[1].print_self_behind_shelter()
@@ -1888,6 +1891,7 @@ class FieldPrinter:
         except AttributeError:
             pass
         print()
+        damage_previewer.update(me.shelter,opposite.shelter)
 
     def print_basic_info(self, days):
         """
@@ -2068,6 +2072,8 @@ class MainLoops:
         dice.set_additional_di(0)
         # 自动驾驶初始化
         auto_pilot.refresh()
+        # 护盾破碎效果初始化
+        damage_previewer.initialize(my_ship.shelter,enemy.shelter)
         # 词条管理器初始化
         entry_manager.set_mode(Modes.FIGHT)
         entry_manager.clear_all_flow()
@@ -2157,6 +2163,8 @@ class MainLoops:
         dice.set_additional_di(0)
         # 自动驾驶初始化
         auto_pilot.refresh()
+        # 护盾破碎效果初始化
+        damage_previewer.initialize(my_ship.shelter,enemy.shelter)
         # 词条管理器初始化
         entry_manager.set_mode(Modes.DISASTER)
         entry_manager.clear_all_flow()
