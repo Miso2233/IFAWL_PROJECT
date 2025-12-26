@@ -408,22 +408,22 @@ class Al_general:
 
     def __init__(self, index: int):
         # metadata 字段
-        self.index: int = index
-        self.short_name: str = al_manager.al_meta_data[str(index)]["short_name"]
-        self.len_name: str = al_manager.al_meta_data[str(index)]["len_name"]
-        self.type: str = al_manager.al_meta_data[str(index)]["type"]
-        self.rank_num: int = al_manager.al_meta_data[str(index)]["rank_num"]
-        self.skin_list: list[str] = al_manager.al_meta_data[str(index)].get("skin_list", [])
-        self.platform: str = al_manager.al_meta_data[str(index)]["platform"]
-        self.metadata: dict[str, str | int] = al_manager.al_meta_data[str(index)]
+        self.index: str = str(index)
+        self.short_name: str = al_manager.al_meta_data[self.index]["short_name"]
+        self.len_name: str = al_manager.al_meta_data[self.index]["len_name"]
+        self.type: str = al_manager.al_meta_data[self.index]["type"]
+        self.rank_num: int = al_manager.al_meta_data[self.index]["rank_num"]
+        self.skin_list: list[str] = al_manager.al_meta_data[self.index].get("skin_list", [])
+        self.platform: str = al_manager.al_meta_data[self.index]["platform"]
+        self.metadata: dict[str, str | int] = al_manager.al_meta_data[self.index]
 
         # industry字段
-        self.recipe = recipe_for_all_al[str(self.index)]
+        self.recipe = recipe_for_all_al[self.index]
         self.recipe["联邦信用点"] = 1100 * self.rank_num
         self.is_craftable = False
 
         # 签名
-        al_manager.all_al_list[str(self.index)] = self
+        al_manager.all_al_list[self.index] = self
 
         # operation 字段
         self.state = 0
