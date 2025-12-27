@@ -2361,7 +2361,7 @@ class MainLoops:
 
     @staticmethod
     def ask_destination() -> str:
-        des = Txt.ask_plus("请输入目的地|[0] 基本对战|[1] 战死之地| [enter]回站",["0","1"])
+        des = Txt.ask_plus("请输入目的地|[0] 基本对战|[1] 战死之地| [enter]回站",["0","1",""])
         return des
 
 main_loops = MainLoops()
