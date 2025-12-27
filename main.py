@@ -15,7 +15,7 @@ from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
-from core.Module11_damage_previewer import damage_previewer
+from modules.Module11_damage_previewer import damage_previewer
 
 __VERSION__ = "IFAWL 1.1.0 'TOWARDS DAWN'"
 
@@ -2203,6 +2203,9 @@ class MainLoops:
                 enemy.react()
 
             # afternoon
+            if entry_manager.get_rank_of("13") != 0 and self.days > 100 - 20 * entry_manager.get_rank_of("13"):
+                enemy.attack(1)
+                entry_manager.all_entries["13"].print_when_react()
             for al in my_ship.al_list:
                 if al:
                     al.operate_in_afternoon()
@@ -2210,9 +2213,6 @@ class MainLoops:
                         al.operate_in_our_turn()
 
             # dusk
-            if entry_manager.get_rank_of("13") != 0 and self.days > 100 - 20 * entry_manager.get_rank_of("13"):
-                enemy.attack(1)
-                entry_manager.all_entries["13"].print_when_react()
             if entry_manager.get_rank_of("5") != 0 and my_ship.shelter <= 0:
                 entry_manager.all_entries["5"].print_when_react()
                 result = -1

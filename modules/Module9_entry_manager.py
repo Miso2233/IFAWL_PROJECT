@@ -150,7 +150,7 @@ class EntryManager:
 
     # 动态词条方法
 
-    def push_up(self):
+    def push_up(self,q_preference:float|None = None):
         """
         将词条库中的某个词条上推一级
         :return: 无
