@@ -1595,7 +1595,7 @@ class Al31(Al_general):#白鲟
 
 al31=Al31(31)
 
-class Al34(Al_general):#风间浦
+class Al34(Al_general): # 风间浦
 
     state = [0,0]
 
@@ -1604,7 +1604,7 @@ class Al34(Al_general):#风间浦
 
     def react(self):
         if self.state[0] == 0:
-            self.state[0] = 8
+            self.state[0] = 9
             my_ship.attack(1,DamageType.ORDINARY_ATTACK)
             self.report("激进模式启动")
 
@@ -1622,18 +1622,20 @@ class Al34(Al_general):#风间浦
 
 
     def operate_in_afternoon(self):
-        if self.state[0] > 5:
+        BEGIN_COOLING = 6
+        if self.state[0] > BEGIN_COOLING:
             if my_ship.shelter <= 0:
                 my_ship.shelter = 1
                 self.report("激进模式保护")
-        elif self.state[0] == 5 and self.state[1] != 0:
+        elif self.state[0] == BEGIN_COOLING and self.state[1] != 0:
             my_ship.heal(self.state[1])
             self.state[1] = 0
             self.report("安全港就位")
-
-        if self.state[0] > 5 and dice.current_who == 0:
             self.state[0] -= 1
-        elif 0 < self.state[0] <= 5 and dice.current_who == 1:
+
+        if self.state[0] > BEGIN_COOLING and dice.current_who == 0:
+            self.state[0] -= 1
+        elif 0 < self.state[0] <= BEGIN_COOLING and dice.current_who == 1:
             self.state[0] -= 1
 
     def reduce_enemy_attack(self, atk):#实则不然
@@ -1646,9 +1648,10 @@ class Al34(Al_general):#风间浦
         pass
 
     def suggest(self):
-        if self.state[0] > 5:
-            return f"[激进模式]剩余{self.state[0] - 5}天|{self.state[1]}伤害计入"
-        elif self.state[0] == 5:
+        BEGIN_COOLING = 6
+        if self.state[0] > BEGIN_COOLING:
+            return f"[激进模式]剩余{self.state[0] - BEGIN_COOLING}天|{self.state[1]}伤害计入"
+        elif self.state[0] == BEGIN_COOLING:
             return f"[脱离激进模式]{self.state[1]}护盾即将回充"
         elif self.state[0] > 0:
             return f"[充能中]剩余{self.state[0]}天"
