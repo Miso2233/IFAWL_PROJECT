@@ -256,8 +256,8 @@
     "description_txt": "-运行在舰船右舷的轨道浮游炮，可以极快地发射甲板导弹\n-航行日内输入q来连续发射三枚导弹\n-若中途导弹耗尽，提供一次自动装弹机会",
     "index": 23,
     "type": "q",
-    "rank": "VI",
-    "rank_num": 6,
+    "rank": "VII",
+    "rank_num": 7,
     "origin": "岩河军工",
     "platform": "导弹"
   },
