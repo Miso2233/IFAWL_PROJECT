@@ -15,7 +15,7 @@ from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
-from core.Module11_damage_previewer import damage_previewer
+from modules.Module11_damage_previewer import damage_previewer
 
 __VERSION__ = "IFAWL 1.1.0 'TOWARDS DAWN'"
 
@@ -1531,7 +1531,7 @@ class Al30(Al_general):
             # p_c_manager.boom_now()
 
     def add_atk(self, atk: int, type: str) -> int:
-        if self.state < 0 and dice.probability(0.8):
+        if self.state < 0 and dice.probability(0.5):
             self.report("增伤")
             return atk + 1
         else:
@@ -1595,7 +1595,7 @@ class Al31(Al_general):#白鲟
 
 al31=Al31(31)
 
-class Al34(Al_general):#风间浦
+class Al34(Al_general): # 风间浦
 
     state = [0,0]
 
@@ -1604,7 +1604,7 @@ class Al34(Al_general):#风间浦
 
     def react(self):
         if self.state[0] == 0:
-            self.state[0] = 8
+            self.state[0] = 9
             my_ship.attack(1,DamageType.ORDINARY_ATTACK)
             self.report("激进模式启动")
 
@@ -1622,18 +1622,20 @@ class Al34(Al_general):#风间浦
 
 
     def operate_in_afternoon(self):
-        if self.state[0] > 5:
+        BEGIN_COOLING = 6
+        if self.state[0] > BEGIN_COOLING:
             if my_ship.shelter <= 0:
                 my_ship.shelter = 1
                 self.report("激进模式保护")
-        elif self.state[0] == 5 and self.state[1] != 0:
+        elif self.state[0] == BEGIN_COOLING and self.state[1] != 0:
             my_ship.heal(self.state[1])
             self.state[1] = 0
             self.report("安全港就位")
-
-        if self.state[0] > 5 and dice.current_who == 0:
             self.state[0] -= 1
-        elif 0 < self.state[0] <= 5 and dice.current_who == 1:
+
+        if self.state[0] > BEGIN_COOLING and dice.current_who == 0:
+            self.state[0] -= 1
+        elif 0 < self.state[0] <= BEGIN_COOLING and dice.current_who == 1:
             self.state[0] -= 1
 
     def reduce_enemy_attack(self, atk):#实则不然
@@ -1646,14 +1648,15 @@ class Al34(Al_general):#风间浦
         pass
 
     def suggest(self):
-        if self.state[0] > 5:
-            return f"[激进模式]剩余{self.state[0] - 5}天|{self.state[1]}伤害计入"
-        elif self.state[0] == 5:
+        BEGIN_COOLING = 6
+        if self.state[0] > BEGIN_COOLING:
+            return f"[激进模式]剩余{self.state[0] - BEGIN_COOLING}天|{self.state[1]}伤害计入"
+        elif self.state[0] == BEGIN_COOLING:
             return f"[脱离激进模式]{self.state[1]}护盾即将回充"
         elif self.state[0] > 0:
             return f"[充能中]剩余{self.state[0]}天"
         else:
-            return "[w]进入激进模式|[保守模式]回盾加成中"        
+            return "[w]进入激进模式|[保守模式]>[2]回盾加成中"
 
 al34=Al34(34)
 
@@ -2092,6 +2095,14 @@ class MainLoops:
             return 1
         return 0
 
+    @staticmethod
+    def get_equivalent_shelter() -> int:
+        """
+        计算我方的等效护盾
+        :return: 等效护盾值
+        """
+        return my_ship.shelter + 3 * al14.state
+
     def fight_mainloop(self):
         sounds_manager.switch_to_bgm("fight")
         while 1:
@@ -2203,6 +2214,9 @@ class MainLoops:
                 enemy.react()
 
             # afternoon
+            if entry_manager.get_rank_of("13") != 0 and self.days > 100 - 20 * entry_manager.get_rank_of("13"):
+                enemy.attack(1)
+                entry_manager.all_entries["13"].print_when_react()
             for al in my_ship.al_list:
                 if al:
                     al.operate_in_afternoon()
@@ -2210,10 +2224,7 @@ class MainLoops:
                         al.operate_in_our_turn()
 
             # dusk
-            if entry_manager.get_rank_of("13") != 0 and self.days > 100 - 20 * entry_manager.get_rank_of("13"):
-                enemy.attack(1)
-                entry_manager.all_entries["13"].print_when_react()
-            if entry_manager.get_rank_of("5") != 0 and my_ship.shelter <= 0:
+            if entry_manager.get_rank_of("5") != 0 and self.get_equivalent_shelter() <= 0:
                 entry_manager.all_entries["5"].print_when_react()
                 result = -1
                 break
@@ -2361,7 +2372,7 @@ class MainLoops:
 
     @staticmethod
     def ask_destination() -> str:
-        des = Txt.ask_plus("请输入目的地|[0] 基本对战|[1] 战死之地| [enter]回站",["0","1"])
+        des = Txt.ask_plus("请输入目的地|[0] 基本对战|[1] 战死之地| [enter]回站",["0","1",""])
         return des
 
 main_loops = MainLoops()

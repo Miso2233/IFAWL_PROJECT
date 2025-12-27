@@ -150,7 +150,7 @@ class EntryManager:
 
     # 动态词条方法
 
-    def push_up(self):
+    def push_up(self,q_preference:float|None = None):
         """
         将词条库中的某个词条上推一级
         :return: 无
@@ -221,6 +221,8 @@ class EntryManager:
 
     def check_and_add_num(self,num:int):
         """烛燃"""
+        if num < 0:
+            return num
         if dice.probability(self.get_rank_of("10")*0.3):
             num += 1
             self.all_entries["10"].print_when_react()
