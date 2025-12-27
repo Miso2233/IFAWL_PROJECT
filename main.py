@@ -1653,7 +1653,7 @@ class Al34(Al_general):#风间浦
         elif self.state[0] > 0:
             return f"[充能中]剩余{self.state[0]}天"
         else:
-            return "[w]进入激进模式|[保守模式]回盾加成中"        
+            return "[w]进入激进模式|[保守模式]>[2]回盾加成中"
 
 al34=Al34(34)
 
@@ -2092,6 +2092,14 @@ class MainLoops:
             return 1
         return 0
 
+    @staticmethod
+    def get_equivalent_shelter() -> int:
+        """
+        计算我方的等效护盾
+        :return: 等效护盾值
+        """
+        return my_ship.shelter + 3 * al14.state
+
     def fight_mainloop(self):
         sounds_manager.switch_to_bgm("fight")
         while 1:
@@ -2213,7 +2221,7 @@ class MainLoops:
                         al.operate_in_our_turn()
 
             # dusk
-            if entry_manager.get_rank_of("5") != 0 and my_ship.shelter <= 0:
+            if entry_manager.get_rank_of("5") != 0 and self.get_equivalent_shelter() <= 0:
                 entry_manager.all_entries["5"].print_when_react()
                 result = -1
                 break
