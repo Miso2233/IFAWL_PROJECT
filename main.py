@@ -611,7 +611,6 @@ class Al4(Al_general):
         if self.state < 2:
             self.state += 2
             self.report("收到")
-            time.sleep(0.4)
             if self.state == 2:
                 self.report("准备好")
 
@@ -833,16 +832,16 @@ class Al11(Al_general):
             self.report("收到")
             self.report("归来")
         elif self.state == 2:
+            self.state -= 1
             my_ship.attack(1, DamageType.ORDINARY_ATTACK)
             my_ship.heal(1)
-            self.state -= 1
             self.report("为了身后的苍生")
 
     def reduce_enemy_heal(self, hp):
         if self.state == 0:
             return hp
-        my_ship.heal(1)
         self.state -= 1
+        my_ship.heal(1)
         self.report("汲取成功")
         hp -= 1
         return hp
