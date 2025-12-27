@@ -1426,7 +1426,7 @@ class Al28(Al_general):#鹘鸮
             self.report("启动报告")
 
     def reduce_enemy_attack(self, atk):
-        if self.state>0 and self.state<4:
+        if 0 < self.state < 4:
             while atk:
                 atk -= 1
                 self.state += 1
@@ -1453,11 +1453,11 @@ class Al28(Al_general):#鹘鸮
                     my_ship.attack(self.state+1,DamageType.ORDINARY_ATTACK)                    
                     self.report("反击")
                     self.report("反击")
-                    print(f"[鹘鸮]造成伤害：{random.randint(3,self.state+1)}")
+                    print(f"[鹘鸮]造成伤害：{self.state+1}")
                 else:
                     my_ship.attack(self.state,DamageType.ORDINARY_ATTACK)
                     self.report("反击")
-                    print(f"[鹘鸮]造成伤害：{random.randint(2,self.state)}")
+                    print(f"[鹘鸮]造成伤害：{self.state}")
                 if enemy.shelter<0:
                     Txt.print_plus("[鹘鸮]勘破灭！",2)
                 self.state = 0
