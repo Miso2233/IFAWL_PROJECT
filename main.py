@@ -229,8 +229,8 @@ class EnemyShip:
         if blind:
             print("[No Info]")
             return
-        if al33.is_on_my_ship:
-            al33.printself()
+        if al33.is_on_my_ship():
+            al33.print_poisoned_shelter()
             return
         for _ in range(self.shelter):
             print("-----")
@@ -441,7 +441,7 @@ class Al_general:
         """
         voices.report(self.short_name, theme)
 
-    def inject_and_report(self, theme:str, data_injected:dict[str,str]):
+    def inject_and_report(self, theme:str, data_injected:dict[str,str|int]):
         """
         Al所包装的注入数据说话函数，省去了说话者名字
         :param theme: 主题
@@ -1641,7 +1641,7 @@ class Al33(Al_general):#蛊
     def print_self(self):
         pass
 
-    def printself(self):
+    def print_poisoned_shelter(self):
         if enemy.shelter>0:
             future = self.state.copy()
             if enemy.missile > 0 and enemy.shelter >=5:
