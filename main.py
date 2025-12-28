@@ -263,7 +263,7 @@ class EnemyShip:
         """
         atk = entry_manager.check_and_add_atk(atk)
         atk = entry_manager.check_and_reduce_missile(atk,my_ship)
-        for al in my_ship.al_list:
+        for al in reversed(my_ship.al_list):
             try:
                 atk = al.reduce_enemy_attack(atk)
             except AttributeError:
@@ -2029,7 +2029,7 @@ class Al40(Al_general): # 冷水
         self.state += 1
         self.report("冷水盾上线")
 
-    def print_self(self):
+    def print_self_before_shelter(self):
         for _ in range(self.state):
             print(self.skin_list[0])
 
@@ -2061,6 +2061,10 @@ class FieldPrinter:
         opposite.print_self_shelter()
         damage_previewer.print_enemy_dmg(opposite.shelter)
         print("\n\n\n")
+        try:
+            me.al_list[2].print_self_before_shelter()
+        except AttributeError:
+            pass
         try:
             me.al_list[1].print_self()
         except AttributeError:
