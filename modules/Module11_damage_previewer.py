@@ -58,7 +58,11 @@ class DamagePreviewer:
                 else:
                     print()
 
-    def show_total_dmg(self):
+    def show_total_dmg(self, my_ship_shelter_now, enemy_shelter_now):
+        if (dmg := self.my_ship_shelter - my_ship_shelter_now) > 0:
+            self.total_dmg_from_enemy += dmg
+        if (dmg := self.enemy_shelter - enemy_shelter_now) > 0:
+            self.total_dmg_from_me += dmg
         Tree(
             "战斗总伤害估计",
             f"对敌方有效伤害>>{self.total_dmg_from_me}",
