@@ -90,6 +90,26 @@ class MyShip:
             except AttributeError:
                 pass
 
+    def get_equivalent_shelter_from_als(self) -> int :
+        """
+        获取从终焉结带来的等效护盾
+        :return: 终焉结带来的等效护盾
+        """
+        out = 0
+        for al in self.al_list:
+            try:
+                out += al.get_equivalent_shelter()
+            except AttributeError:
+                pass
+        return out
+
+    def get_equivalent_shelter_of_ship(self) -> int:
+        """
+        计算全船等效护盾值
+        :return: 全船等效护盾
+        """
+        return my_ship.shelter + self.get_equivalent_shelter_from_als()
+
     def attack(self, atk: int, type: str) -> int:
         """
         根据原始伤害进行加减并对目标造成攻击
@@ -524,6 +544,9 @@ class Al_general:
     def react(self):
         pass
 
+    def get_equivalent_shelter(self):
+        return 0
+
     def print_self(self):
         if self.state != 0:
             try:
@@ -589,7 +612,7 @@ class Al_general:
         """
         storage_manager.transaction(self.recipe,{str(self.index):1})
 
-class Al3(Al_general):
+class Al3(Al_general): # 风行者
 
     def react(self):
         if dice.probability(0.3 * enemy.shelter):
@@ -609,7 +632,7 @@ class Al3(Al_general):
 al3 = Al3(3)
 
 
-class Al4(Al_general):
+class Al4(Al_general): # 咆哮
 
     def react(self):
         if self.state < 2:
@@ -676,7 +699,7 @@ class Al5(Al_general):  # 水银
 al5 = Al5(5)
 
 
-class Al6(Al_general):
+class Al6(Al_general): # 白金
     def react(self):
         if self.state == 0:
             if my_ship.shelter > 0:
@@ -702,7 +725,7 @@ class Al6(Al_general):
 al6 = Al6(6)
 
 
-class Al7(Al_general):
+class Al7(Al_general): # 奶油
     def react(self):
         if self.state == 0:
             if dice.probability(0.7):
@@ -734,7 +757,7 @@ class Al7(Al_general):
 al7 = Al7(7)
 
 
-class Al8(Al_general):
+class Al8(Al_general): # 维多利亚
 
     def react(self):
         if self.state < 2:
@@ -768,7 +791,7 @@ class Al8(Al_general):
 al8 = Al8(8)
 
 
-class Al9(Al_general):
+class Al9(Al_general): # 修械师
 
     def react(self):
         if self.state == 0:
@@ -798,7 +821,7 @@ class Al9(Al_general):
 al9 = Al9(9)
 
 
-class Al10(Al_general):
+class Al10(Al_general): # 离人
 
     def react(self):
         if my_ship.shelter >= 2:
@@ -827,7 +850,7 @@ class Al10(Al_general):
 al10 = Al10(10)
 
 
-class Al11(Al_general):
+class Al11(Al_general): # 柒
 
     def react(self):
         if self.state == 0:
@@ -857,7 +880,7 @@ class Al11(Al_general):
 al11 = Al11(11)
 
 
-class Al12(Al_general):
+class Al12(Al_general): # 晴空
 
     def __init__(self, index):
         super().__init__(index)
@@ -904,7 +927,7 @@ class Al12(Al_general):
 al12 = Al12(12)
 
 
-class Al13(Al_general):
+class Al13(Al_general): # 北极
 
     def react(self):
         if my_ship.missile == 0:
@@ -931,7 +954,7 @@ class Al13(Al_general):
 al13 = Al13(13)
 
 
-class Al14(Al_general):
+class Al14(Al_general): # 信风
 
     def react(self):
         if my_ship.shelter > 0:
@@ -952,6 +975,9 @@ class Al14(Al_general):
         atk -= minor
         return atk
 
+    def get_equivalent_shelter(self):
+        return self.state
+
     def print_self(self):
         print(self.skin_list[self.state % 3], end="")
         print("\n//\\\\//" * (self.state // 3))
@@ -967,7 +993,7 @@ class Al14(Al_general):
 al14 = Al14(14)
 
 
-class Al15(Al_general):
+class Al15(Al_general): # 暴雨
 
     def react(self):
         if self.state == 0:
@@ -986,7 +1012,7 @@ class Al15(Al_general):
             return num
 
     def operate_in_afternoon(self):
-        if self.state > 0:  # 暴雨
+        if self.state > 0:
             if self.state == 1:
                 if my_ship.missile > 0:
                     my_ship.missile -= 1
@@ -1007,7 +1033,7 @@ class Al15(Al_general):
 al15 = Al15(15)
 
 
-class Al16(Al_general):
+class Al16(Al_general): # 情诗
     cure_list = [0, 3, 6, 8, 10]
 
     def react(self):
@@ -1042,7 +1068,7 @@ class Al16(Al_general):
 al16 = Al16(16)
 
 
-class Al17(Al_general):
+class Al17(Al_general): # 白夜
 
     def react(self):
         if my_ship.missile == 0:
@@ -1069,7 +1095,8 @@ class Al17(Al_general):
 al17 = Al17(17)
 
 
-class Al18(Al_general):
+class Al18(Al_general): # 初夏
+
     def react(self):
         if dice.probability(0.6) or self.state == 1:
             my_ship.heal(2)
@@ -1089,7 +1116,7 @@ class Al18(Al_general):
 
 al18 = Al18(18)
 
-class Al19(Al_general):
+class Al19(Al_general): # 苍穹
     
     def react(self):
         if self.state==0:
@@ -1114,7 +1141,7 @@ class Al19(Al_general):
 
 al19 = Al19(19)
 
-class Al20(Al_general):
+class Al20(Al_general): # 长安
     def react(self):
         if self.state == 0:
             dice.probability_current+=0.6
@@ -1136,7 +1163,7 @@ class Al20(Al_general):
 
 al20 = Al20(20)
 
-class Al21(Al_general):
+class Al21(Al_general): # 诗岸
 
     def heal(self):
         if self.state>2 and dice.probability(0.5):
@@ -1180,7 +1207,7 @@ class Al21(Al_general):
 
 al21 = Al21(21)
 
-class Al22(Al_general):
+class Al22(Al_general): # 迫害妄想
     def react(self):
         if self.state == 0:
             my_ship.attack(1,DamageType.ORDINARY_ATTACK)
@@ -1212,7 +1239,7 @@ class Al22(Al_general):
 
 al22 = Al22(22)
 
-class Al23(Al_general):
+class Al23(Al_general): # 浮生
 
     def react(self):
         for i in range(3):
@@ -1235,7 +1262,7 @@ class Al23(Al_general):
 
 al23 = Al23(23)
 
-class Al24(Al_general):
+class Al24(Al_general): # 大奶油
 
     def find_the_quotient_rounded_up(self, a, b):#向上取整
         if a % b != 0:
@@ -1291,7 +1318,7 @@ class Al24(Al_general):
 al24 = Al24(24)
 
 
-class Al25(Al_general):
+class Al25(Al_general): # 阿贾克斯
     def react(self):
         if self.state == 0:
             self.state=3
@@ -1334,7 +1361,7 @@ class Al25(Al_general):
 
 al25 = Al25(25)
 
-class Al26(Al_general):
+class Al26(Al_general): # 眠雀
 
     def react(self):
         if self.state == 0:
@@ -1379,7 +1406,7 @@ class Al26(Al_general):
 
 al26 = Al26(26)
 
-class Al27(Al_general):#瞳猫
+class Al27(Al_general): # 瞳猫
 
     def react(self):
         if self.state < 9:
@@ -1402,20 +1429,20 @@ class Al27(Al_general):#瞳猫
 
     def reduce_enemy_attack(self, atk):
         if self.is_on_my_ship() and atk > 0:
-            if dice.probability(self.state*0.1-(my_ship.shelter+al14.state-1)*0.12):
+            if dice.probability(self.state*0.1-(my_ship.get_equivalent_shelter_of_ship()-1)*0.12):
                 atk = 0
                 self.report("喵")
         return atk
 
     def suggest(self):
         if self.state<9:
-            return f"[e]提升层数|{self.state}层|当前闪避率>>{self.state*10-(my_ship.shelter+al14.state-1)*12}%"
+            return f"[e]提升层数|{self.state}层|当前闪避率>>{self.state*10-(my_ship.get_equivalent_shelter_of_ship()-1)*12}%"
         else:
-            return f"[层数已满]|{self.state}层|当前闪避率>>{self.state*10-(my_ship.shelter+al14.state-1)*12}%"
+            return f"[层数已满]|{self.state}层|当前闪避率>>{self.state*10-(my_ship.get_equivalent_shelter_of_ship()-1)*12}%"
 
 al27 = Al27(27)
 
-class Al28(Al_general):#鹘鸮
+class Al28(Al_general): # 鹘鸮
 
    
     def print_self_before_shelter(self):
@@ -1479,7 +1506,7 @@ class Al28(Al_general):#鹘鸮
         
 al28=Al28(28)
 
-class Al29(Al_general):#酒师
+class Al29(Al_general): # 酒师
 
     state = []
 
@@ -1559,7 +1586,7 @@ class Al30(Al_general):
 
 al30 = Al30(30)
 
-class Al31(Al_general):#白鲟
+class Al31(Al_general): # 白鲟
 
     def react(self):
         if self.state == 0:
@@ -1601,7 +1628,7 @@ class Al31(Al_general):#白鲟
 
 al31=Al31(31)
 
-class Al33(Al_general):#蛊
+class Al33(Al_general): # 蛊
 
     state = [0,0,0,0,0]
 
@@ -1808,7 +1835,7 @@ class Al35(Al_general): # 青鹄
 
 al35=Al35(35)
 
-class Al36(Al_general):#西岭
+class Al36(Al_general): # 西岭
 
     def reduce_enemy_attack(self, atk):
         if not self.is_on_my_ship() or self.state == 1 :
@@ -1988,6 +2015,38 @@ class Al39(Al_general): # 黎明维多利亚
 
 al39 = Al39(39)
 
+
+class Al40(Al_general): # 冷水
+
+    def get_equivalent_shelter(self):
+        return self.state
+
+    def react(self):
+        if my_ship.shelter < 1:
+            self.report("护盾不足")
+            return
+        my_ship.shelter -= 1
+        self.state += 1
+        self.report("冷水盾上线")
+
+    def print_self(self):
+        for _ in range(self.state):
+            print(self.skin_list[0])
+
+    def reduce_enemy_attack(self, atk):
+        while self.state != 0 and atk != 0:
+            if dice.probability(0.33):
+                self.state -= 1
+                my_ship.attack(1,DamageType.ORDINARY_ATTACK)
+                atk -= 1
+                self.report("破碎")
+            else:
+                atk = 0
+                self.report("承受")
+        return atk
+
+al40 = Al40(40)
+
 class FieldPrinter:
 
     def print_for_fight(self, me: MyShip, opposite: EnemyShip):
@@ -2010,7 +2069,7 @@ class FieldPrinter:
             me.al_list[0].print_self_before_shelter()
         except AttributeError:
             pass
-        damage_previewer.print_my_ship_dmg(me.shelter,mute=(al14.state!=0))
+        damage_previewer.print_my_ship_dmg(me.shelter,mute=(my_ship.get_equivalent_shelter_from_als()!=0))
         me.print_self_shelter(entry_manager.get_rank_of("2")>=2)
         try:
             me.al_list[1].print_self_behind_shelter()
@@ -2229,14 +2288,6 @@ class MainLoops:
             return 1
         return 0
 
-    @staticmethod
-    def get_equivalent_shelter() -> int:
-        """
-        计算我方的等效护盾
-        :return: 等效护盾值
-        """
-        return my_ship.shelter + 3 * al14.state
-
     def fight_mainloop(self):
         sounds_manager.switch_to_bgm("fight")
         while 1:
@@ -2358,7 +2409,7 @@ class MainLoops:
                         al.operate_in_our_turn()
 
             # dusk
-            if entry_manager.get_rank_of("5") != 0 and self.get_equivalent_shelter() <= 0:
+            if entry_manager.get_rank_of("5") != 0 and my_ship.get_equivalent_shelter_of_ship() <= 0:
                 entry_manager.all_entries["5"].print_when_react()
                 result = -1
                 break

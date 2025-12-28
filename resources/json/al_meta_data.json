@@ -454,5 +454,18 @@
     "rank_num": 7,
     "origin": "浅草寺重工",
     "platform": "导弹"
+  },
+    "40": {
+    "len_name": "“冷水”超临界冰晶护盾注入剂",
+    "short_name": "冷水",
+    "short_name_en": "Icey",
+    "description_txt": "-\n-\n-\n-",
+    "index": 40,
+    "type": "w",
+    "rank": "FREE",
+    "rank_num": 0,
+    "skin_list": ["-=-=-"],
+    "origin": "岩河军工",
+    "platform": "通用"
   }
 }
