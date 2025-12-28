@@ -559,7 +559,12 @@ class Al_general:
         pass
 
     def print_self_before_shelter(self):
-        pass
+        if self.type == "w":
+            self.print_self()
+
+    def print_self_behind_missile(self):
+        if self.type in ["q","e"]:
+            self.print_self()
 
     def suggest(self) -> str | None:
         return None
@@ -1183,7 +1188,7 @@ class Al21(Al_general): # 诗岸
             self.report("充注")
 
     def operate_in_afternoon(self):
-        if my_ship.shelter<=0:
+        if my_ship.get_equivalent_shelter_of_ship() <= 0:
             if self.state>0:
                 self.state-=1
                 my_ship.shelter=1
@@ -2068,34 +2073,25 @@ class FieldPrinter:
         opposite.print_self_shelter()
         damage_previewer.print_enemy_dmg(opposite.shelter)
         print("\n\n\n")
-        try:
-            me.al_list[2].print_self_before_shelter()
-        except AttributeError:
-            pass
-        try:
-            me.al_list[1].print_self()
-        except AttributeError:
-            pass
-        try:
-            me.al_list[0].print_self_before_shelter()
-        except AttributeError:
-            pass
+        for al in reversed(my_ship.al_list):
+            try:
+                al.print_self_before_shelter()
+            except AttributeError:
+                pass
         damage_previewer.print_my_ship_dmg(me.shelter,mute=(my_ship.get_equivalent_shelter_from_als()!=0))
         me.print_self_shelter(entry_manager.get_rank_of("2")>=2)
-        try:
-            me.al_list[1].print_self_behind_shelter()
-        except AttributeError:
-            pass
+        for al in reversed(my_ship.al_list):
+            try:
+                al.print_self_behind_shelter()
+            except AttributeError:
+                pass
         me.print_self_missile()
         print()
-        try:
-            me.al_list[2].print_self()
-        except AttributeError:
-            pass
-        try:
-            me.al_list[0].print_self()
-        except AttributeError:
-            pass
+        for al in reversed(my_ship.al_list):
+            try:
+                al.print_self_behind_missile()
+            except AttributeError:
+                pass
         print()
         damage_previewer.update(me.shelter,opposite.shelter)
 
