@@ -111,6 +111,7 @@ class MyShip:
                 pass
         atk = entry_manager.check_and_reduce_atk(atk)
         atk = entry_manager.check_and_attack_me(atk,enemy)
+        al33.check_if_move(atk)####
         enemy.shelter -= atk
         return atk
 
@@ -227,6 +228,9 @@ class EnemyShip:
     def print_self_shelter(self,blind=False):
         if blind:
             print("[No Info]")
+            return
+        if al33.is_on_my_ship:
+            al33.printself()
             return
         for _ in range(self.shelter):
             print("-----")
@@ -1593,6 +1597,80 @@ class Al31(Al_general):#白鲟
         print(".....\n"*self.state)
 
 al31=Al31(31)
+
+class Al33(Al_general):#蛊
+
+    state = [0,0,0,0,0]
+
+    def initialize(self):
+        self.state = [0,0,0,0,0]
+
+    def react(self):
+        #p_c_manager.boom_now()
+        if my_ship.missile > 0 and enemy.shelter >=5:
+            my_ship.missile-=1
+            pre_poi_list=[60,40,30,10,10]
+            num=random.randint(135,246)
+            self.inject_and_report("射线攻击",{"num":num})
+        else:
+            pre_poi_list=[40,30,30,0,0]
+            self.report("内置核同质异能素组攻击")
+        for i in range(5):#for(int i; i < 5; i++)
+            self.state[i]+=pre_poi_list[i]
+        if enemy.shelter<=5:#去尾
+            for i in range(enemy.shelter,5):
+                self.state[i]=0
+    
+    def check_if_move(self,times):
+        if self.is_on_my_ship:
+            for i in range(times):
+                self.state=self.state[1:]
+                self.state.append(0)
+    
+    def operate_in_afternoon(self):
+        for i in range(5):
+            if self.state[i] > 0:
+                self.state[i] += 4
+        while self.state[0] >= 100:
+            enemy.shelter -= 1
+            self.report("正常攻击")
+            if enemy.shelter != 0:
+                self.state[1] += self.state[0] - 100
+            self.check_if_move(1)
+
+    def print_self(self):
+        pass
+
+    def printself(self):
+        if enemy.shelter>0:
+            future = self.state.copy()
+            if enemy.missile > 0 and enemy.shelter >=5:
+                pre_poi_list=[60,40,30,10,10]
+            else:
+                pre_poi_list=[40,30,30,0,0]
+            for i in range(5):
+                future[i]+=pre_poi_list[i]
+            
+            for i in range(1,enemy.shelter+1):
+                p=enemy.shelter-i
+                if p<5 and al33.state[p] != 0:
+                    print(f"----->{self.state[p]} |q]>{future[p]}")
+                elif  p<5 and al33.state[p] == 0 and future[p] !=0:
+                    print(f"-----    |q]>{future[p]}")
+                else:
+                    print("-----")
+
+
+    def suggest(self):
+
+        now = self.state.copy()
+        if my_ship.missile > 0 and enemy.shelter >=5:
+            pre_poi_list=[60,40,30,10,10]
+            return f"[q]射线粒子炮发射|估计破损{pre_poi_list}|加成中"
+        else:
+            pre_poi_list=[40,30,30,0,0]
+            return f"[q]射线粒子炮发射|估计破损{pre_poi_list}"
+al33=Al33(33)
 
 class Al34(Al_general): # 风间浦
 
