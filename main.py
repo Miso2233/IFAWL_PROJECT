@@ -90,6 +90,26 @@ class MyShip:
             except AttributeError:
                 pass
 
+    def get_equivalent_shelter_from_als(self) -> int :
+        """
+        获取从终焉结带来的等效护盾
+        :return: 终焉结带来的等效护盾
+        """
+        out = 0
+        for al in self.al_list:
+            try:
+                out += al.get_equivalent_shelter()
+            except AttributeError:
+                pass
+        return out
+
+    def get_equivalent_shelter_of_ship(self) -> int:
+        """
+        计算全船等效护盾值
+        :return: 全船等效护盾
+        """
+        return my_ship.shelter + self.get_equivalent_shelter_from_als()
+
     def attack(self, atk: int, type: str) -> int:
         """
         根据原始伤害进行加减并对目标造成攻击
@@ -524,6 +544,9 @@ class Al_general:
     def react(self):
         pass
 
+    def get_equivalent_shelter(self):
+        return 0
+
     def print_self(self):
         if self.state != 0:
             try:
@@ -951,6 +974,9 @@ class Al14(Al_general):
         self.state -= minor
         atk -= minor
         return atk
+
+    def get_equivalent_shelter(self):
+        return self.state
 
     def print_self(self):
         print(self.skin_list[self.state % 3], end="")
@@ -1402,16 +1428,16 @@ class Al27(Al_general):#瞳猫
 
     def reduce_enemy_attack(self, atk):
         if self.is_on_my_ship() and atk > 0:
-            if dice.probability(self.state*0.1-(my_ship.shelter+al14.state-1)*0.12):
+            if dice.probability(self.state*0.1-(my_ship.get_equivalent_shelter_of_ship()-1)*0.12):
                 atk = 0
                 self.report("喵")
         return atk
 
     def suggest(self):
         if self.state<9:
-            return f"[e]提升层数|{self.state}层|当前闪避率>>{self.state*10-(my_ship.shelter+al14.state-1)*12}%"
+            return f"[e]提升层数|{self.state}层|当前闪避率>>{self.state*10-(my_ship.get_equivalent_shelter_of_ship()-1)*12}%"
         else:
-            return f"[层数已满]|{self.state}层|当前闪避率>>{self.state*10-(my_ship.shelter+al14.state-1)*12}%"
+            return f"[层数已满]|{self.state}层|当前闪避率>>{self.state*10-(my_ship.get_equivalent_shelter_of_ship()-1)*12}%"
 
 al27 = Al27(27)
 
@@ -2010,7 +2036,7 @@ class FieldPrinter:
             me.al_list[0].print_self_before_shelter()
         except AttributeError:
             pass
-        damage_previewer.print_my_ship_dmg(me.shelter,mute=(al14.state!=0))
+        damage_previewer.print_my_ship_dmg(me.shelter,mute=(my_ship.get_equivalent_shelter_from_als()!=0))
         me.print_self_shelter(entry_manager.get_rank_of("2")>=2)
         try:
             me.al_list[1].print_self_behind_shelter()
@@ -2229,14 +2255,6 @@ class MainLoops:
             return 1
         return 0
 
-    @staticmethod
-    def get_equivalent_shelter() -> int:
-        """
-        计算我方的等效护盾
-        :return: 等效护盾值
-        """
-        return my_ship.shelter + 3 * al14.state
-
     def fight_mainloop(self):
         sounds_manager.switch_to_bgm("fight")
         while 1:
@@ -2358,7 +2376,7 @@ class MainLoops:
                         al.operate_in_our_turn()
 
             # dusk
-            if entry_manager.get_rank_of("5") != 0 and self.get_equivalent_shelter() <= 0:
+            if entry_manager.get_rank_of("5") != 0 and my_ship.get_equivalent_shelter_of_ship() <= 0:
                 entry_manager.all_entries["5"].print_when_react()
                 result = -1
                 break
