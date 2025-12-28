@@ -229,7 +229,7 @@ class EnemyShip:
         if blind:
             print("[No Info]")
             return
-        if al33.is_on_my_ship:
+        if al33.is_on_my_ship():
             al33.printself()
             return
         for _ in range(self.shelter):
@@ -1454,17 +1454,20 @@ class Al28(Al_general):#鹘鸮
             elif self.state>1:
                 if my_ship.missile>1:
                     my_ship.load(-1)
-                    my_ship.attack(self.state+1,DamageType.ORDINARY_ATTACK)                    
+                    atk_num = self.state+1
+                    self.state = 0
+                    my_ship.attack(atk_num,DamageType.ORDINARY_ATTACK)                    
                     self.report("反击")
                     self.report("反击")
-                    print(f"[鹘鸮]造成伤害：{self.state+1}")
+                    print(f"[鹘鸮]造成伤害：{atk_num}")
                 else:
-                    my_ship.attack(self.state,DamageType.ORDINARY_ATTACK)
+                    atk_num = self.state
+                    self.state = 0
+                    my_ship.attack(atk_num,DamageType.ORDINARY_ATTACK)
                     self.report("反击")
-                    print(f"[鹘鸮]造成伤害：{self.state}")
+                    print(f"[鹘鸮]造成伤害：{atk_num}")
                 if enemy.shelter<0:
                     Txt.print_plus("[鹘鸮]勘破灭！",2)
-                self.state = 0
     
     def suggest(self):
         if self.state == 0:
@@ -1804,6 +1807,60 @@ class Al35(Al_general): # 青鹄
             return f"[e]装弹|[待命中]获得额外回合|充能层数{self.state}/4"
 
 al35=Al35(35)
+
+class Al36(Al_general):#西岭
+
+    def reduce_enemy_attack(self, atk):
+        if not self.is_on_my_ship() or self.state == 1 :
+            return atk
+        if dice.probability(0.5):
+            self.report("拦截成功")
+            return 0
+        else:
+            self.report("拦截失败")
+            return atk
+
+    def react(self):
+        if self.state == 0:
+            self.state = 1
+        else:
+            self.state = 0
+
+    def operate_in_afternoon(self):
+        if self.state == 1 and dice.current_who == 1:
+            if_auto = False
+            count_shot = 40
+            while count_shot > 0:
+                if not if_auto:
+                    inp = input(f"[西岭]机炮已就位|剩余{count_shot}梭>>>")
+                    if inp == "a":
+                        if_auto = True
+                else:
+                    print(f"[西岭]机炮已就位|剩余{count_shot}梭")
+                count_shot -= 1
+                if dice.probability(0.017):
+                    print("[西岭]" + 
+                        random.choice(
+                            [
+                                "攻击命中！",
+                                "护盾破碎！",
+                                "判定摧毁！"
+                            ]
+                        ) +
+                        "------------+++[命中确认]+++------------"
+                    )
+                    my_ship.attack(1,DamageType.ORDINARY_ATTACK)
+                else:
+                    print("[西岭]攻击未命中！--------[未能命中]---------")
+        time.sleep(0.4)
+
+    def suggest(self):
+        if self.state == 0:
+            return "[自动防空]导弹拦截中|[e]切换至饱和式弹雨扫射模式"
+        else:
+            return "[弹雨启动]每日攻击就位|[e]切换回自动防御模式"            
+        
+al36=Al36(36)
 
 class Al38(Al_general): # 澈
 
