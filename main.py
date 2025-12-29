@@ -1915,6 +1915,70 @@ class Al36(Al_general): # 西岭
         
 al36=Al36(36)
 
+class Al37(Al_general):#星尘
+
+    def react(self):
+        if self.state<0:
+            self.report("冷却中")
+            return
+        try:
+            Txt.input_plus("[星尘]确认后使用[ctrl+C]（请勿多次敲击或长按）锁定目标|[enter]确认>>>")
+        except KeyboardInterrupt:
+            self.report("谁叫你在这里按了？？")
+        #time.sleep(1)
+        run_delta_t=0.03
+        e = random.randint(33,66)
+        print(" "*(e-2) + "[ + ]")
+
+        pos=-1
+        for i in range(100):
+            try:
+                pos+=1
+                print("|",end="")
+                time.sleep(run_delta_t)
+            except KeyboardInterrupt:
+                break
+
+        if e-4  <= pos <= e+4 :
+            print("x")
+            self.state=-7
+            if  e-2  <= pos <= e+2:
+                print(" "*(e-10)+r"\\\\   [星尘]   ////")
+                print(" "*(e-10)+r"   \\\\FIRE!!////")
+                damage=min(10,my_ship.missile)
+            else:
+                print(" "*(e-10)+r"\\ [星尘]SPLASH!! //")
+                damage=min(4,my_ship.missile)
+                self.state=-4
+            self.report("锁定成功")
+            my_ship.attack(int(damage*1.5),DamageType.PARTICLE_CANNON_SHOOTING)
+            #p_c_manager.boom_now()
+            my_ship.load(-damage)
+            Txt.print_plus(
+                f" 有效伤害>{damage_previewer.enemy_shelter-enemy.shelter}.0"
+            )
+        else:
+            print("?")
+            self.report("锁定未成功")
+
+    def operate_in_afternoon(self):
+        if self.state<0:
+            self.state+=1
+
+    #def check_if_recycle(self):
+    #    if self.is_on_my_ship() and enemy.shelter<-1:
+    #        my_ship.load(int((-1-enemy.shelter)*0.5))
+    #        enemy.shelter=-1
+    #        self.report("能量回收")
+        
+    def suggest(self):
+        if self.state<0:
+            return f"[冷却中]剩余{-self.state}天"
+        else:
+            return "[q]启动狙击粒子炮|注意-含有qte"
+        
+al37=Al37(37)
+
 class Al38(Al_general): # 澈
 
     def initialize(self):
