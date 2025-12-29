@@ -180,18 +180,6 @@ class MyShip:
                 pass
         if self.missile < 1 and operation == "1":
             operation = "0"
-        if self.al_list[1] == al21 and operation == "2":
-            al21.heal()
-            operation = "pass"
-        if al12.state != 0 and operation != "q" and not (self.al_list[1]==al16 and operation in ["w","2"]):
-            al12.attack()
-        if al39.state in [11,9] and operation == "q":
-            operation = "1"
-        if al15.state != 0 and operation == "1":
-            voices.report("暴雨", "常规发射器离线")
-            operation = ""
-        if al16.state != 0 and operation == "2":
-            al16.heal()
         match operation:
             case "0" | " ":
                 self.load(1)
@@ -897,6 +885,11 @@ class Al12(Al_general): # 晴空
         super().__init__(index)
         self.atk_list: list[int] = [0, 0, 1, 2, 4, 5, 7, 8]
 
+    def adjust_operation(self,raw:str) -> str:
+        if self.state != 0 and raw != "q" and not (al16.is_on_my_ship() and raw in ["w","2"]):
+            self.attack()
+        return raw
+
     def react(self):
         if self.state < 7:
             self.state += 1
@@ -1022,6 +1015,12 @@ class Al15(Al_general): # 暴雨
         else:
             return num
 
+    def adjust_operation(self,raw:str) -> str:
+        if self.state != 0 and raw == "1":
+            voices.report("暴雨", "常规发射器离线")
+            return "0"
+        return raw
+
     def operate_in_afternoon(self):
         if self.state > 0:
             if self.state == 1:
@@ -1046,6 +1045,11 @@ al15 = Al15(15)
 
 class Al16(Al_general): # 情诗
     cure_list = [0, 3, 6, 8, 10]
+
+    def adjust_operation(self,raw:str) -> str:
+        if self.state != 0 and raw == "2":
+            self.heal()
+        return raw
 
     def react(self):
         if self.state < 4:
@@ -1187,6 +1191,12 @@ class Al21(Al_general): # 诗岸
         else:
             al21.state+=1
             self.report("充注")
+
+    def adjust_operation(self,raw:str) -> str:
+        if self.is_on_my_ship() and raw == "2":
+            self.heal()
+            return "pass"
+        return raw
 
     def react(self):
         if self.state>0:           
@@ -1970,6 +1980,11 @@ class Al39(Al_general): # 黎明维多利亚
     """
     黎明维多利亚的state转移过程是：0 2 4 6 8 10->11 9 7 5 3 1->0
     """
+
+    def adjust_operation(self,raw:str) -> str:
+        if self.state in [11,9] and raw == "q":
+            return "1"
+        return raw
 
     def add_num(self, num: int):
         if self.state % 2 == 1:
