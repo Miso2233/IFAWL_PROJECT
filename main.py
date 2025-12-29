@@ -173,22 +173,13 @@ class MyShip:
         """
         operation = auto_pilot.get_operation([self.shelter, self.missile, enemy.shelter, enemy.missile, 0])
         #print(operation)
+        for al in my_ship.al_list:
+            try:
+                operation = al.adjust_operation(operation)
+            except AttributeError:
+                pass
         if self.missile < 1 and operation == "1":
             operation = "0"
-        if self.al_list[1] == al18 and operation == "2":
-            operation = "w"
-        if self.al_list[1] == al21 and operation == "2":
-            al21.heal()
-            operation = "pass"
-        if al12.state != 0 and operation != "q" and not (self.al_list[1]==al16 and operation in ["w","2"]):
-            al12.attack()
-        if al39.state in [11,9] and operation == "q":
-            operation = "1"
-        if al15.state != 0 and operation == "1":
-            voices.report("暴雨", "常规发射器离线")
-            operation = ""
-        if al16.state != 0 and operation == "2":
-            al16.heal()
         match operation:
             case "0" | " ":
                 self.load(1)
@@ -572,6 +563,9 @@ class Al_general:
     def operate_in_our_turn(self):
         pass
 
+    def adjust_operation(self,raw:str) -> str:
+        return raw
+
     def refresh_craftable_tag(self):
         """
         刷新自己能否被合成
@@ -891,6 +885,11 @@ class Al12(Al_general): # 晴空
         super().__init__(index)
         self.atk_list: list[int] = [0, 0, 1, 2, 4, 5, 7, 8]
 
+    def adjust_operation(self,raw:str) -> str:
+        if self.state != 0 and raw != "q" and not (al16.is_on_my_ship() and raw in ["w","2"]):
+            self.attack()
+        return raw
+
     def react(self):
         if self.state < 7:
             self.state += 1
@@ -1016,6 +1015,12 @@ class Al15(Al_general): # 暴雨
         else:
             return num
 
+    def adjust_operation(self,raw:str) -> str:
+        if self.state != 0 and raw == "1":
+            voices.report("暴雨", "常规发射器离线")
+            return "0"
+        return raw
+
     def operate_in_afternoon(self):
         if self.state > 0:
             if self.state == 1:
@@ -1040,6 +1045,11 @@ al15 = Al15(15)
 
 class Al16(Al_general): # 情诗
     cure_list = [0, 3, 6, 8, 10]
+
+    def adjust_operation(self,raw:str) -> str:
+        if self.state != 0 and raw == "2":
+            self.heal()
+        return raw
 
     def react(self):
         if self.state < 4:
@@ -1101,6 +1111,11 @@ al17 = Al17(17)
 
 
 class Al18(Al_general): # 初夏
+
+    def adjust_operation(self,raw:str) -> str:
+        if self.is_on_my_ship() and raw == "2":
+            return "w"
+        return raw
 
     def react(self):
         if dice.probability(0.6) or self.state == 1:
@@ -1176,6 +1191,12 @@ class Al21(Al_general): # 诗岸
         else:
             al21.state+=1
             self.report("充注")
+
+    def adjust_operation(self,raw:str) -> str:
+        if self.is_on_my_ship() and raw == "2":
+            self.heal()
+            return "pass"
+        return raw
 
     def react(self):
         if self.state>0:           
@@ -1960,6 +1981,11 @@ class Al39(Al_general): # 黎明维多利亚
     黎明维多利亚的state转移过程是：0 2 4 6 8 10->11 9 7 5 3 1->0
     """
 
+    def adjust_operation(self,raw:str) -> str:
+        if self.state in [11,9] and raw == "q":
+            return "1"
+        return raw
+
     def add_num(self, num: int):
         if self.state % 2 == 1:
             return num
@@ -2338,13 +2364,19 @@ class MainLoops:
             self.days += 1
         sounds_manager.stop_bgm()
         if result == 1:
-            Txt.print_plus("我方胜利")
+            print()
+            Txt.print_plus("=========我方胜利=========")
+            print()
+            damage_previewer.show_total_dmg(my_ship.shelter,enemy.shelter)
             sounds_manager.switch_to_bgm("win")
             storage_manager.drop_for_fight()
             input_plus("[enter]回站")
             sounds_manager.stop_bgm()
             return
-        Txt.print_plus("敌方胜利")
+        print()
+        Txt.print_plus("=========敌方胜利=========")
+        print()
+        damage_previewer.show_total_dmg(my_ship.shelter,enemy.shelter)
         if storage_manager.has_enough_ssd(my_ship.total_al_rank):
             storage_manager.cost_ssd(my_ship.total_al_rank)
             input_plus("[enter]回站")
@@ -2425,13 +2457,19 @@ class MainLoops:
             self.days += 1
         sounds_manager.stop_bgm()
         if result == 1:
-            Txt.print_plus("我方胜利")
+            print()
+            Txt.print_plus("=========我方胜利=========")
+            print()
+            damage_previewer.show_total_dmg(my_ship.shelter,enemy.shelter)
             sounds_manager.switch_to_bgm("win")
             storage_manager.drop_for_fight()
             input_plus("[enter]回站")
             sounds_manager.stop_bgm()
             return
-        Txt.print_plus("敌方胜利")
+        print()
+        Txt.print_plus("=========敌方胜利=========")
+        print()
+        damage_previewer.show_total_dmg(my_ship.shelter,enemy.shelter)
         if storage_manager.has_enough_ssd(my_ship.total_al_rank):
             storage_manager.cost_ssd(my_ship.total_al_rank)
             input_plus("[enter]回站")

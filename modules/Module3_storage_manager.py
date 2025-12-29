@@ -137,12 +137,20 @@ class StorageManager:
         """
         money = random.randint(1000, 1200)
         self.modify("联邦信用点",money)
-        print(f"[赏金到账]信用点x{money}")
+        isk_str = f"联邦信用点*{money}"
         items = random.sample(list(self.template["materials"].keys()),2)
+        item_dict = {}
         for item in items:
             num = random.randint(10,15)
             self.modify(item,num)
-            print(f"[战利品收集] {item}x{num}")
+            item_dict[item] = num
+        Txt.Tree(
+            "收益统计",
+            "赏金到账>>",
+            isk_str,
+            "战利品收集>>",
+            item_dict
+        ).print_self()
         self.sync()
 
     def transaction(self,give_list:dict[str,int],get_list:dict[str,int]):
