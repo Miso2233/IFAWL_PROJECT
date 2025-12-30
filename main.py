@@ -1652,7 +1652,28 @@ class Al31(Al_general): # 白鲟
     def print_self(self):
         print(".....\n"*self.state)
 
-al31=Al31(31)
+al31 = Al31(31)
+
+
+class Al32(Al_general): # 普罗旺斯
+
+    def react(self):
+        if my_ship.missile % 2 == 1:
+            my_ship.load(-1)
+            my_ship.heal(2)
+            self.report("耗弹回盾")
+        else:
+            my_ship.load(2)
+            self.report("回弹")
+
+    def suggest(self):
+        if my_ship.missile % 2 == 1:
+            return "[e]消耗粒子匣回充2护盾"
+        else:
+            return "[e]回充2个粒子匣"
+
+al32 = Al32(32)
+
 
 class Al33(Al_general): # 蛊
 
@@ -1726,7 +1747,10 @@ class Al33(Al_general): # 蛊
         else:
             pre_poi_list=[40,30,30,0,0]
             return f"[q]射线粒子炮发射|估计破损{pre_poi_list}"
-al33=Al33(33)
+
+
+al33 = Al33(33)
+
 
 class Al34(Al_general): # 风间浦
 
@@ -1791,7 +1815,7 @@ class Al34(Al_general): # 风间浦
         else:
             return "[w]进入激进模式|[保守模式]>[2]回盾加成中"
 
-al34=Al34(34)
+al34 = Al34(34)
 
 class Al35(Al_general): # 青鹄
 
