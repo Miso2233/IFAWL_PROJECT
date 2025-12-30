@@ -230,7 +230,7 @@ class EntryManager:
 
     def check_and_reduce_missile(self,atk:int,my_ship):
         """海啸"""
-        if dice.probability(self.get_rank_of("12") * 0.2) and atk > 1:
+        if dice.probability(self.get_rank_of("12") * 0.2) and my_ship.missile > 0 and atk > 1:
             my_ship.load(-1)
             self.all_entries["12"].print_when_react()
         return atk
