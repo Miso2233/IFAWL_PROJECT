@@ -224,7 +224,7 @@ class MyShip:
                 pass
             case _:
                 Txt.print_plus("你跳过了这一天！")
-
+                auto_pilot.refresh()
 
 my_ship = MyShip()
 
