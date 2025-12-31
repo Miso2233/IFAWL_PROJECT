@@ -2645,8 +2645,8 @@ class MainLoops:
         Txt.print_plus(f"轮次{self.infinity_round}>>准备开始>>")
 
     def infinity_mainloop(self):
-        sounds_manager.switch_to_bgm("fight")
         while 1:
+            sounds_manager.switch_to_bgm("fight")
             while 1:
                 # dawn
                 if (rank := entry_manager.get_rank_of("11")) != 0:
@@ -2684,7 +2684,6 @@ class MainLoops:
                 if (result := self.__is_over()) != 0:
                     break
                 self.days += 1
-            sounds_manager.stop_bgm()
             if result == 1:
                 print()
                 Txt.print_plus("=========我方胜利=========")
