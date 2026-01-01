@@ -163,6 +163,19 @@ class EntryManager:
                 print_plus(f"[警告]{entry.title} 等级{entry.RANK_STR_LIST[entry.flow_rank]} 已被激活 >>> {entry.description_list[entry.flow_rank]}")
                 break
 
+    def pull_down(self):
+        """
+        将一个已激活词条下拉一级
+        :return: 无
+        """
+        entry_list = list(self.all_entries.values())
+        random.shuffle(entry_list)
+        for entry in entry_list:
+            if entry.flow_rank > 0:
+                entry.flow_rank -= 1
+                print_plus(f"[抑制剂启动]{entry.title} 已被抑制 >>> {entry.description_list[entry.flow_rank]}")
+                break
+
     def clear_all_flow(self):
         for entry in self.all_entries.values():
             entry.flow_rank = 0

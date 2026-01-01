@@ -16,6 +16,7 @@ from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
 from modules.Module11_damage_previewer import damage_previewer
+from modules.Module12_infinity_card_manager import CardManager
 
 __VERSION__ = "IFAWL 1.1.0 'TOWARDS DAWN'"
 
@@ -2380,7 +2381,7 @@ class StationTreesManager:
 station_trees_manager = StationTreesManager()
 
 contract_manager = Contract_manager(storage_manager, list(al_manager.all_al_list.keys()))
-
+infinity_card_manager = CardManager(my_ship,enemy,entry_manager)
 
 class MainLoops:
 
