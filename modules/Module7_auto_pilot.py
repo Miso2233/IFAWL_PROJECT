@@ -89,21 +89,25 @@ class Auto_pilot_manager:#自动驾驶
         output=""
 
         while output in ["","(",")","p"] and self.to_do_list_normal != []:
-            if eval(self.condition_list[0]):
-                try:
-                    if self.condition_list[1] == "Same as yesterday":
-                        self.condition_list[1]= "True"
-                except IndexError:
-                    pass
-                output=self.to_do_list_normal[0]
-            else:
-                try:
-                    if self.condition_list[1] == "Same as yesterday":
-                        self.condition_list[1]= "False"
-                except IndexError:
-                    pass
-                output=self.to_do_list_special[0]
-
+            try:
+                if eval(self.condition_list[0]):
+                    try:
+                        if self.condition_list[1] == "Same as yesterday":
+                            self.condition_list[1]= "True"
+                    except IndexError:
+                        pass
+                    output=self.to_do_list_normal[0]
+                else:
+                    try:
+                        if self.condition_list[1] == "Same as yesterday":
+                            self.condition_list[1]= "False"
+                    except IndexError:
+                        pass
+                    output=self.to_do_list_special[0]
+            except SyntaxError:
+                self.refresh()
+                print_plus("自动驾驶读取异常，控制权即将转交给指挥官")
+                return input_plus("请输入你的操作|此处不支持自动驾驶")
             if output == "(":
                 self.memory=[self.to_do_list_normal, self.to_do_list_special, self.condition_list]
             
