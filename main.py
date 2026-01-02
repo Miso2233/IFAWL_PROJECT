@@ -432,6 +432,21 @@ class Al_manager:
         my_ship.update_platform()
         my_ship.update_total_al_rank()
 
+    def push_up_limit(self,type_choosing: str | Literal["q", "w", "e"],delta:int):
+        """
+        将站外终焉结升级限制上推
+        :param type_choosing: 终焉结类型
+        :param delta: 上推等级
+        :return: 无
+        """
+        match type_choosing:
+            case "q":
+                self.al_max_rank_q += delta
+            case "w":
+                self.al_max_rank_w += delta
+            case "e":
+                self.al_max_rank_e += delta
+
     def clear_al(self):
         for index in range(len(my_ship.al_list)):
             if my_ship.al_list[index] is None:
