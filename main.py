@@ -2708,11 +2708,6 @@ class MainLoops:
                 Txt.print_plus("=========敌方胜利=========")
                 print()
                 damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
-                if storage_manager.has_enough_ssd(my_ship.total_al_rank):
-                    storage_manager.cost_ssd(my_ship.total_al_rank)
-                else:
-                    storage_manager.destroy_al(my_ship.al_list)
-                    al_manager.clear_al()
                 Txt.print_plus(f"最高挑战轮次{self.infinity_round}\n")
                 input_plus("[enter]回站")
                 return
