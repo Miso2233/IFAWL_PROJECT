@@ -432,6 +432,45 @@ class Al_manager:
         my_ship.update_platform()
         my_ship.update_total_al_rank()
 
+    def print_info_before_push_up(self,delta:int):
+        for type in ("q","w","e"):
+            max_rank = 0
+            match type:
+                case "q":
+                    max_rank = self.al_max_rank_q
+                case "w":
+                    max_rank = self.al_max_rank_w
+                case "e":
+                    max_rank = self.al_max_rank_e
+            print(f"[{type}] >>> 当前已有 >>> 最大等级{max_rank}级")
+            print()
+            als_below = [
+                f"{al.short_name}#{al.index}[{al.metadata['rank']}]" \
+                for al in sorted(self.all_al_list.values(),key=lambda al:al.rank_num) \
+                if al.rank_num <= max_rank and al.type == type
+            ]
+            als_delta = [
+                f"{al.short_name}#{al.index}[{al.metadata['rank']}]" \
+                for al in sorted(self.all_al_list.values(),key=lambda al:al.rank_num) \
+                if max_rank < al.rank_num <= max_rank + delta and al.type == type
+            ]
+            als_future = [
+                f"{al.short_name}#{al.index}[{al.metadata['rank']}]" \
+                for al in sorted(self.all_al_list.values(),key=lambda al:al.rank_num) \
+                if max_rank + delta < al.rank_num and al.type == type
+            ]
+            for al_name in als_below:
+                print(al_name,end=" ")
+            print("\n")
+            print(">>> 即将解锁 >>>\n")
+            for al_name in als_delta:
+                print(al_name,end=" ")
+            print("\n")
+            print(">>> 未来可解锁 >>>\n")
+            for al_name in als_future:
+                print(al_name,end=" ")
+            print("\n")
+
     def push_up_limit(self,type_choosing: str | Literal["q", "w", "e"],delta:int):
         """
         将站外终焉结升级限制上推
@@ -447,7 +486,8 @@ class Al_manager:
             case "e":
                 self.al_max_rank_e += delta
 
-    def clear_al(self):
+    @staticmethod
+    def clear_al():
         for index in range(len(my_ship.al_list)):
             if my_ship.al_list[index] is None:
                 continue
@@ -472,7 +512,8 @@ class Al_manager:
                 pass
         return out
 
-    def check_if_kick_e(self) -> bool:
+    @staticmethod
+    def check_if_kick_e() -> bool:
         q = my_ship.al_list[0]
         e = my_ship.al_list[2]
         if not q or not e:
