@@ -2685,6 +2685,7 @@ class MainLoops:
         enemy.initialize(shelter, missile)
         # 终焉结初始化
         al_manager.initialize_all_al()
+        al_manager.al_max_rank_q, al_manager.al_max_rank_w, al_manager.al_max_rank_e = 2,2,2
         # 骰子初始化
         dice.set_probability(0.8)
         dice.set_di(0.3)
