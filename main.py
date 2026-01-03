@@ -18,7 +18,7 @@ from core.Module10_sound_manager import sounds_manager
 from modules.Module11_damage_previewer import damage_previewer
 from modules.Module12_infinity_card_manager import CardManager
 
-__VERSION__ = "IFAWL 1.1.0 'TOWARDS DAWN'"
+__VERSION__ = "IFAWL 1.2.0 'STARDUST INFINITY'"
 
 
 class DamageType:
@@ -2145,11 +2145,10 @@ class Al37(Al_general):  #星尘
         if self.state < 0:
             self.state += 1
 
-    #def check_if_recycle(self):
-    #    if self.is_on_my_ship() and enemy.shelter<-1:
-    #        my_ship.load(int((-1-enemy.shelter)*0.5))
-    #        enemy.shelter=-1
-    #        self.report("能量回收")
+        if self.is_on_my_ship() and enemy.shelter<-1:
+            my_ship.load(int((-1-enemy.shelter)*0.5))
+            enemy.shelter=-1
+            self.report("能量回收")
 
     def suggest(self):
         if self.state < 0:
