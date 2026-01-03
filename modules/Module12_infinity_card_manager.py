@@ -20,7 +20,7 @@ class CardManager:
 
     def choose_card(self):
         choose_list:list[CardGeneral] = random.sample(list(self.all_cards.values()),k=3)
-        for card in choose_list:
+        for card in sorted(choose_list,key=lambda __card:int(__card.index)):
             card.print_self()
         result = ask_plus("请输入要选择的协议>>>",[card.index for card in choose_list])
         self.all_cards[result].react()
@@ -71,3 +71,11 @@ class Card3(CardGeneral): # 终焉结支援
         self.al_manager.print_info_before_push_up(2)
         inp = ask_plus("[q/w/e]输入终焉结类别以提升最大等级",["q","w","e"])
         self.al_manager.push_up_limit(inp,2)
+
+class Card4(CardGeneral): # 风行天末
+
+    def react(self):
+        num = random.randint(3,7)
+        print_plus(f"[浅草寺]收到>>>{num}枚巡飞弹正在前往前线")
+        for _ in range(num):
+            self.al_manager.all_al_list["3"].react()
