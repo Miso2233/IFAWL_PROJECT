@@ -175,6 +175,9 @@ class MyShip:
         :param num: 原始上弹量
         :return: 无
         """
+        if num < 0:
+            self.missile += num
+            return
         for al in self.al_list:
             try:
                 num = al.add_num(num)
@@ -870,14 +873,11 @@ class Al7(Al_general):  # 奶油
             else:
                 self.report("骇入失败")
 
-    def operate_in_morning(self):
         if self.state == 1:
             if dice.probability(0.6):
                 my_ship.attack(1, DamageType.ENEMY_MISSILE_BOOM)
-                time.sleep(0.4)
                 self.report("引爆成功")
             else:
-                time.sleep(0.4)
                 self.report("引爆失败")
         self.state = 0
 
@@ -2757,6 +2757,7 @@ class MainLoops:
         self.infinity_round = 1
         # 终焉结选择
         while 1:
+            print()
             station_trees_manager.all_tree_list["终焉结信息"].inject({
             "total_al_rank": my_ship.total_al_rank,
             "ssg_tag": "",
@@ -2797,6 +2798,7 @@ class MainLoops:
         infinity_card_manager.choose_card()
         # 终焉结选择
         while 1:
+            print()
             station_trees_manager.all_tree_list["终焉结信息"].inject({
             "total_al_rank": my_ship.total_al_rank,
             "ssg_tag": "",
