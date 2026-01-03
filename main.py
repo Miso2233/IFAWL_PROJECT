@@ -2871,7 +2871,7 @@ class MainLoops:
                 sounds_manager.switch_to_bgm("win")
                 Txt.print_plus(f"第{self.infinity_round}轮次|获胜>>\n")
                 damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
-                storage_manager.drop_for_fight()
+                #storage_manager.drop_for_fight()
                 des = input_plus("[enter]下一轮次| [0]回站")
                 match des:
                     case "":
