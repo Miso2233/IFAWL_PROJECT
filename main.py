@@ -18,7 +18,7 @@ from core.Module10_sound_manager import sounds_manager
 from modules.Module11_damage_previewer import damage_previewer
 from modules.Module12_infinity_card_manager import CardManager
 
-__VERSION__ = "IFAWL 1.1.0 'TOWARDS DAWN'"
+__VERSION__ = "IFAWL 1.2.0 'STARDUST INFINITY'"
 
 
 class DamageType:
@@ -175,6 +175,9 @@ class MyShip:
         :param num: 原始上弹量
         :return: 无
         """
+        if num < 0:
+            self.missile += num
+            return
         for al in self.al_list:
             try:
                 num = al.add_num(num)
@@ -870,14 +873,11 @@ class Al7(Al_general):  # 奶油
             else:
                 self.report("骇入失败")
 
-    def operate_in_morning(self):
         if self.state == 1:
             if dice.probability(0.6):
                 my_ship.attack(1, DamageType.ENEMY_MISSILE_BOOM)
-                time.sleep(0.4)
                 self.report("引爆成功")
             else:
-                time.sleep(0.4)
                 self.report("引爆失败")
         self.state = 0
 
@@ -2095,7 +2095,7 @@ class Al36(Al_general):  # 西岭
 al36 = Al36(36)
 
 
-class Al37(Al_general):  #星尘
+class Al37(Al_general): # 星尘
 
     def react(self):
         if self.state < 0:
@@ -2145,11 +2145,10 @@ class Al37(Al_general):  #星尘
         if self.state < 0:
             self.state += 1
 
-    #def check_if_recycle(self):
-    #    if self.is_on_my_ship() and enemy.shelter<-1:
-    #        my_ship.load(int((-1-enemy.shelter)*0.5))
-    #        enemy.shelter=-1
-    #        self.report("能量回收")
+        if self.is_on_my_ship() and enemy.shelter<-1:
+            my_ship.load(int((-1-enemy.shelter)*0.5))
+            enemy.shelter=-1
+            self.report("能量回收")
 
     def suggest(self):
         if self.state < 0:
@@ -2336,14 +2335,14 @@ class Al40(Al_general):  # 冷水
 
 al40 = Al40(40)
 
-class Al41(Al_general): # 昏离
+class Al41(Al_general): # 暮离
 
     def react(self):
         if self.state == 0:
             if my_ship.missile>0:
                 my_ship.load(-1)
                 my_ship.heal(3)
-                self.report("保守模式治疗加成")
+                self.report("耗弹治疗")
             else:
                 my_ship.load(2)
             self.state = -3
@@ -2354,14 +2353,14 @@ class Al41(Al_general): # 昏离
                 my_ship.load(-1)
             self.state = -6
             my_ship.shelter = 3
-            self.report("激进模式保护")
+            self.report("急救")
         if self.state < 0:
             self.state += 1
     
     def reduce_enemy_attack(self, atk):
         if atk > 1:
             my_ship.load(atk)
-            self.report("上弹")
+            self.report("受击上弹")
         return atk
     
     def suggest(self):
@@ -2801,6 +2800,7 @@ class MainLoops:
         self.infinity_round = 1
         # 终焉结选择
         while 1:
+            print()
             station_trees_manager.all_tree_list["终焉结信息"].inject({
             "total_al_rank": my_ship.total_al_rank,
             "ssg_tag": "",
@@ -2841,6 +2841,7 @@ class MainLoops:
         infinity_card_manager.choose_card()
         # 终焉结选择
         while 1:
+            print()
             station_trees_manager.all_tree_list["终焉结信息"].inject({
             "total_al_rank": my_ship.total_al_rank,
             "ssg_tag": "",
@@ -2913,7 +2914,7 @@ class MainLoops:
                 sounds_manager.switch_to_bgm("win")
                 Txt.print_plus(f"第{self.infinity_round}轮次|获胜>>\n")
                 damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
-                storage_manager.drop_for_fight()
+                #storage_manager.drop_for_fight()
                 des = input_plus("[enter]下一轮次| [0]回站")
                 match des:
                     case "":
