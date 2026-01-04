@@ -238,6 +238,7 @@ class MyShip:
 
 my_ship = MyShip()
 
+his_ship = MyShip()
 
 class EnemyShip:
     def __init__(self):
