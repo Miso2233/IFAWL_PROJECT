@@ -2760,6 +2760,7 @@ class MainLoops:
             damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
             sounds_manager.switch_to_bgm("win")
             storage_manager.drop_for_fight()
+            storage_manager.set_value_of("max_disaster_point",entry_manager.count_total_points())
             input_plus("[enter]回站")
             sounds_manager.stop_bgm()
             return
