@@ -276,6 +276,26 @@ class IndustryContract(Contract):
         self.get_tree = Tree("你将得到>>>", {AL_NAME_LIST[al]:1})
         self.give_tree = Tree("你将支付>>>", self.give_list)
 
+class RepurchaseContract(Contract):
+    """
+    回购合同
+    """
+    def __init__(self, index,storage_manager):
+        super().__init__(index,storage_manager)
+        al = random.choice(list(AL_META_DATA.keys()))
+        while AL_META_DATA[al]["rank_num"] == 0:
+            al = random.choice(list(AL_META_DATA.keys()))
+        self.rank = AL_META_DATA[al]["rank_num"]
+        self.title = f"[{self.index}] 回购合同 [{self.rank}]级"
+
+        self.give_list = {al:1}
+        self.get_list = tools.create_material_list(20*self.rank)
+        self.get_list["联邦信用点"] = random.randint(1000*self.rank-300,1000*self.rank+100)
+
+        # 打印树构建
+        self.get_tree = Tree("你将得到>>>", self.get_list)
+        self.give_tree = Tree("你将支付>>>", {AL_NAME_LIST[al]:1})
+
 class Contract_manager:
 
     def __init__(self,storage_manager,all_al_str_list:list[str]):
@@ -285,7 +305,8 @@ class Contract_manager:
             GoodsContract,
             FinanceContract,
             IndustryContract,
-            SsdContract
+            SsdContract,
+            RepurchaseContract
         ]
         self.all_contracts_list = []
         for key in AL_META_DATA.copy():
