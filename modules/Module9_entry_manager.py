@@ -1,17 +1,14 @@
 from typing import Literal
 import random
 
+from core.Module0_enums import Modes
 from core.Module1_txt import print_plus,Tree
 from core.Module2_json_loader import json_loader
 from core.Module5_dice import dice
 
 ALL_ENTRY_METADATA = json_loader.load("entries_meta_data")
 
-class Modes:
-    """游戏模式枚举"""
-    FIGHT = "FIGHT"
-    DISASTER = "DISASTER"
-    INFINITY = "INFINITY"
+# Modes 枚举已移至 core.Module0_enums 模块
 
 class Entry:
 
