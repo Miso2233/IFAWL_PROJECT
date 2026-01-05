@@ -10,7 +10,9 @@ AL_META_DATA = json_loader.load("al_meta_data")
 ENTRY_META_DATA = json_loader.load("entries_meta_data")
 
 class StorageManager:
-
+    
+    # ==================== 初始化与基础设置 ====================
+    
     def __init__(self):
         self.username:str = ""
         # 建立模板
@@ -33,23 +35,9 @@ class StorageManager:
         if not os.path.exists('userdata'):
             os.makedirs('userdata')
         self.repository_for_all_users = shelve.open('userdata/game_save',writeback=True)
-
-    def update_statistical_data(self):
-        """
-        更新统计字段
-        :return: 无
-        """
-        self.total_materials_num = sum(self.repository_for_all_users[self.username]["materials"].values())
-        self.total_als_num = sum(self.repository_for_all_users[self.username]["als"].values())
-
-    def sync(self):
-        """
-        将仓库同步至硬盘
-        :return: 无
-        """
-        self.update_statistical_data()
-        self.repository_for_all_users.sync()
-
+    
+    # ==================== 用户管理 ====================
+    
     def login(self):
         """
         登录|将硬盘数据写入模板|新建用户|重灌入硬盘
@@ -67,15 +55,17 @@ class StorageManager:
         else:
             Txt.print_plus("初次登录|欢迎指挥官")
         self.repository_for_all_users[self.username] = self.template
+        # hello
+        Txt.print_plus(f"指挥官代号识别成功·{self.get_value_of('ship_name')}号护卫舰正在启动·欢迎来到浅草寺")
         # 更新统计字段
         self.update_statistical_data()
         self.sync()
-
+    
     def logout(self):
         Txt.print_plus(f"指挥官{self.username}请求登出")
         Txt.print_plus("登出完毕")
         self.repository_for_all_users.close()
-
+    
     def set_ship_name(self):
         """
         设置舰船名字
@@ -86,8 +76,35 @@ class StorageManager:
             return
         self.repository_for_all_users[self.username]["metadata"]["ship_name"] = new_name
         self.sync()
-
-
+    
+    # ==================== 数据存取与同步 ====================
+    
+    def update_statistical_data(self):
+        """
+        更新统计字段
+        :return: 无
+        """
+        self.total_materials_num = sum(self.repository_for_all_users[self.username]["materials"].values())
+        self.total_als_num = sum(self.repository_for_all_users[self.username]["als"].values())
+    
+    def sync(self):
+        """
+        将仓库同步至硬盘
+        :return: 无
+        """
+        self.update_statistical_data()
+        self.repository_for_all_users.sync()
+    
+    def clear(self):
+        """
+        清空当前登录玩家的仓库
+        :return: 无
+        """
+        self.repository_for_all_users[self.username] = self.template_empty
+        self.sync()
+    
+    # ==================== 仓库资产管理 ====================
+    
     def show_assets(self) -> dict[str:int]:
         """
         展示现有仓库资产
@@ -98,7 +115,7 @@ class StorageManager:
             for item in self.repository_for_all_users[self.username][key]:
                 out[item] = self.repository_for_all_users[self.username][key][item]
         return out
-
+    
     def show_assets_except_al(self) -> dict[str:int]:
         """
         展示现有仓库资产,Als除外
@@ -109,7 +126,7 @@ class StorageManager:
             for item in self.repository_for_all_users[self.username][key]:
                 out[item] = self.repository_for_all_users[self.username][key][item]
         return out
-
+    
     def modify(self,item:str,delta:int):
         """
         增减仓库物品数量|核心业务封装
@@ -120,7 +137,7 @@ class StorageManager:
         key:str = self.item_to_key_table[item]
         self.repository_for_all_users[self.username][key][item] += delta
         self.sync()
-
+    
     def get_value_of(self,item:str) -> int|str:
         """
         查找仓库物品数量或元数据值|核心业务封装
@@ -129,7 +146,98 @@ class StorageManager:
         """
         key: str = self.item_to_key_table[item]
         return self.repository_for_all_users[self.username][key][item]
-
+    
+    def set_value_of(self,item:str,val):
+        """
+        设置仓库内物品或元数据的值|核心业务封装
+        :param item: 需设置的物品或键
+        :param val: 需设置的值
+        :return: 无
+        """
+        key: str = self.item_to_key_table[item]
+        self.repository_for_all_users[self.username][key][item] = val
+    
+    def transaction(self,give_list:dict[str,int],get_list:dict[str,int]):
+        for item in give_list:
+            self.modify(item,-give_list[item])
+        for item in get_list:
+            self.modify(item,get_list[item])
+        self.sync()
+    
+    def print_storage(self):
+        al_list = {}
+        for al,num in self.repository_for_all_users[self.username]["als"].items():
+            if num != 0:
+                al_list[AL_META_DATA[al]["len_name"]] = num
+        Txt.n_column_print(
+            [
+                Txt.Tree("基本物资", self.repository_for_all_users[self.username]["materials"]).generate_line_list(),
+                Txt.Tree("终焉结", al_list).generate_line_list()
+            ]
+        )
+        input("[enter]离开仓库>>>")
+    
+    # ==================== 终焉结相关功能 ====================
+    
+    def save_al_on_ship(self,al_on_ship):
+        al_str_list = ["","",""]
+        for position in range(len(al_on_ship)):
+            try:
+                al_str_list[position] = str(al_on_ship[position].index)
+            except AttributeError:
+                al_str_list[position] = ""
+        self.repository_for_all_users[self.username]["metadata"]["al_on_ship"] = al_str_list
+        self.sync()
+    
+    def get_al_on_ship(self):
+        return self.repository_for_all_users[self.username]["metadata"]["al_on_ship"]
+    
+    def have_all_al_on_ship(self,al_on_ship:list) -> bool:
+        """
+        判断是否拥有船上所有的终焉结
+        :param al_on_ship: list[Al_general|None]，my_ship对象的属性
+        :return: True表示船上所有终焉结在仓库里都有存货
+        """
+        count = 0
+        for al in al_on_ship:
+            if not al:
+                count += 1
+                continue
+            if al.rank_num == 0:
+                count += 1
+                continue
+            al_str = str(al.index)
+            if self.get_value_of(al_str) > 0:
+                count += 1
+        return count == len(al_on_ship)
+    
+    def destroy_al(self, al_on_ship:list):
+        """
+        损毁船上所有的终焉结
+        :param al_on_ship: list[Al_general|None]，my_ship对象的属性
+        :return: 无
+        """
+        for al in al_on_ship:
+            if not al:
+                continue
+            if al.rank_num == 0:
+                continue
+            al_str = str(al.index)
+            self.modify(al_str,-1)
+            print(f"{al.len_name} 已损毁")
+            self.sync()
+    
+    # ==================== 词条相关功能 ====================
+    
+    def save_entry_rank(self,all_entry_rank:dict[str,int]):
+        self.repository_for_all_users[self.username]["metadata"]["entry_rank"] = all_entry_rank
+        self.sync()
+    
+    def get_entry_rank(self) -> dict[str,int]:
+        return self.repository_for_all_users[self.username]["metadata"]["entry_rank"]
+    
+    # ==================== 战斗相关功能 ====================
+    
     def drop_for_fight(self):
         """
         单局战斗后掉落物结算|1100信用点|2种物品各12.5个
@@ -152,67 +260,7 @@ class StorageManager:
             item_dict
         ).print_self()
         self.sync()
-
-    def transaction(self,give_list:dict[str,int],get_list:dict[str,int]):
-        for item in give_list:
-            self.modify(item,-give_list[item])
-        for item in get_list:
-            self.modify(item,get_list[item])
-        self.sync()
-
-    def clear(self):
-        """
-        清空当前登录玩家的仓库
-        :return: 无
-        """
-        self.repository_for_all_users[self.username] = self.template_empty
-        self.sync()
-
-    def save_al_on_ship(self,al_on_ship):
-        al_str_list = ["","",""]
-        for position in range(len(al_on_ship)):
-            try:
-                al_str_list[position] = str(al_on_ship[position].index)
-            except AttributeError:
-                al_str_list[position] = ""
-        self.repository_for_all_users[self.username]["metadata"]["al_on_ship"] = al_str_list
-        self.sync()
-
-    def get_al_on_ship(self):
-        return self.repository_for_all_users[self.username]["metadata"]["al_on_ship"]
-
-    def print_storage(self):
-        al_list = {}
-        for al,num in self.repository_for_all_users[self.username]["als"].items():
-            if num != 0:
-                al_list[AL_META_DATA[al]["len_name"]] = num
-        Txt.n_column_print(
-            [
-                Txt.Tree("基本物资", self.repository_for_all_users[self.username]["materials"]).generate_line_list(),
-                Txt.Tree("终焉结", al_list).generate_line_list()
-            ]
-        )
-        input("[enter]离开仓库>>>")
-
-    def have_all_al_on_ship(self,al_on_ship:list) -> bool:
-        """
-        判断是否拥有船上所有的终焉结
-        :param al_on_ship: list[Al_general|None]，my_ship对象的属性
-        :return: True表示船上所有终焉结在仓库里都有存货
-        """
-        count = 0
-        for al in al_on_ship:
-            if not al:
-                count += 1
-                continue
-            if al.rank_num == 0:
-                count += 1
-                continue
-            al_str = str(al.index)
-            if self.get_value_of(al_str) > 0:
-                count += 1
-        return count == len(al_on_ship)
-
+    
     def has_enough_ssd(self,total_rank:int):
         """
         判断是否有足够的保险点，一并打印结果。
@@ -226,32 +274,9 @@ class StorageManager:
         else:
             print("当前信用点未覆盖舰船")
             return False
-
+    
     def cost_ssd(self,total_rank:int):
         self.modify("保险点",-total_rank)
         print(f"{total_rank}保险点从账户扣除·感谢使用星际保险服务")
-
-    def destroy_al(self, al_on_ship:list):
-        """
-        损毁船上所有的终焉结
-        :param al_on_ship: list[Al_general|None]，my_ship对象的属性
-        :return: 无
-        """
-        for al in al_on_ship:
-            if not al:
-                continue
-            if al.rank_num == 0:
-                continue
-            al_str = str(al.index)
-            self.modify(al_str,-1)
-            print(f"{al.len_name} 已损毁")
-            self.sync()
-
-    def save_entry_rank(self,all_entry_rank:dict[str,int]):
-        self.repository_for_all_users[self.username]["metadata"]["entry_rank"] = all_entry_rank
-        self.sync()
-
-    def get_entry_rank(self) -> dict[str,int]:
-        return self.repository_for_all_users[self.username]["metadata"]["entry_rank"]
 
 storage_manager = StorageManager()

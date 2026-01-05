@@ -31,9 +31,10 @@
 	"指挥官信息": {
 		"title": "持证指挥官>>{username}",
 		"line_list": [
-            "从属舰艇>>>{ship_name}号侦查护卫舰",
-            "信用点：{isk_num} ISK",
-            "合约纪念点：{cmp_num} CMP"
+            "从属舰艇>>{ship_name}号侦查护卫舰",
+            "信用点>>{isk_num} ISK",
+			"战死之地最高得分>>{max_disaster_point}",
+			"无尽模式最大轮次>>{max_infinity_round}轮"
 		],
 		"col": 1,
 		"row": 0

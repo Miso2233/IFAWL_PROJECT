@@ -5,6 +5,7 @@ import time
 from typing import Literal
 
 from core import Module1_txt as Txt
+from core.Module0_enums import DamageType, Modes
 from core.Module1_txt import input_plus
 from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
@@ -21,19 +22,7 @@ from modules.Module12_infinity_card_manager import CardManager
 __VERSION__ = "IFAWL 1.2.0 'STARDUST INFINITY'"
 
 
-class DamageType:
-    """伤害类型枚举"""
-    MISSILE_LAUNCH = "missile_launch"  # 导弹射击
-    PARTICLE_CANNON_SHOOTING = "particle_cannon_shooting"  # 粒子炮射击
-    ENEMY_MISSILE_BOOM = "enemy_missile_boom"  # 敌方导弹殉爆
-    ORDINARY_ATTACK = "ordinary_attack"  # 杂项攻击
-
-
-class Modes:
-    """游戏模式枚举"""
-    FIGHT = "FIGHT"
-    DISASTER = "DISASTER"
-    INFINITY = "INFINITY"
+# 枚举类已移至 core.Module0_enums 模块
 
 
 class MyShip:
@@ -2500,7 +2489,8 @@ class StationTreesManager:
             "username": storage_manager.username,
             "ship_name": storage_manager.get_value_of("ship_name"),
             "isk_num": storage_manager.get_value_of("联邦信用点"),
-            "cmp_num": storage_manager.get_value_of("合约纪念点")
+            "max_disaster_point": storage_manager.get_value_of("max_disaster_point"),
+            "max_infinity_round": storage_manager.get_value_of("max_infinity_round")
         })
         self.all_tree_list["按键导航"].inject({})
         self.all_tree_list["终焉结信息"].inject({
@@ -2759,6 +2749,7 @@ class MainLoops:
             damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
             sounds_manager.switch_to_bgm("win")
             storage_manager.drop_for_fight()
+            storage_manager.set_value_of("max_disaster_point",entry_manager.count_total_points())
             input_plus("[enter]回站")
             sounds_manager.stop_bgm()
             return
@@ -2929,6 +2920,7 @@ class MainLoops:
                 print()
                 damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
                 Txt.print_plus(f"最高挑战轮次{self.infinity_round}\n")
+                storage_manager.set_value_of("max_infinity_round", self.infinity_round)
                 input_plus("[enter]回站")
                 return
 
@@ -3062,6 +3054,26 @@ class MainLoops:
             "[2] 无尽模式",
             "[enter] 回站"
         ).print_self()
+        Txt.n_column_print(
+            [Txt.Tree(
+                "[0] 基本对战",
+                "与游荡的星际海盗进行一对一战斗",
+                "启用仓库的终焉结·若失败则损毁",
+                "战斗胜利后将获得赏金和物资奖励",
+            ).generate_line_list()+
+            Txt.Tree(
+                "[1] 战死之地",
+                "依据选定的词条匹配相应的高强度悬赏目标进行战斗",
+                "启用仓库的终焉结·若失败则损毁",
+                "战斗胜利后将获得赏金和物资奖励",
+            ).generate_line_list(),
+            Txt.Tree(
+                "[2] 无尽模式",
+                "在模拟器中与多波次敌人进行战斗",
+                "不启用仓库的终焉结",
+                "战斗结束后无奖励"
+            ).generate_line_list()]
+        )
         des = Txt.ask_plus("请输入目的地>>>", ["0", "1", "2", ""])
         return des
 
