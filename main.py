@@ -18,6 +18,7 @@ from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
 from modules.Module11_damage_previewer import damage_previewer
 from modules.Module12_infinity_card_manager import CardManager
+from modules.Module13_plot_manager import plot_manager
 
 __VERSION__ = "IFAWL 1.2.0 'STARDUST INFINITY'"
 
@@ -3090,6 +3091,10 @@ def hello():
 if __name__ == "__main__":
     hello()
     storage_manager.login()
+    plot_manager.set_information_map({
+        "username": storage_manager.username,
+        "ship_name": storage_manager.get_value_of("ship_name")
+    })
     my_ship.load_al()
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
     while 1:
