@@ -11,13 +11,14 @@ from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
 from modules.Module4_voices import voices
 from core.Module5_dice import dice
-from modules.Module6_market_manager import Contract_manager, Contract, tools
+from modules.Module6_market_manager import ContractManager, Contract, tools
 from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
 from modules.Module11_damage_previewer import damage_previewer
 from modules.Module12_infinity_card_manager import CardManager
+from modules.Module13_plot_manager import plot_manager
 
 __VERSION__ = "IFAWL 1.2.0 'STARDUST INFINITY'"
 
@@ -2536,9 +2537,6 @@ class StationTreesManager:
 
 station_trees_manager = StationTreesManager()
 
-contract_manager = Contract_manager(storage_manager, list(al_manager.all_al_list.keys()))
-infinity_card_manager = CardManager(my_ship,enemy,entry_manager,al_manager)
-
 class MainLoops:
 
     def __init__(self):
@@ -3080,6 +3078,9 @@ class MainLoops:
 
 main_loops = MainLoops()
 
+contract_manager = ContractManager(storage_manager, list(al_manager.all_al_list.keys()))
+infinity_card_manager = CardManager(my_ship,enemy,entry_manager,al_manager)
+plot_manager.set_storage_manager(storage_manager)
 
 def hello():
     sounds_manager.switch_to_bgm("login")
@@ -3089,9 +3090,20 @@ def hello():
 
 if __name__ == "__main__":
     hello()
+    # 存储管理器登录
     storage_manager.login()
+    # 剧情管理器初始化
+    plot_manager.load_session()
+    plot_manager.set_information_map({
+        "username": storage_manager.username,
+        "ship_name": storage_manager.get_value_of("ship_name")
+    })
+    plot_manager.try_to_play_when_login()
+    # 舰船读取终焉结
     my_ship.load_al()
+    # 词条管理器读取词条
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
+    # 主循环
     while 1:
         main_loops.station_mainloop()
         des = main_loops.ask_destination()

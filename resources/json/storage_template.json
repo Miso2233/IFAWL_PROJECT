@@ -4,7 +4,8 @@
     "al_on_ship": ["","",""],
     "entry_rank": {},
     "max_infinity_round": 0,
-    "max_disaster_point": 0
+    "max_disaster_point": 0,
+    "plot_progress": {}
   },
   "materials": {
     "三钛合金":10,
