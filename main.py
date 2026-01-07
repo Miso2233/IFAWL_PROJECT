@@ -81,6 +81,11 @@ class MyShip:
         for _ in range(self.shelter):
             print("-----")
 
+    def generate_shelter_list(self, blind=False):
+        if blind:
+            return ["[No Info]"]
+        return ["-----"]*self.shelter
+
     def print_self_missile(self, blind=False):
         if blind:
             print("[No Info]")
@@ -92,6 +97,18 @@ class MyShip:
         for _ in range(self.missile):
             print(ammunition_type, end="")
         print()
+
+    def generate_missile_list(self, blind=False):
+        if blind:
+            return ["[No Info]"]
+        ammunition_type = {
+            "导弹": "[]",
+            "粒子炮": "|| "
+        }[self.platform]
+        str = ""
+        for _ in range(self.missile):
+            str += ammunition_type
+        return [str]
 
     def initialize(self):
         self.missile = 1
@@ -115,7 +132,7 @@ class MyShip:
         计算全船等效护盾值
         :return: 全船等效护盾
         """
-        return my_ship.shelter + self.get_equivalent_shelter_from_als()
+        return self.shelter + self.get_equivalent_shelter_from_als()
 
     def attack(self, atk: int, type: str) -> int:
         """
@@ -265,24 +282,23 @@ class EnemyShip:
         for _ in range(self.shelter):
             print("-----")
 
-    def attack(self, atk: int,target:MyShip|None = None):
+    def attack(self, atk: int,force_target:MyShip|None = None):
         """
         根据原始伤害进行加减并对目标造成攻击
         :param atk: 原始伤害
         :return: 无
         """
-        if des == 3:
-            self.target_ship = random.choice([my_ship,another_ship])
-        if target:
-            self.target_ship = target
+        target_ship = self.target_ship
+        if force_target:
+            target_ship = force_target
         atk = entry_manager.check_and_add_atk(atk)
-        atk = entry_manager.check_and_reduce_missile(atk, self.target_ship)
-        for al in reversed(self.target_ship.al_list):
+        atk = entry_manager.check_and_reduce_missile(atk, target_ship)
+        for al in reversed(target_ship.al_list):
             try:
                 atk = al.reduce_enemy_attack(atk)
             except AttributeError:
                 pass
-        self.target_ship.shelter -= atk
+        target_ship.shelter -= atk
         if atk <= 0:
             voices.report("护盾", "未受伤")
         elif atk <= 1:
@@ -349,6 +365,13 @@ class EnemyShip:
                 self.heal(1)
             case _:
                 Txt.print_plus("敌人跳过了这一天！")
+        ##
+        if entry_manager.current_mode == Modes.PPVE:
+            target_ship_before = self.target_ship
+            self.target_ship = random.choice([my_ship,another_ship])
+            if target_ship_before != self.target_ship:
+                Txt.print_plus("敌方目标改变，注意警戒！")
+        ##
 
 
 enemy = EnemyShip()
@@ -682,16 +705,37 @@ class Al_general:
             except IndexError:
                 pass
 
-    def print_self_behind_shelter(self):
-        pass
+    def generate_line_list(self):
+        print_list = []
+        if self.state != 0:
+            try:
+                print_list.append(self.skin_list[self.state])
+                print_list.append("")
+            except IndexError:
+                pass
+        return print_list
 
-    def print_self_before_shelter(self):
+    def print_self_behind_shelter(self,return_list = False):
+        if return_list:
+            return []
+
+    def print_self_before_shelter(self,return_list = False) -> list[str] | None:
+        print_list = []
         if self.type == "w":
-            self.print_self()
+            if return_list:
+                print_list = self.generate_line_list()
+            else:
+                self.print_self()
+        return print_list
 
-    def print_self_behind_missile(self):
-        if self.type in ["q", "e"]:
-            self.print_self()
+    def print_self_behind_missile(self,return_list = False) -> list[str] | None:
+        print_list = []
+        if self.type in ["q","e"]:
+            if return_list:
+                print_list = self.generate_line_list()
+            else:
+                self.print_self()
+        return print_list
 
     def suggest(self) -> str | None:
         return None
@@ -1020,7 +1064,7 @@ class Al12(Al_general):  # 晴空
         self.atk_list: list[int] = [0, 0, 1, 2, 4, 5, 7, 8]
 
     def adjust_operation(self, raw: str) -> str:
-        if self.state != 0 and raw != "q" and not (al16.is_on_self.ship() and raw in ["w", "2"]):
+        if self.state != 0 and raw != "q" and not (al16.is_on_ones_ship() and raw in ["w", "2"]):
             self.attack()
         return raw
 
@@ -1050,6 +1094,14 @@ class Al12(Al_general):  # 晴空
             print(self.skin_list[self.state // 3], end="")
             print(f"[晴空]粒子炮集群伤害水准：{self.atk_list[self.state]}")
             print()
+
+    def generate_line_list(self):
+        print_list = []
+        if self.state != 0:
+            print_list.append(self.skin_list[self.state // 3]+f"[晴空]粒子炮集群伤害水准：{self.atk_list[self.state]}")
+            print_list.append("")
+        return print_list
+
 
     def suggest(self):
         if self.state == 0:
@@ -1119,6 +1171,12 @@ class Al14(Al_general):  # 信风
     def print_self(self):
         print(self.skin_list[self.state % 3], end="")
         print("\n//\\\\//" * (self.state // 3))
+
+    def generate_line_list(self):
+        print_list = []
+        print_list.append(self.skin_list[self.state % 3])
+        print_list += ["//\\\\//"] * (self.state // 3)
+        return print_list
 
     def suggest(self):
 
@@ -1204,6 +1262,12 @@ class Al16(Al_general):  # 情诗
         if self.state != 0:
             print(self.skin_list[self.state // 2], end="")
             print(f"[情诗]大规模护盾存量：{self.cure_list[self.state]}")
+
+    def generate_line_list(self):
+        print_list = []
+        if self.state != 0:
+            print_list.append(self.skin_list[self.state // 2]+f"[情诗]大规模护盾存量：{self.cure_list[self.state]}")
+        return print_list
 
     def suggest(self):
         if self.state == 0:
@@ -1353,12 +1417,20 @@ class Al21(Al_general):  # 诗岸
                 self.ship.shelter = 1
                 self.report("急救")
 
-    def print_self_behind_shelter(self):
+    def print_self_behind_shelter(self,return_list = False):
+        print_list = []
         if self.is_on_ones_ship():
-            if self.state <= 6:
-                print("/-/-/-/\n" * self.state)
+            if return_list:
+                if self.state <= 6:
+                    print_list += ["/-/-/-/"]*self.state
+                else:
+                    print_list.append(f"/-/-/-/ x{self.state}")
             else:
-                print(f"/-/-/-/ x{self.state}")
+                if self.state <= 6:
+                    print("/-/-/-/\n" * self.state)
+                else:
+                    print(f"/-/-/-/ x{self.state}")
+        return print_list
 
     def suggest(self):
         if self.state >= 3:
@@ -1548,6 +1620,8 @@ class Al26(Al_general):  # 眠雀
     def get_controlled_operation(self, operation: str) -> str:
         if self.state <= 0:
             return operation
+        if entry_manager.current_mode == Modes.PPVE:
+            enemy.target_ship = self.ship
         self.report("控制成功")
         controlled_operation = Txt.ask_plus("[眠雀]选择敌方操作", ["0", "1", "2"])
         self.state -= 1
@@ -1614,10 +1688,16 @@ al27 = Al27(27)
 
 class Al28(Al_general):  # 鹘鸮
 
-    def print_self_before_shelter(self):
+    def print_self_before_shelter(self,return_list = False):
+        print_list = []
         if self.state > 0:
-            print(r"/===\鹘鸮招架中")
-            print("~~~~~\n" * max(0, 4 - self.state))
+            if return_list:
+                print_list.append(r"/===\鹘鸮招架中")
+                print_list += ["~~~~~"]* max(0, 4 - self.state)
+            else:
+                print(r"/===\鹘鸮招架中")
+                print("~~~~~\n" * max(0, 4 - self.state))
+        return print_list
 
     def react(self):
         if self.state == 0:
@@ -1710,6 +1790,15 @@ class Al29(Al_general):  # 酒师
                 print(self.skin_list[i], end=" ")
             print()
 
+    def generate_line_list(self):
+        print_list = []
+        if self.is_on_ones_ship():
+            str = ""
+            for i in self.state:
+                str += self.skin_list[i]
+            print_list.append(str)
+        return print_list
+
     def suggest(self):
         if not self.state:
             return "[2/w]建立治疗塔"
@@ -1799,6 +1888,9 @@ class Al31(Al_general):  # 白鲟
     def print_self(self):
         print(".....\n" * self.state)
 
+    def generate_line_list(self):
+        return ["....."]*self.state
+
 
 al31 = Al31(31)
 
@@ -1864,9 +1956,6 @@ class Al33(Al_general):  # 蛊
                 self.state[1] += self.state[0] - 100
             self.check_if_move(1)
 
-    def print_self(self):
-        pass
-
     def print_poisoned_shelter(self):
         if enemy.shelter > 0:
             future = self.state.copy()
@@ -1887,7 +1976,6 @@ class Al33(Al_general):  # 蛊
                     print("-----")
 
     def suggest(self):
-
         now = self.state.copy()
         if self.ship.missile > 0 and enemy.shelter >= 5:
             pre_poi_list = [60, 40, 30, 10, 10]
@@ -1948,8 +2036,6 @@ class Al34(Al_general):  # 风间浦
             self.inject_and_report("记录伤害", {"atk": atk})
         return atk
 
-    def print_self(self):
-        pass
 
     def suggest(self):
         BEGIN_COOLING = 6
@@ -2210,6 +2296,13 @@ class Al38(Al_general):  # 澈
         else:
             print(f"--X-- x{self.state[0]}")
 
+    def generate_line_list(self):
+        print_list = []
+        if self.state[0] <= 5:
+            print_list += ["--X--"] * self.state[0]
+        else:
+            print_list.append(f"--X-- x{self.state[0]}")
+
     def suggest(self):
         if self.state[1]:
             return f"[w]自伤并获得三点锋镝|[寂]伤害加成中|[锋镝]>{self.state[0]}"
@@ -2308,10 +2401,15 @@ class Al40(Al_general):  # 冷水
         self.state += 1
         self.report("冷水盾上线")
 
-    def print_self_before_shelter(self):
-        for _ in range(self.state):
-            print(self.skin_list[0])
-
+    def print_self_before_shelter(self,return_list = False):
+        print_list = []
+        if return_list:
+            for _ in range(self.state):
+                print_list += [self.skin_list[0]]
+        else:
+            for _ in range(self.state):
+                print(self.skin_list[0])
+        return print_list
     def reduce_enemy_attack(self, atk):
         while self.state != 0 and atk != 0:
             if dice.probability(0.33):
@@ -2416,46 +2514,53 @@ class FieldPrinter:
         opposite.print_self_shelter()
         damage_previewer.print_enemy_dmg(opposite.shelter)
         print("\n\n\n")
-        for al in reversed(me.al_list):
-            try:
-                al.print_self_before_shelter()
-            except AttributeError:
-                pass
-        me.print_self_shelter(entry_manager.get_rank_of("2") >= 2)
-        for al in reversed(me.al_list):
-            try:
-                al.print_self_behind_shelter()
-            except AttributeError:
-                pass
-        me.print_self_missile()
-        print()
-        for al in reversed(me.al_list):
-            try:
-                al.print_self_behind_missile()
-            except AttributeError:
-                pass
-        print()
 
-        for al in reversed(another.al_list):
+        left = []
+        if opposite.target_ship == me:
+            left.append("@")
+        for al in reversed(me.al_list):
             try:
-                al.print_self_before_shelter()
+                left += al.print_self_before_shelter(return_list=True)
             except AttributeError:
                 pass
-        another.print_self_shelter(entry_manager.get_rank_of("2") >= 2)
-        for al in reversed(another.al_list):
+        left += me.generate_shelter_list(entry_manager.get_rank_of("2") >= 2)
+        for al in reversed(me.al_list):
             try:
-                al.print_self_behind_shelter()
+                left += al.print_self_behind_shelter(return_list = True)
             except AttributeError:
                 pass
-        another.print_self_missile()
-        print()
-        for al in reversed(another.al_list):
+        left += me.generate_missile_list()
+        left += [""]
+        for al in reversed(me.al_list):
             try:
-                al.print_self_behind_missile()
+                left += al.print_self_behind_missile(return_list= True)
             except AttributeError:
                 pass
-        print()
+        left += [""]
 
+        right = []
+        if opposite.target_ship == another:
+            right.append("@")
+        for al in reversed(another.al_list):
+            try:
+                right += al.print_self_before_shelter(return_list = True)
+            except AttributeError:
+                pass
+        right += another.generate_shelter_list(entry_manager.get_rank_of("2") >= 2)
+        for al in reversed(another.al_list):
+            try:
+                right += al.print_self_behind_shelter(return_list = True)
+            except AttributeError:
+                pass
+        right += another.generate_missile_list()
+        right += [""]
+        for al in reversed(another.al_list):
+            try:
+                right += al.print_self_behind_missile(return_list = True)
+            except AttributeError:
+                pass
+        right += [""]
+        Txt.n_column_print([left,right])
         damage_previewer.update(me.shelter, opposite.shelter)
 
     def print_basic_info(self, days):
@@ -2937,6 +3042,7 @@ class MainLoops:
                 else "[No Info]"
             })
             station_trees_manager.all_tree_list["终焉结信息"].print_self()
+            another_ship.al_list = [al15,al14,al19]
             inp = input_plus("二号请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
             match inp:
                 case "q"|"w"|"e":
@@ -3304,8 +3410,8 @@ if __name__ == "__main__":
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
     while 1:
         main_loops.station_mainloop()
-        des = main_loops.ask_destination()
-        match des:
+        current_destination = main_loops.ask_destination()
+        match current_destination:
             case "0":
                 main_loops.initialize_before_fight()
                 main_loops.fight_mainloop()
