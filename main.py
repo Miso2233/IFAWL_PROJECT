@@ -11,7 +11,7 @@ from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
 from modules.Module4_voices import voices
 from core.Module5_dice import dice
-from modules.Module6_market_manager import Contract_manager, Contract, tools
+from modules.Module6_market_manager import ContractManager, Contract, tools
 from modules.Module7_auto_pilot import auto_pilot
 from modules.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
@@ -3078,7 +3078,7 @@ class MainLoops:
 
 main_loops = MainLoops()
 
-contract_manager = Contract_manager(storage_manager, list(al_manager.all_al_list.keys()))
+contract_manager = ContractManager(storage_manager, list(al_manager.all_al_list.keys()))
 infinity_card_manager = CardManager(my_ship,enemy,entry_manager,al_manager)
 plot_manager.set_storage_manager(storage_manager)
 

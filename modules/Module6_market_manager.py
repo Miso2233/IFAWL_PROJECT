@@ -296,7 +296,7 @@ class RepurchaseContract(Contract):
         self.get_tree = Tree("你将得到>>>", self.get_list)
         self.give_tree = Tree("你将支付>>>", {AL_NAME_LIST[al]:1})
 
-class Contract_manager:
+class ContractManager:
 
     def __init__(self,storage_manager,all_al_str_list:list[str]):
         self.storage_manager = storage_manager
