@@ -194,6 +194,31 @@ class MyShip:
                 pass
         self.missile += num
 
+    def ppve_react_extra(self,operation:str):
+        if entry_manager.current_mode != Modes.PPVE or operation == "":
+            return operation
+        if operation[0] not in ["m","s","c"]:
+            return operation
+        match operation[0]:
+            case "m":
+                if len(operation) > 1 and operation[1:].isdigit():
+                    my_ship.load(int(operation[1:]))
+                    another_ship.load(int(operation[1:]))
+                    self.load(-int(operation[1:])*2)
+            case "s":
+                if len(operation) > 1 and operation[1:].isdigit():
+                    my_ship.heal(int(operation[1:]))
+                    another_ship.heal(int(operation[1:]))
+                    enemy.attack(int(operation[1:])*2,self)
+            case "c":
+                if my_ship.life_for_ppve > 0:
+                    enemy.attack(-1-my_ship.shelter,self)
+                    my_ship.shelter = 1
+                if another_ship.life_for_ppve > 0:
+                    enemy.attack(-1-another_ship.shelter,self)
+                    another_ship.shelter = 1
+        return "pass"
+
     def react(self):
         """
         进行回合中响应
@@ -207,6 +232,8 @@ class MyShip:
             else:
                 field_printer.append(0)
         operation = auto_pilot.get_operation(field_printer)
+
+        operation = self.ppve_react_extra(operation)
 
         for al in self.al_list:
             try:
@@ -340,13 +367,13 @@ class EnemyShip:
         self.shelter = 2 + adj_shelter
         self.target_ship = my_ship
 
-    def ppve_react_plus(self):
+    def ppve_react_extra(self):
         ##
         if entry_manager.current_mode == Modes.PPVE:
             target_ship_before = self.target_ship
             while 1:
                 self.target_ship = random.choice([my_ship,another_ship])
-                if not main_loops.__is_near_death(self.target_ship):
+                if self.target_ship.life_for_ppve <= 0:
                     break
             if target_ship_before != self.target_ship:
                 Txt.print_plus("敌方目标改变，注意警戒！")
@@ -379,7 +406,7 @@ class EnemyShip:
             case _:
                 Txt.print_plus("敌人跳过了这一天！")
 
-        self.ppve_react_plus()
+        self.ppve_react_extra()
 
 enemy = EnemyShip()
 
@@ -2523,6 +2550,8 @@ class FieldPrinter:
         print("\n\n\n")
 
         left = []
+        if me.life_for_ppve > 0:
+            left.append("("+"+"*(me.life_for_ppve-main_loops.days+1)+")")
         if opposite.target_ship == me:
             left.append("@")
         for al in reversed(me.al_list):
@@ -2546,6 +2575,10 @@ class FieldPrinter:
         left += [""]
 
         right = []
+        if another.life_for_ppve > 0:
+            right.append("("+"+"*(another.life_for_ppve-main_loops.days+1)+")")
+        elif another.life_for_ppve == -1:
+            right.append("(-)")
         if opposite.target_ship == another:
             right.append("@")
         for al in reversed(another.al_list):
@@ -2733,8 +2766,7 @@ class MainLoops:
             return 1
         return 0
 
-    @staticmethod
-    def __is_near_death(ship:MyShip) -> bool:
+    def is_near_death(self,ship:MyShip) -> bool:
         if ship.shelter < 0:
             return 1
         if entry_manager.get_rank_of("5") != 0 and ship.get_equivalent_shelter_of_ship() <= 0:
@@ -2765,19 +2797,20 @@ class MainLoops:
         return 0
     
     def is_over_for_ppve(self):
-        if self.__is_near_death(my_ship) and self.__is_near_death(another_ship):
+        if self.is_near_death(my_ship) and self.is_near_death(another_ship):
             return -1
         if enemy.shelter < 0:
             return 1
         for ship in [my_ship,another_ship]:
             ship:MyShip
-            if self.__is_near_death(ship):
+            if not self.is_near_death(ship) and ship.life_for_ppve > 0:
+                ship.life_for_ppve = -1
+            elif self.is_near_death(ship):
                 if ship.life_for_ppve == -1:
                     return -1
                 elif ship.life_for_ppve == 0:
                     ship.life_for_ppve = self.days+5
-                else:
-                    if self.days == ship.life_for_ppve:
+                elif self.days == ship.life_for_ppve:
                         return -1
         return 0
 
@@ -3061,6 +3094,7 @@ class MainLoops:
         Txt.print_plus(f"轮次{self.infinity_round}>>准备开始>>")
 
     def initialize_before_ppve(self):
+        another_ship.al_list = [al15,al14,al19]
         while 1:
             station_trees_manager.all_tree_list["终焉结信息"].inject({
             "total_al_rank": another_ship.total_al_rank,
@@ -3077,7 +3111,6 @@ class MainLoops:
                 else "[No Info]"
             })
             station_trees_manager.all_tree_list["终焉结信息"].print_self()
-            another_ship.al_list = [al15,al14,al19]
             inp = input_plus("二号请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
             match inp:
                 case "q"|"w"|"e":
@@ -3118,7 +3151,9 @@ class MainLoops:
                 al.ship = another_ship
         # 舰船初始化
         my_ship.initialize()
+        my_ship.life_for_ppve = 0
         another_ship.initialize()
+        another_ship.life_for_ppve = 0
         shelter, missile = self.__get_adjusting_shelter_and_missile()
         enemy.initialize(shelter, missile)
         # 终焉结初始化
@@ -3163,12 +3198,15 @@ class MainLoops:
 
             # noon
             if who == 1:
-                Txt.print_plus("今天由我方行动,请一号指挥官行动")
-                field_printer.print_key_prompt(my_ship)
-                my_ship.react()
-                Txt.print_plus("请二号指挥官行动")
-                field_printer.print_key_prompt(another_ship)
-                another_ship.react()
+                Txt.print_plus("今天由我方行动")
+                if not self.is_near_death(my_ship):
+                    Txt.print_plus("请一号指挥官行动")
+                    field_printer.print_key_prompt(my_ship)
+                    my_ship.react()
+                if not self.is_near_death(another_ship):
+                    Txt.print_plus("请二号指挥官行动")
+                    field_printer.print_key_prompt(another_ship)
+                    another_ship.react()
             else:
                 Txt.print_plus("今天由敌方行动")
                 enemy.react()
