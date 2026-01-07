@@ -3090,15 +3090,20 @@ def hello():
 
 if __name__ == "__main__":
     hello()
+    # 存储管理器登录
     storage_manager.login()
+    # 剧情管理器初始化
     plot_manager.load_session()
     plot_manager.set_information_map({
         "username": storage_manager.username,
         "ship_name": storage_manager.get_value_of("ship_name")
     })
     plot_manager.try_to_play_when_login()
+    # 舰船读取终焉结
     my_ship.load_al()
+    # 词条管理器读取词条
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
+    # 主循环
     while 1:
         main_loops.station_mainloop()
         des = main_loops.ask_destination()
