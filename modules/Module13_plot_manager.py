@@ -18,6 +18,11 @@ class Paragraph:
 
     @staticmethod
     def __processed(line:str):
+        """
+        处理文本行
+        :param line: 原始文本行
+        :return: 处理后文本。具有开头协议来传输必要数据
+        """
         out = line
         if line.startswith("-"):
             out = "[" + line[1:]
@@ -27,6 +32,18 @@ class Paragraph:
             content = line[1:-1]
             out = "[enter]" + content
             return out
+        if line.startswith("+"):
+            count = 0
+            while "+" in out:
+                out = out.replace("+",f" |[{count}] ",1)
+                count += 1
+            return f"+{count}+" + out
+        if line.startswith("/"):
+            count = 0
+            while "/" in out:
+                out = out.replace("/",f" |[{count}] ",1)
+                count += 1
+            return f"/{count}/" + out
         return out
 
     def play(self,info_map) -> Paragraph:
@@ -39,8 +56,18 @@ class Paragraph:
         for line in self.lines:
             processed = self.__processed(line)
             processed = processed.format_map(info_map)
-            if processed.startswith("[enter]"):
+            if processed.startswith("[enter]"): # 非输入回车
                 input_plus(processed)
+                print()
+            elif processed.startswith("+"): # 剧情分支的多选项
+                count = int(processed[1])
+                content = processed[3:]
+                next_index = ask_plus(content,list(range(0,count)))
+                print()
+            elif processed.startswith("/"):  # 非剧情分支的多选项
+                count = int(processed[1])
+                content = processed[3:]
+                ask_plus(content, list(range(0, count)))
                 print()
             else:
                 print_plus(processed)
