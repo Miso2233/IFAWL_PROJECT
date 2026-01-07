@@ -2537,9 +2537,6 @@ class StationTreesManager:
 
 station_trees_manager = StationTreesManager()
 
-contract_manager = Contract_manager(storage_manager, list(al_manager.all_al_list.keys()))
-infinity_card_manager = CardManager(my_ship,enemy,entry_manager,al_manager)
-
 class MainLoops:
 
     def __init__(self):
@@ -3081,6 +3078,9 @@ class MainLoops:
 
 main_loops = MainLoops()
 
+contract_manager = Contract_manager(storage_manager, list(al_manager.all_al_list.keys()))
+infinity_card_manager = CardManager(my_ship,enemy,entry_manager,al_manager)
+plot_manager.set_storage_manager(storage_manager)
 
 def hello():
     sounds_manager.switch_to_bgm("login")
@@ -3091,10 +3091,12 @@ def hello():
 if __name__ == "__main__":
     hello()
     storage_manager.login()
+    plot_manager.load_session()
     plot_manager.set_information_map({
         "username": storage_manager.username,
         "ship_name": storage_manager.get_value_of("ship_name")
     })
+    plot_manager.try_to_play_when_login()
     my_ship.load_al()
     entry_manager.set_all_rank(storage_manager.get_entry_rank())
     while 1:

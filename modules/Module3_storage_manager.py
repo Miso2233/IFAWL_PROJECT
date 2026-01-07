@@ -8,6 +8,7 @@ from core.Module2_json_loader import json_loader
 
 AL_META_DATA = json_loader.load("al_meta_data")
 ENTRY_META_DATA = json_loader.load("entries_meta_data")
+ALL_POLT_DATA:dict[str,dict[str,dict[str,str]]|str] = json_loader.load("plots")
 
 class StorageManager:
     
@@ -17,10 +18,12 @@ class StorageManager:
         self.username:str = ""
         # 建立模板
         self.template:dict[str,dict[str,str|int|dict[str,int]]] = json_loader.load("storage_template")
-        for al_index_str in AL_META_DATA.keys():
-            self.template["als"][al_index_str] = 0
-        for entry_index in ENTRY_META_DATA:
-            self.template["metadata"]["entry_rank"][entry_index] = 0
+        for al_str in AL_META_DATA.keys():
+            self.template["als"][al_str] = 0
+        for entry_str in ENTRY_META_DATA:
+            self.template["metadata"]["entry_rank"][entry_str] = 0
+        for session_str in ALL_POLT_DATA:
+            self.template["metadata"]["plot_progress"][session_str] = False
         # 建立空模板
         self.template_empty = deepcopy(self.template)
         # 建立映射表
@@ -278,5 +281,23 @@ class StorageManager:
     def cost_ssd(self,total_rank:int):
         self.modify("保险点",-total_rank)
         print(f"{total_rank}保险点从账户扣除·感谢使用星际保险服务")
+
+    # ==================== 剧情进度保存 ====================
+
+    def save_session_progress(self,session_str):
+        """
+        将某个会话的进度在硬盘中设置为已播放
+        :param session_str: 会话编号
+        :return: 无
+        """
+        self.repository_for_all_users[self.username]["metadata"]["plot_progress"][session_str] = True
+        self.sync()
+
+    def get_session_progress(self) -> dict[str,bool] :
+        """
+        获取所有会话的播放进度
+        :return: 一个字典，键为会话编号
+        """
+        return self.repository_for_all_users[self.username]["metadata"]["plot_progress"]
 
 storage_manager = StorageManager()

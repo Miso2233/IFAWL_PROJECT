@@ -3,7 +3,7 @@ from __future__ import annotations
 from core.Module1_txt import print_plus,input_plus,ask_plus
 from core.Module2_json_loader import json_loader
 
-ALL_POLT_DATA:dict[str,dict[str,dict[str,str]]] = json_loader.load("plots")
+ALL_POLT_DATA:dict[str,dict[str,dict[str,str]]|str] = json_loader.load("plots")
 
 class Paragraph:
 
@@ -80,15 +80,22 @@ class Session:
     会话类，封装一个会话的所有段落
     """
     def __init__(self, session_str: str):
-        self.session_id = int(session_str)
+        # 元数据字段
+        self.title:str = ALL_POLT_DATA[session_str]["session_title"]
+        self.session_index:int = int(session_str)
         self.paragraphs: dict[int, Paragraph] = {}
+        self.has_been_played:bool = False
         
         # 创建段落对象
         for paragraph in ALL_POLT_DATA[session_str]:
+            if not paragraph.isdigit(): # 跳过段落元数据
+                continue
             self.paragraphs[int(paragraph)] = Paragraph(session_str, paragraph)
         
         # 设置每个段落的后续段落链接
         for paragraph_key, paragraph_data in ALL_POLT_DATA[session_str].items():
+            if not paragraph_key.isdigit(): # 跳过段落元数据
+                continue
             paragraph_id = int(paragraph_key)
             current_plot = self.paragraphs[paragraph_id]
 
@@ -108,13 +115,14 @@ class Session:
 
     def play(self, info_map: dict):
         """
-        播放整个会话
+        播放整个会话，同时更新已播放标签
         :param info_map: 注入信息字典
         :return: 无
         """
         current = self.first_paragraph
         while current is not None:
             current = current.play(info_map)
+        self.has_been_played = True
 
 class PlotManager:
     def __init__(self):
@@ -128,8 +136,36 @@ class PlotManager:
         # 信息映射表
         self.information_map = {}
 
+        # 存储管理器
+        self.storage_manager = None
+
+    # ==================== 依赖注入 ====================
+
     def set_information_map(self, info_map: dict):
         self.information_map = info_map
+
+    def set_storage_manager(self, storage_manager):
+        self.storage_manager = storage_manager
+
+    # ==================== 剧情保存 ====================
+
+    def save_session(self, session_index: int):
+        """
+        将一个会话保存为已播放。storage_manager.save_story_progress()的封装
+        :param session_index: 会话整数编号
+        :return: 无
+        """
+        self.storage_manager.save_session_progress(str(session_index))
+
+    def load_session(self):
+        """
+        从存储管理器中加载会话播放状态
+        :return: 无
+        """
+        for session,state in self.storage_manager.get_session_progress().items():
+            self.sessions[int(session)].has_been_played = state
+
+    # ==================== 剧情播放 ====================
 
     def play_session(self, session: int):
         """
@@ -137,7 +173,15 @@ class PlotManager:
         :param session: 会话编号
         :return: 无
         """
-        if session in self.sessions:
-            self.sessions[session].play(self.information_map)
+        self.sessions[session].play(self.information_map)
+        self.save_session(session)
+
+    def try_to_play_when_login(self):
+        """
+        尝试在登录时播放会话
+        :return: 无
+        """
+        if not self.sessions[0].has_been_played:
+            self.play_session(0)
 
 plot_manager = PlotManager()
