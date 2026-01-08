@@ -17,3 +17,9 @@ class Modes:
     FIGHT = "FIGHT"
     DISASTER = "DISASTER"
     INFINITY = "INFINITY"
+
+
+class Side:
+    """阵营枚举，用于标识敌我双方"""
+    PLAYER = 1  # 玩家方
+    ENEMY = 0   # 敌方
