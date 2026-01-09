@@ -749,6 +749,8 @@ class Al_general:
             try:
                 print_list.append(self.skin_list[self.state])
                 print_list.append("")
+            except TypeError:
+                pass
             except IndexError:
                 pass
         return print_list
