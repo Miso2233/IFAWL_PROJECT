@@ -3130,7 +3130,7 @@ class MainLoops:
                             al:Al_general
                             if al in my_ship.al_list:
                                 print(f"{al.short_name}已被装备")
-                            al.print_description()
+                            al.print_description(show_num_in_storage=False)
                         # Al的选择
                         cn_type = {"q": "主武器", "w": "生存位", "e": "战术装备"}[inp]
                         while 1:
