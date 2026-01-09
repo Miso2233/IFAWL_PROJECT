@@ -1693,7 +1693,7 @@ class Al27(Al_general):  # 瞳猫
             self.report("充能")
 
     def operate_in_morning(self):
-        if self.is_on_my_ship() and dice.current_who == Side.PLAYER and self.state < 9:
+        if self.is_on_ones_ship() and dice.current_who == Side.PLAYER and self.state < 9:
             self.state += 1
 
     def add_atk(self, atk, type):
@@ -2268,7 +2268,7 @@ class Al37(Al_general): # 星尘
     def operate_in_afternoon(self):
         if self.state < 0:
             self.state += 1
-        if self.is_on_my_ship() and enemy.shelter < -1:
+        if self.is_on_ones_ship() and enemy.shelter < -1:
             my_ship.load(int((-1-enemy.shelter)*0.5))
             enemy.shelter=-1
             self.report("能量回收")
@@ -2775,10 +2775,10 @@ class MainLoops:
 
     def is_near_death(self,ship:MyShip) -> bool:
         if ship.shelter < 0:
-            return 1
+            return True
         if entry_manager.get_rank_of("5") != 0 and ship.get_equivalent_shelter_of_ship() <= 0:
-            return 1
-        return 0
+            return True
+        return False
 
 
     @staticmethod
