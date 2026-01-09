@@ -626,7 +626,7 @@ class Al_general:
         self.skin_list: list[str] = al_manager.al_meta_data[self.index].get("skin_list", [])
         self.platform: str = al_manager.al_meta_data[self.index]["platform"]
         self.metadata: dict[str, str | int] = al_manager.al_meta_data[self.index]
-        self.ship = my_ship
+        self.ship:MyShip = my_ship
 
         # industry字段
         self.recipe = recipe_for_all_al[self.index]
@@ -676,7 +676,11 @@ class Al_general:
         # [30] 岩河军工“湾区铃兰”饱和式蜂巢突击粒子炮      [粒子炮平台] [VIII] 1在仓库 >>[可以离站使用]<<
         print()
 
-    def is_on_ones_ship(self):
+    def is_on_ones_ship(self) -> bool:
+        """
+        判断自己是否在任意一艘我方舰船上
+        :return: 是否在任意一艘我方舰船上
+        """
         return self in self.ship.al_list
 
     def add_atk(self, atk: int, type: str):
@@ -3103,6 +3107,72 @@ class MainLoops:
                     pass
         Txt.print_plus(f"轮次{self.infinity_round}>>准备开始>>")
 
+    def infinity_mainloop(self):
+        while 1:
+            sounds_manager.switch_to_bgm("fight")
+            while 1:
+                # dawn
+                if (rank := entry_manager.get_rank_of("11")) != 0:
+                    dice.set_additional_di(rank * 0.1)
+                who = dice.decide_who(force_advance=self.__get_force_advance())
+                time.sleep(0.4)
+
+                # morning
+                for al in my_ship.al_list:
+                    if al:
+                        al.operate_in_morning()
+                field_printer.print_basic_info(self.days)
+                print(f"轮数>>{self.infinity_round}\n")
+                entry_manager.print_all_flow_rank()
+                field_printer.print_for_fight(my_ship, enemy)
+                field_printer.generate_suggestion_tree().print_self()
+                field_printer.print_key_prompt()
+
+                # noon
+                if who == Side.PLAYER:
+                    Txt.print_plus("今天由我方行动")
+                    my_ship.react()
+                else:
+                    Txt.print_plus("今天由敌方行动")
+                    enemy.react()
+
+                # afternoon
+                for al in my_ship.al_list:
+                    if al:
+                        al.operate_in_afternoon()
+                        if who == Side.PLAYER:
+                            al.operate_in_our_turn()
+
+                # dusk
+                if (result := self.__is_over()) != 0:
+                    break
+                self.days += 1
+            if result == 1:
+                print()
+                Txt.print_plus("=========我方胜利=========")
+                print()
+                sounds_manager.switch_to_bgm("win")
+                Txt.print_plus(f"第{self.infinity_round}轮次|获胜>>\n")
+                damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
+                #storage_manager.drop_for_fight()
+                des = input_plus("[enter]下一轮次| [0]回站")
+                match des:
+                    case "":
+                        self.__initialize_between_infinity()
+                    case "0":
+                        return
+                    case _:
+                        return
+            else:
+                print()
+                Txt.print_plus("=========敌方胜利=========")
+                print()
+                damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
+                Txt.print_plus(f"最高挑战轮次{self.infinity_round}\n")
+                storage_manager.set_value_of("max_infinity_round", self.infinity_round)
+                input_plus("[enter]回站")
+                return
+
     def initialize_before_ppve(self):
         another_ship.al_list = [al15,al14,al19]
         while 1:
@@ -3255,72 +3325,6 @@ class MainLoops:
         #damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
         input_plus("[enter]回站")
         return
-
-    def infinity_mainloop(self):
-        while 1:
-            sounds_manager.switch_to_bgm("fight")
-            while 1:
-                # dawn
-                if (rank := entry_manager.get_rank_of("11")) != 0:
-                    dice.set_additional_di(rank * 0.1)
-                who = dice.decide_who(force_advance=self.__get_force_advance())
-                time.sleep(0.4)
-
-                # morning
-                for al in my_ship.al_list:
-                    if al:
-                        al.operate_in_morning()
-                field_printer.print_basic_info(self.days)
-                print(f"轮数>>{self.infinity_round}\n")
-                entry_manager.print_all_flow_rank()
-                field_printer.print_for_fight(my_ship, enemy)
-                field_printer.generate_suggestion_tree().print_self()
-                field_printer.print_key_prompt()
-
-                # noon
-                if who == Side.PLAYER:
-                    Txt.print_plus("今天由我方行动")
-                    my_ship.react()
-                else:
-                    Txt.print_plus("今天由敌方行动")
-                    enemy.react()
-
-                # afternoon
-                for al in my_ship.al_list:
-                    if al:
-                        al.operate_in_afternoon()
-                        if who == Side.PLAYER:
-                            al.operate_in_our_turn()
-
-                # dusk
-                if (result := self.__is_over()) != 0:
-                    break
-                self.days += 1
-            if result == 1:
-                print()
-                Txt.print_plus("=========我方胜利=========")
-                print()
-                sounds_manager.switch_to_bgm("win")
-                Txt.print_plus(f"第{self.infinity_round}轮次|获胜>>\n")
-                damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
-                #storage_manager.drop_for_fight()
-                des = input_plus("[enter]下一轮次| [0]回站")
-                match des:
-                    case "":
-                        self.__initialize_between_infinity()
-                    case "0":
-                        return
-                    case _:
-                        return
-            else:
-                print()
-                Txt.print_plus("=========敌方胜利=========")
-                print()
-                damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
-                Txt.print_plus(f"最高挑战轮次{self.infinity_round}\n")
-                storage_manager.set_value_of("max_infinity_round", self.infinity_round)
-                input_plus("[enter]回站")
-                return
 
     @staticmethod
     def station_mainloop():
