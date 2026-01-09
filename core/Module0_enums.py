@@ -17,6 +17,8 @@ class Modes:
     FIGHT = "FIGHT"
     DISASTER = "DISASTER"
     INFINITY = "INFINITY"
+    PPVE = "PPVE"
+
 
 
 class Side:

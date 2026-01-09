@@ -10,6 +10,7 @@ ALL_ENTRY_METADATA = json_loader.load("entries_meta_data")
 
 # Modes 枚举已移至 core.Module0_enums 模块
 
+
 class Entry:
 
     def __init__(self,index:str):
@@ -141,7 +142,7 @@ class EntryManager:
         :param index: 词条编号
         :return: 词条等级。战死之地返回selected_rank，其它则返回flow_rank
         """
-        if self.current_mode == Modes.DISASTER:
+        if self.current_mode == Modes.DISASTER  or self.current_mode == Modes.PPVE:
             return self.all_entries[index].selected_rank
         return self.all_entries[index].flow_rank
 
