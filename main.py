@@ -456,8 +456,10 @@ class EnemyShip:
             target_ship_before = self.target_ship
             if main_loops.is_near_death(my_ship) and not main_loops.is_near_death(another_ship):
                 self.target_ship = another_ship
-            if main_loops.is_near_death(another_ship) and not main_loops.is_near_death(my_ship):
+            elif main_loops.is_near_death(another_ship) and not main_loops.is_near_death(my_ship):
                 self.target_ship = my_ship
+            else:
+                self.target_ship = random.choice([my_ship,another_ship])
             if target_ship_before != self.target_ship:
                 Txt.print_plus("敌方目标改变，注意警戒！")
         ##
@@ -724,6 +726,9 @@ class Al_general:
         :param theme: 主题
         :return: 无
         """
+        if entry_manager.current_mode == Modes.PPVE:
+            voices.send_and_report(self.short_name, theme,main_loops.server)
+            return
         voices.report(self.short_name, theme)
 
     def inject_and_report(self, theme: str, data_injected: dict[str, str | int]):
@@ -2209,7 +2214,7 @@ class Al35(Al_general):  # 青鹄
     def check_if_extra_act(self):
 
         if self.state >= 4 and dice.current_who == Side.ENEMY:
-            suggestion_tree = field_printer.generate_suggestion_tree()
+            suggestion_tree = field_printer.generate_suggestion_tree(self.ship)
             suggestion_tree.topic = "额外回合操作"
             suggestion_tree.print_self()
             inp = Txt.ask_plus("""+[+Extra action+]+>>选择你的操作[q/w/e]立即响应或重置其冷却""", ["q", "w", "e"])
@@ -2818,7 +2823,9 @@ class FieldPrinter:
         )
 
     def ppve_help_prompt(self):
-        print("[m1~m9]转移1~9枚弹药 [s]转移一层护盾 [c]救援")
+        prompt = "[m1~m9]转移1~9枚弹药 [s]转移一层护盾 [c]救援"
+        main_loops.server.send_str(prompt)
+        print(prompt)
 
 
     def print_key_prompt(self,ship = my_ship):
@@ -2828,6 +2835,9 @@ class FieldPrinter:
                 key_prompt += f"[{al.type}] {al.short_name}#{al.index}  "
             except AttributeError:
                 key_prompt += "[NO INFO]  "
+        if ship == another_ship:
+            main_loops.server.send_str(key_prompt)
+            return
         print(key_prompt)
 
 
@@ -3342,9 +3352,12 @@ class MainLoops:
     def initialize_before_ppve(self):
         # 服务器建立
         self.server = Server()
+        entry_manager.set_server(self.server)
         self.server.connect()
         # 终焉结选择
         another_ship.al_list = [al15,al14,al19]
+        fast_choi = False##员工通道
+        inp_position = 0
         while 1:
             station_trees_manager.all_tree_list["终焉结信息"].inject({
             "total_al_rank": another_ship.total_al_rank,
@@ -3361,7 +3374,17 @@ class MainLoops:
                 else "[No Info]"
             })
             station_trees_manager.all_tree_list["终焉结信息"].print_self()
-            inp = input_plus("二号请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
+
+            if fast_choi:##员工通道
+                inp_position += 1
+                inp = "qwe "[inp_position]
+            else:
+                inp = main_loops.server.ask("二号请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
+            if " " in inp and len(fclist := inp.split(" ")) == 3:
+                fast_choi = True
+                inp_position = 0
+                inp = "q"
+
             match inp:
                 case "q"|"w"|"e":
                     al_position = {"q": 0, "w": 1, "e": 2}[inp]
@@ -3369,6 +3392,8 @@ class MainLoops:
                         al_list = [al for al in al_manager.all_al_list.values() if al.type == inp]
                         al_list.sort(key=lambda al: al.rank_num)
                         for al in al_list:
+                            if fast_choi:##员工通道
+                                break
                             al:Al_general
                             if al in my_ship.al_list:
                                 print(f"{al.short_name}已被装备")
@@ -3376,9 +3401,13 @@ class MainLoops:
                         # Al的选择
                         cn_type = {"q": "主武器", "w": "生存位", "e": "战术装备"}[inp]
                         while 1:
-                            index = Txt.input_plus(
-                                f"\n指挥官，请输入数字选择本场战斗的{cn_type}|[-1] 不使用{cn_type}|[enter] 保留原有选择>>>")
+                            if fast_choi:##员工通道
+                                index = fclist[al_position]
+                            else:
+                                index = Txt.input_plus(
+                                    f"\n指挥官，请输入数字选择本场战斗的{cn_type}|[-1] 不使用{cn_type}|[enter] 保留原有选择>>>")
                             if index not in al_manager.al_meta_data or al_manager.al_meta_data[index]["type"] != inp:
+                                fast_choi = False
                                 if index == "":
                                     break
                                 elif index == "-1":
@@ -3392,7 +3421,7 @@ class MainLoops:
                                 break
                         if another_ship.al_list[al_position] != my_ship.al_list[al_position]:
                             break
-                case "":
+                case ""|" ":
                     break
                 case _:
                     pass
@@ -3445,22 +3474,25 @@ class MainLoops:
             field_printer.print_for_ppve(my_ship,another_ship,enemy)
             field_printer.print_suggestion_for_ppve()
 
-            self.server.send_str(field_printer.generate_basic_info(self.days)
-            +entry_manager.generate_str_of_all_selected_rank()
-            +field_printer.generate_for_ppve(my_ship,another_ship,enemy)
-            +field_printer.generate_suggestion_for_ppve()
-            )
+            #self.server.buffer_send()
+            self.server.send_str(field_printer.generate_basic_info(self.days))
+            self.server.send_long_str(entry_manager.generate_str_of_all_selected_rank())
+            self.server.send_long_str(field_printer.generate_for_ppve(my_ship,another_ship,enemy))
+            self.server.send_long_str(field_printer.generate_suggestion_for_ppve())
 
             # noon
             if who == 1:
                 Txt.print_plus("今天由我方行动")
+                self.server.send_str("今天由我方行动\n请一号指挥官行动")
                 field_printer.ppve_help_prompt()
                 if not self.is_near_death(my_ship):
                     Txt.print_plus("请一号指挥官行动")
                     field_printer.print_key_prompt(my_ship)
                     my_ship.react_for_ppve()
+                    #self.server.buffer_send()
                 if not self.is_near_death(another_ship):
                     Txt.print_plus("请二号指挥官行动")
+                    self.server.send_str("请二号指挥官行动")
                     field_printer.print_key_prompt(another_ship)
                     another_ship.react_for_ppve(self.server)
             else:
@@ -3480,28 +3512,21 @@ class MainLoops:
             # dusk
             if (result := self.is_over_for_ppve()) != 0:
                 break
+
+            #self.server.buffer_send()
             self.days += 1
         sounds_manager.stop_bgm()
         for al in another_ship.al_list:
             if al:
                 al.ship = my_ship
-        if result == 1:
-            print()
-            Txt.print_plus("=========我方胜利=========")
-            print()
-            #damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
-            sounds_manager.switch_to_bgm("win")
-            self.server.send_exit("作战已结束")
-            self.server.close()
-            input_plus("[enter]回站")
-            sounds_manager.stop_bgm()
-            return
         print()
-        Txt.print_plus("=========敌方胜利=========")
+        Txt.print_plus("=========我方胜利=========" if result == 1 else"=========敌方胜利=========")
         print()
         #damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
         self.server.send_exit("作战已结束")
         self.server.close()
+        self.server = None
+        entry_manager.clear_server()
         input_plus("[enter]回站")
         return
 

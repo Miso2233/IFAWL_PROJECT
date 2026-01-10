@@ -32,7 +32,7 @@ def adjust(txt:str,width:int,mode:Literal["left","right"]="left"):
         case "right":
             return " " * (width-get_shell_len(txt)) + txt
 
-def print_plus(txt:str, sec:float=0.3):
+def print_plus(txt:str, sec:float=0.3,should_wait:bool=True):
     """
     增强视觉print函数
     :param txt: 文本
@@ -47,7 +47,8 @@ def print_plus(txt:str, sec:float=0.3):
             print(j,end="")
             time.sleep(sec/i)
         print("")
-        time.sleep(0.2)
+        if should_wait:
+            time.sleep(0.2)
     else:
         print(txt)
 

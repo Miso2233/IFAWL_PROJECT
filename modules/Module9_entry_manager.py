@@ -5,6 +5,7 @@ from core.Module0_enums import Modes
 from core.Module1_txt import print_plus,Tree
 from core.Module2_json_loader import json_loader
 from core.Module5_dice import dice
+from core.Module14_communication import Server
 
 ALL_ENTRY_METADATA = json_loader.load("entries_meta_data")
 
@@ -54,6 +55,10 @@ class Entry:
         Tree(title,body).print_self()
 
     def print_when_react(self):
+        if entry_manager.server:
+            entry_manager.server.send_str(f"[警告] 词条 {self.title} 被触发 >>> {self.reaction}")
+            print_plus(f"[警告] 词条 {self.title} 被触发 >>> {self.reaction}",should_wait=False)
+            return
         print_plus(f"[警告] 词条 {self.title} 被触发 >>> {self.reaction}")
 
     def is_not_full(self) -> bool:
@@ -68,12 +73,18 @@ class EntryManager:
     def __init__(self):
         self.all_entries = {index:Entry(index) for index in ALL_ENTRY_METADATA}
         self.current_mode:Literal["FIGHT","DISASTER","INFINITY"] = "FIGHT"
+        self.server = None
 
     # 设置模式
 
     def set_mode(self,mode:Literal["FIGHT","DISASTER","INFINITY"]):
         self.current_mode = mode
 
+    def set_server(self,server:Server):
+        self.server = server
+
+    def clear_server(self):
+        self.server = None
     # 静态词条方法
 
     def print_all_descriptions(self):
