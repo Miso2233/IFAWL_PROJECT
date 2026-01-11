@@ -3173,7 +3173,10 @@ class MainLoops:
             print()
             damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
             sounds_manager.switch_to_bgm("win")
-            storage_manager.drop_for_fight()
+            times = (entry_manager.count_total_points() // 100)
+            if times == 0:
+                times = 1
+            storage_manager.drop_for_fight(times=times)
             storage_manager.set_value_of("max_disaster_point",entry_manager.count_total_points())
             input_plus("[enter]回站")
             sounds_manager.stop_bgm()

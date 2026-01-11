@@ -241,20 +241,60 @@ class StorageManager:
     
     # ==================== 战斗相关功能 ====================
     
-    def drop_for_fight(self):
+    def drop_for_fight(self, times:int=1):
         """
-        单局战斗后掉落物结算|1100信用点|2种物品各12.5个
+        单局战斗后掉落物结算|1100信用点|物品掉落量随倍数变化
+        :param times: 掉落物倍数
         :return: 无
         """
         money = random.randint(1000, 1200)
-        self.modify("联邦信用点",money)
+        self.modify("联邦信用点",money*times)
         isk_str = f"联邦信用点*{money}"
-        items = random.sample(list(self.template["materials"].keys()),2)
+
+        # 根据倍数确定物品种类数量
+        if times <= 4:
+            item_count = min(times*2, 8)  # 1倍2种，2倍4种，3倍6种，4倍8种
+        else:
+            item_count = 8  # 4倍以上保持8种物品
+
+        # 随机选择物品
+        items = random.sample(list(self.template["materials"].keys()), item_count)
         item_dict = {}
-        for item in items:
-            num = random.randint(10,15)
-            self.modify(item,num)
-            item_dict[item] = num
+
+        # 计算基础总掉落数量（2种物品，每种10-15个）
+        base_total = 2 * 12.5  # 平均每种12.5个
+
+        # 根据times倍数调整物品数量
+        if times <= 4:
+            # 1-4倍，每种物品数量不变
+            for item in items:
+                num = random.randint(10, 15)
+                self.modify(item, num)
+                item_dict[item] = num
+        else:
+            # 4倍以上，物品数量增加以满足总掉落量为times倍
+            target_total = base_total * times
+            current_total = 0
+
+            # 先给每种物品分配基础数量
+            for item in items:
+                num = random.randint(10, 15)
+                item_dict[item] = num
+                current_total += num
+
+            # 计算还需要增加的数量
+            remaining = int(target_total - current_total)
+
+            # 将剩余数量随机分配到物品上
+            if remaining > 0:
+                for _ in range(remaining):
+                    item = random.choice(items)
+                    item_dict[item] += 1
+
+            # 应用修改
+            for item, num in item_dict.items():
+                self.modify(item, num)
+
         Txt.Tree(
             "收益统计",
             "赏金到账>>",
