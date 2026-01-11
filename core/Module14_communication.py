@@ -15,6 +15,7 @@ class HeadTags:
     ASK_TAG = "\tASK\t"
     TEST_TAG = "\tTEST\t"
     LONG_STR_TAG = "\tLONG\t"
+    NONE_TAG = "\tNONE\t"
 
 class Server:
 
@@ -64,6 +65,8 @@ class Server:
             (HeadTags.ASK_TAG+prompt).encode("utf-8")
         )
         response = self.connection_socket.recv(BUFFER_SIZE).decode("utf-8")
+        if response == HeadTags.NONE_TAG:
+            response = ""
         return response
     
     def buffer_append(self,msg:str):
@@ -113,6 +116,8 @@ class Client:
                     break
                 case HeadTags.ASK_TAG:
                     answer = input_plus(content)
+                    if answer == "":
+                        answer = HeadTags.NONE_TAG
                     self.client_socket.send(answer.encode("utf-8"))
                 case HeadTags.TEST_TAG:
                     self.client_socket.send(b"test")

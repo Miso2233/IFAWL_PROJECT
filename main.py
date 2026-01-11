@@ -3382,7 +3382,7 @@ class MainLoops:
                 inp_position += 1
                 inp = "qwe "[inp_position]
             else:
-                inp = main_loops.server.ask("二号请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
+                inp = main_loops.server.ask("僚机指挥官请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
             if " " in inp and len(fclist := inp.split(" ")) == 3:
                 fast_choi = True
                 inp_position = 0
@@ -3429,6 +3429,7 @@ class MainLoops:
                 case ""|" ":
                     break
                 case _:
+                    print(f"请输入正确的指令|{inp}不正确")
                     pass
         for al in another_ship.al_list:
             if al:
@@ -3491,13 +3492,13 @@ class MainLoops:
                 self.server.send_str("今天由我方行动\n请一号指挥官行动")
                 field_printer.ppve_help_prompt()
                 if not self.is_near_death(my_ship):
-                    Txt.print_plus("请一号指挥官行动")
+                    #Txt.print_plus("请一号指挥官行动")
                     field_printer.print_key_prompt(my_ship)
                     my_ship.react_for_ppve()
                     #self.server.buffer_send()
                 if not self.is_near_death(another_ship):
-                    Txt.print_plus("请二号指挥官行动")
-                    self.server.send_str("请二号指挥官行动")
+                    #Txt.print_plus("请二号指挥官行动")
+                    #self.server.send_str("请二号指挥官行动")
                     field_printer.print_key_prompt(another_ship)
                     another_ship.react_for_ppve(self.server)
             else:
