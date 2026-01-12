@@ -6,7 +6,7 @@ from typing import Literal
 
 from core import Module1_txt as Txt
 from core.Module0_enums import DamageType, Modes, Side
-from core.Module14_communication import Server
+from core.Module14_communication import Server, Client
 from core.Module1_txt import input_plus
 from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
@@ -829,6 +829,8 @@ class Al_general:
                 print(self.skin_list[self.state])
                 print()
             except IndexError:
+                pass
+            except TypeError:
                 pass
 
     def generate_line_list(self):
@@ -2104,6 +2106,12 @@ class Al33(Al_general):  # 蛊
                 else:
                     print("-----")
 
+    def print_self(self):
+        pass
+
+    def generate_line_list(self):
+        pass
+
     def suggest(self):
         now = self.state.copy()
         if self.ship.missile > 0 and enemy.shelter >= 5:
@@ -3173,7 +3181,10 @@ class MainLoops:
             print()
             damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
             sounds_manager.switch_to_bgm("win")
-            storage_manager.drop_for_fight()
+            times = (entry_manager.count_total_points() // 100)
+            if times == 0:
+                times = 1
+            storage_manager.drop_for_fight(times=times)
             storage_manager.set_value_of("max_disaster_point",entry_manager.count_total_points())
             input_plus("[enter]回站")
             sounds_manager.stop_bgm()
@@ -3349,7 +3360,7 @@ class MainLoops:
                 input_plus("[enter]回站")
                 return
 
-    def initialize_before_ppve(self):
+    def initialize_before_ppve_server(self):
         # 服务器建立
         self.server = Server()
         entry_manager.set_server(self.server)
@@ -3379,11 +3390,13 @@ class MainLoops:
                 inp_position += 1
                 inp = "qwe "[inp_position]
             else:
-                inp = main_loops.server.ask("二号请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
+                inp = main_loops.server.ask("僚机指挥官请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
             if " " in inp and len(fclist := inp.split(" ")) == 3:
                 fast_choi = True
                 inp_position = 0
                 inp = "q"
+            else:
+                fclist = []
 
             match inp:
                 case "q"|"w"|"e":
@@ -3424,6 +3437,7 @@ class MainLoops:
                 case ""|" ":
                     break
                 case _:
+                    print(f"请输入正确的指令|{inp}不正确")
                     pass
         for al in another_ship.al_list:
             if al:
@@ -3458,7 +3472,7 @@ class MainLoops:
         # 设置天数
         self.days = 1
             
-    def ppve_mainloop(self):
+    def ppve_server_mainloop(self):
         sounds_manager.switch_to_bgm("fight")
         while 1:
             # dawn
@@ -3483,20 +3497,21 @@ class MainLoops:
             # noon
             if who == 1:
                 Txt.print_plus("今天由我方行动")
-                self.server.send_str("今天由我方行动\n请一号指挥官行动")
+                self.server.send_str("今天由我方行动")
                 field_printer.ppve_help_prompt()
                 if not self.is_near_death(my_ship):
-                    Txt.print_plus("请一号指挥官行动")
                     field_printer.print_key_prompt(my_ship)
+                    self.server.send_str("正在等待长机指挥官操作<<<")
                     my_ship.react_for_ppve()
-                    #self.server.buffer_send()
+                    self.server.send_str("长机指挥官操作完毕>>>")
                 if not self.is_near_death(another_ship):
-                    Txt.print_plus("请二号指挥官行动")
-                    self.server.send_str("请二号指挥官行动")
+                    Txt.print_plus("正在等待僚机指挥官操作<<<")
                     field_printer.print_key_prompt(another_ship)
                     another_ship.react_for_ppve(self.server)
+                    Txt.print_plus("僚机指挥官操作完毕>>>")
             else:
                 Txt.print_plus("今天由敌方行动")
+                self.server.send_str("今天由敌方行动")
                 enemy.react()
 
             # afternoon
@@ -3529,6 +3544,12 @@ class MainLoops:
         entry_manager.clear_server()
         input_plus("[enter]回站")
         return
+
+    def ppve_client_mainloop(self):
+        client = Client()
+        client.connect()
+        client.start_main_loop()
+        client.close()
 
     @staticmethod
     def station_mainloop():
@@ -3679,15 +3700,22 @@ class MainLoops:
                 "在模拟器中与多波次敌人进行战斗",
                 "不启用仓库的终焉结",
                 "战斗结束后无奖励"
-            ).generate_line_list()+
+            ).generate_line_list(),
              Txt.Tree(
-                 "[3] 联合狩猎",
+                 "[3] 联合狩猎[长机]",
                  "在模拟器中与另一位指挥官合作打击敌方",
                  "不启用仓库的终焉结",
                  "战斗结束后无奖励"
-             ).generate_line_list()]
+             ).generate_line_list()+
+             Txt.Tree(
+                 "[4] 联合狩猎[僚机]",
+                 "在模拟器中与另一位指挥官合作打击敌方",
+                 "不启用仓库的终焉结",
+                 "战斗结束后无奖励"
+             ).generate_line_list()
+             ]
         )
-        des = Txt.ask_plus("请输入目的地>>>", ["0", "1", "2", "3",""])
+        des = Txt.ask_plus("请输入目的地>>>", ["0", "1", "2", "3", "4", ""])
         return des
 
 
@@ -3734,7 +3762,9 @@ if __name__ == "__main__":
                 main_loops.infinity_mainloop()
                 my_ship.load_al()
             case "3":
-                main_loops.initialize_before_ppve()
-                main_loops.ppve_mainloop()
+                main_loops.initialize_before_ppve_server()
+                main_loops.ppve_server_mainloop()
+            case "4":
+                main_loops.ppve_client_mainloop()
             case _:
                 pass
