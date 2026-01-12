@@ -249,7 +249,7 @@ class StorageManager:
         """
         money = random.randint(1000, 1200)
         self.modify("联邦信用点",money*times)
-        isk_str = f"联邦信用点*{money}"
+        isk_str = f"联邦信用点*{money*times}"
 
         # 根据倍数确定物品种类数量
         if times <= 4:

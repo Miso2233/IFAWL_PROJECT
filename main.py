@@ -830,6 +830,8 @@ class Al_general:
                 print()
             except IndexError:
                 pass
+            except TypeError:
+                pass
 
     def generate_line_list(self):
         print_list = []
@@ -2103,6 +2105,12 @@ class Al33(Al_general):  # 蛊
                     print(f"-----    |q]>{future[p]}")
                 else:
                     print("-----")
+
+    def print_self(self):
+        pass
+
+    def generate_line_list(self):
+        pass
 
     def suggest(self):
         now = self.state.copy()
