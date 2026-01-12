@@ -2610,6 +2610,44 @@ class Al41(Al_general): # 暮离
 al41=Al41(41)
                 
 
+class Al42(Al_general): # 百里香 奇数充能，偶数掉层
+
+    def react(self):
+        if self.state == 0:
+            self.state = 1
+            self.report("开始")
+        elif self.state % 2 == 1:
+            self.state += 2
+            self.report("叠层")
+
+    def adjust_operation(self, raw):
+        if self.state % 2 == 1 and raw != "q" :
+            self.state += 1
+            self.report("启动")
+        return raw
+
+    def operate_in_morning(self):
+        if self.state != 0 and self.state % 2 == 0:
+            if dice.current_who == Side.ENEMY:
+                self.ship.attack(1,DamageType.ORDINARY_ATTACK)
+                self.report("攻击")
+            else:
+                self.state -= 2
+                self.report("掉层")
+                if self.state == 0:
+                    self.report("结束")
+    
+    def suggest(self):
+        if self.state == 0:
+            return "[q]启用"
+        elif self.state % 2 == 1:
+            return f"[q]叠层：当前层数>{self.state//2+1}"
+        else:
+            return f"[释放中]剩余{self.state/2}层"
+
+al42=Al42(42)
+                
+
 class FieldPrinter:
 
     def print_for_fight(self, me: MyShip, opposite: EnemyShip):
