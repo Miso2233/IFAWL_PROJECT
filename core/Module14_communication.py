@@ -1,6 +1,7 @@
 import socket
 import time
 
+from core.Module0_enums_exceptions import IFAWL_ConnectionCancel
 from core.Module1_txt import input_plus, print_plus
 
 HOST = "0.0.0.0"  # 服务端-本机
@@ -97,8 +98,23 @@ class Client:
         self.client_socket.close()
 
     def connect(self):
-        server_host = input_plus("请输入长机设备的局域网地址>>>")
-        self.client_socket.connect((server_host, PORT))
+        while 1:
+            try:
+                server_host = input_plus("请输入长机设备的局域网地址|[enter]退出>>>")
+                if server_host == "":
+                    raise IFAWL_ConnectionCancel
+                self.client_socket.connect((server_host, PORT))
+            except ConnectionRefusedError:
+                print_plus("连接失败，请检查长机设备是否已启动")
+            except socket.timeout:
+                print_plus("连接超时，请检查网络连接或稍后重试")
+            except socket.gaierror:
+                print_plus("地址无效，请检查输入的IP地址是否正确")
+            except OSError as e:
+                print_plus(f"网络错误: {str(e)}")
+            except IFAWL_ConnectionCancel:
+                raise
+
 
     def start_main_loop(self):
         print_plus("主循环启动……正在接收服务器提问")

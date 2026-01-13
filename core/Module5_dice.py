@@ -2,7 +2,7 @@ import random
 import math
 from typing import Literal
 
-from .Module0_enums import Side
+from .Module0_enums_exceptions import Side
 
 class Dice:
 

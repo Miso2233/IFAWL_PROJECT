@@ -5,7 +5,7 @@ import time
 from typing import Literal
 
 from core import Module1_txt as Txt
-from core.Module0_enums import DamageType, Modes, Side
+from core.Module0_enums_exceptions import DamageType, Modes, Side, IFAWL_ConnectionCancel
 from core.Module14_communication import Server, Client
 from core.Module1_txt import input_plus
 from core.Module2_json_loader import json_loader
@@ -3592,9 +3592,14 @@ class MainLoops:
 
     def ppve_client_mainloop(self):
         client = Client()
-        client.connect()
-        client.start_main_loop()
-        client.close()
+        try:
+            client.connect()
+        except IFAWL_ConnectionCancel:
+            Txt.print_plus("连接已取消")
+        else:
+            client.start_main_loop()
+        finally:
+            client.close()
 
     @staticmethod
     def station_mainloop():
