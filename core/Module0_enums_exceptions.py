@@ -26,12 +26,13 @@ class Side:
     PLAYER = 1  # 玩家方
     ENEMY = 0   # 敌方
 
-class AlStateIndex:
+class ASI:
     """Al state列表索引枚举"""
-    STRUCTURE = 0
-    WORKING = 1
-    COOLING = 2
-    OTHER = 3
+    OTHER = 0
+    BUILDING = 1
+    WORKING = 2
+    LOGGING = 3
+    COOLING = 4
 
 class IFAWL_ConnectionCancel(Exception):
     pass
