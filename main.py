@@ -4,8 +4,8 @@ import random
 import time
 from typing import Literal
 
+from core.Module0_enums_exceptions import DamageType, Modes, Side, AlStateIndex, IFAWL_ConnectionCancel
 from core import Module1_txt as Txt
-from core.Module0_enums_exceptions import DamageType, Modes, Side, IFAWL_ConnectionCancel
 from core.Module14_communication import Server, Client
 from core.Module1_txt import input_plus
 from core.Module2_json_loader import json_loader
@@ -726,7 +726,7 @@ class Al_general:
         al_manager.all_al_list[self.index] = self
 
         # operation 字段
-        self.state = 0
+        self.state = [0,0,0,None]
 
     def report(self, theme: str):
         """
@@ -823,7 +823,7 @@ class Al_general:
         pass
 
     def initialize(self):
-        self.state = 0
+        self.state = [0, 0, 0, None]
 
     def react(self):
         pass
@@ -953,17 +953,35 @@ al3 = Al3(3)
 class Al4(Al_general):  # 咆哮
 
     def react(self):
-        if self.state < 2:
-            self.state += 2
-            self.report("收到")
-            if self.state == 2:
-                self.report("准备好")
+#        if self.state < 2:
+#            self.state += 2
+#            self.report("收到")
+#            if self.state == 2:
+#                self.report("准备好")
+        if self.state[AlStateIndex.WORKING] > 0:
+            return
+        if self.state[AlStateIndex.STRUCTURE] == 0:
+            self.state[AlStateIndex.STRUCTURE] = 2
+            self.report("准备好")
 
     def operate_in_afternoon(self):
-        if self.state >= 2:
-            self.state += 1
-            if self.state == 4:
-                self.state = 0
+#        if self.state >= 2:
+#            self.state += 1
+#            if self.state == 4:
+#                self.state = 0
+#            if dice.probability(0.7):
+#                self.ship.attack(1, "missile_launch")
+#                self.report("命中")
+#            else:
+#                self.report("未命中")
+#                self.ship.load(1)
+#                self.report("回流")
+        if self.state[AlStateIndex.STRUCTURE] == 2:
+            self.state[AlStateIndex.STRUCTURE] = 0
+            self.state[AlStateIndex.WORKING] = 2
+
+        if self.state[AlStateIndex.WORKING] > 0:
+            self.state[AlStateIndex.WORKING] -= 1
             if dice.probability(0.7):
                 self.ship.attack(1, "missile_launch")
                 self.report("命中")
@@ -973,11 +991,14 @@ class Al4(Al_general):  # 咆哮
                 self.report("回流")
 
     def suggest(self) -> str | None:
-        return \
-            ["[q]部署发射台",
-             "[q]挂载铜芯导弹 2/2",
-             "[自动攻击中]回流系统正在生效",
-             "[自动攻击中]回流系统正在生效"][self.state]
+        if self.state[AlStateIndex.STRUCTURE] == 0:
+            return "[q]部署发射台"
+        elif self.state[AlStateIndex.STRUCTURE] == 1:
+            return "[q]挂载铜芯导弹 2/2"
+        elif self.state[AlStateIndex.WORKING] > 0:
+            return "[自动攻击中]回流系统正在生效"
+        else:
+            return None
 
 
 al4 = Al4(4)
@@ -986,14 +1007,14 @@ al4 = Al4(4)
 class Al5(Al_general):  # 水银
 
     def react(self):
-        if self.state == 0:
-            self.state += 1
+        if self.state[AlStateIndex.STRUCTURE] == 0:
+            self.state[AlStateIndex.STRUCTURE] += 1
             self.report("收到")
-        elif self.state == 1:
-            self.state += 1
+        elif self.state[AlStateIndex.STRUCTURE] == 1:
+            self.state[AlStateIndex.STRUCTURE] += 1
             self.report("准备好")
         else:
-            self.state = 0
+            self.state[AlStateIndex.STRUCTURE] = 0
             if random.randint(0, 9) > -1:
                 self.ship.attack(2, DamageType.MISSILE_LAUNCH)
                 self.report("命中")
@@ -1001,7 +1022,7 @@ class Al5(Al_general):  # 水银
                 self.report("未命中")
 
     def add_num(self, num) -> int:
-        if self.state == 2 and dice.probability(0.5):
+        if self.state[AlStateIndex.STRUCTURE] == 2 and dice.probability(0.5):
             self.report("协助上弹")
             return num + 1
         else:
@@ -1011,7 +1032,7 @@ class Al5(Al_general):  # 水银
         return \
             ["[q]建立汞弹推进器 1/2",
              "[q]加注液态汞 2/2",
-             "[q]发射汞弹|[0/space]上弹效率加成中"][self.state]
+             "[q]发射汞弹|[0/space]上弹效率加成中"][self.state[AlStateIndex.STRUCTURE]]
 
 
 al5 = Al5(5)
@@ -1756,7 +1777,7 @@ class Al26(Al_general):  # 眠雀
         return 0
 
     def get_controlled_operation(self, operation: str) -> str:
-        if self.state <= 0:
+        if not self.is_on_one_ship() or self.state <= 0:
             return operation
         if entry_manager.current_mode == Modes.PPVE:
             enemy.target_ship = self.ship
@@ -2229,6 +2250,9 @@ class Al35(Al_general):  # 青鹄
 
     def check_if_extra_act(self):
 
+        if not self.is_on_one_ship():
+            return
+
         if self.state >= 4 and dice.current_who == Side.ENEMY:
             suggestion_tree = field_printer.generate_suggestion_tree(self.ship)
             suggestion_tree.topic = "额外回合操作"
@@ -2622,38 +2646,66 @@ class Al42(Al_general): # 百里香
     """百里香的state为奇数时代表充能，否则为攻击"""
 
     def react(self):
-        if self.state == 0:
-            self.state = 1
+#        if self.state == 0:
+#            self.state = 1
+#            self.report("开始")
+#        elif self.state % 2 == 1:
+#            self.state += 2
+#            self.report("叠层")
+        if self.state[AlStateIndex.WORKING] != 0:
+            return
+        if self.state[AlStateIndex.STRUCTURE] == 0:
             self.report("开始")
-        elif self.state % 2 == 1:
-            self.state += 2
-            self.report("叠层")
+        self.state[AlStateIndex.STRUCTURE] += 1
+        self.report("叠层")
 
     def adjust_operation(self, raw):
-        if self.state % 2 == 1 and raw != "q" :
-            self.state += 1
+#        if self.state % 2 == 1 and raw != "q" :
+#            self.state += 1
+#            self.report("启动")
+#        return raw
+        if self.state[AlStateIndex.STRUCTURE] != 0 and raw != "q":
+            self.state[AlStateIndex.WORKING] = self.state[AlStateIndex.STRUCTURE]
+            self.state[AlStateIndex.STRUCTURE] = 0
             self.report("启动")
         return raw
 
+
     def operate_in_morning(self):
-        if self.state % 2 == 1 or self.state == 0:
+#        if self.state % 2 == 1 or self.state == 0:
+#            return
+#        if dice.current_who == Side.ENEMY:
+#            self.ship.attack(1,DamageType.ORDINARY_ATTACK)
+#            self.report("攻击")
+#        else:
+#            self.state -= 2
+#            self.report("掉层")
+#            if self.state == 0:
+#                self.report("结束")
+        if self.state[AlStateIndex.WORKING] == 0:
             return
         if dice.current_who == Side.ENEMY:
-            self.ship.attack(1,DamageType.ORDINARY_ATTACK)
+            self.ship.attack(1, DamageType.ORDINARY_ATTACK)
             self.report("攻击")
         else:
-            self.state -= 2
+            self.state[AlStateIndex.WORKING] -= 1
             self.report("掉层")
-            if self.state == 0:
+            if self.state[AlStateIndex.WORKING] == 0:
                 self.report("结束")
     
     def suggest(self):
-        if self.state == 0:
-            return "[q]粒子炮启动"
-        elif self.state % 2 == 1:
-            return f"[q]充能|当前层数>{self.state//2+1}"
+#        if self.state == 0:
+#            return "[q]粒子炮启动"
+#        elif self.state % 2 == 1:
+#            return f"[q]充能|当前层数>{self.state//2+1}"
+#        else:
+#            return f"[释放中]剩余{self.state/2}层"
+        if self.state[AlStateIndex.WORKING] == 0 and self.state[AlStateIndex.STRUCTURE] != 0:
+            return f"[q]充能|当前层数>{self.state[AlStateIndex.STRUCTURE]}"
+        elif self.state[AlStateIndex.WORKING] != 0:
+            return f"[释放中]剩余{self.state[AlStateIndex.WORKING]}层"
         else:
-            return f"[释放中]剩余{self.state/2}层"
+            return "[q]启动"
 
 al42=Al42(42)
                 
