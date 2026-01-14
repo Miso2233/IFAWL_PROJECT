@@ -1763,9 +1763,9 @@ class Al25(Al_general):  # 阿贾克斯
             print(self.skin_list[self.state[ASI.WORKING]])
 
     def suggest(self):
-        if self.state < 0:
+        if self.state[ASI.COOLING] < 0:
             return f"[冷却中]剩余{-self.state[ASI.COOLING]}天"
-        elif self.state == 0:
+        elif self.state[ASI.WORKING] == 0:
             return f"[w]启动贾氏无人机群"
         else:
             return f"[防御进行中]剩余{self.state[ASI.WORKING]}次"
@@ -1808,11 +1808,11 @@ class Al26(Al_general):  # 眠雀
         return controlled_operation
 
     def suggest(self):
-        if self.state == 0:
+        if self.state[ASI.COOLING] == 0 and self.state[ASI.WORKING] == 0:
             return "[e]控制敌方两次行动"
-        elif self.state < 0:
+        elif self.state[ASI.COOLING] < 0:
             return f"[冷却中]剩余{-self.state[ASI.COOLING]}天"
-        elif self.state > 0 and dice.current_who == Side.PLAYER:
+        elif self.state[ASI.WORKING] > 0 and dice.current_who == Side.PLAYER:
             return f"[生效中]剩余{self.state[ASI.WORKING]}次"
         else:
             return "[支配中]输入敌方指令[0]装弹|[1]发射|[2]上盾"
@@ -2062,9 +2062,9 @@ class Al31(Al_general):  # 白鲟
                 self.report("冷却")
 
     def suggest(self):
-        if self.state == 0:
+        if self.state[ASI.WORKING] == 0 and self.state[ASI.COOLING] == 0:
             return "[w]部署临时护盾并获得一枚弹药"
-        elif self.state > 0:
+        elif self.state[ASI.WORKING] > 0:
             return f"[保护中]剩余{self.state[ASI.WORKING]}层"
         else:
             return f"[冷却中]剩余{-self.state[ASI.COOLING]}天"
@@ -2102,10 +2102,12 @@ al32 = Al32(32)
 
 class Al33(Al_general):  # 蛊
 
-    state = [0, 0, 0, 0, 0]
+    def __init__(self, index: int):
+        super().__init__(index)
+        self.state = [[0, 0, 0, 0, 0], 0, 0, 0, 0]
 
     def initialize(self):
-        self.state = [0, 0, 0, 0, 0]
+        self.state = [[0, 0, 0, 0, 0],0,0,0,0]
 
     def react(self):
         #p_c_manager.boom_now()
@@ -2117,32 +2119,32 @@ class Al33(Al_general):  # 蛊
         else:
             pre_poi_list = [40, 30, 30, 0, 0]
             self.report("内置核同质异能素组攻击")
-        for i in range(5):  #for(int i; i < 5; i++)
-            self.state[i] += pre_poi_list[i]
+        for i in range(5):  #for (int i=0; i<5; i++)
+            self.state[ASI.OTHER][i] += pre_poi_list[i]
         if enemy.shelter <= 5:  #去尾
             for i in range(enemy.shelter, 5):
-                self.state[i] = 0
+                self.state[ASI.OTHER][i] = 0
 
     def check_if_move(self, times):
         if self.is_on_one_ship:
             for i in range(times):
-                self.state = self.state[1:]
-                self.state.append(0)
+                self.state[ASI.OTHER] = self.state[ASI.OTHER][1:]
+                self.state[ASI.OTHER].append(0)
 
     def operate_in_afternoon(self):
         for i in range(5):
-            if self.state[i] > 0:
-                self.state[i] += 4
-        while self.state[0] >= 100:
+            if self.state[ASI.OTHER][i] > 0:
+                self.state[ASI.OTHER][i] += 4
+        while self.state[ASI.OTHER][0] >= 100:
             enemy.shelter -= 1
             self.report("正常攻击")
             if enemy.shelter != 0:
-                self.state[1] += self.state[0] - 100
+                self.state[ASI.OTHER][1] += self.state[ASI.OTHER][0] - 100
             self.check_if_move(1)
 
     def print_poisoned_shelter(self):
         if enemy.shelter > 0:
-            future = self.state.copy()
+            future = self.state[ASI.OTHER].copy()
             if self.ship.missile > 0 and enemy.shelter >= 5:
                 pre_poi_list = [60, 40, 30, 10, 10]
             else:
@@ -2152,9 +2154,9 @@ class Al33(Al_general):  # 蛊
 
             for i in range(1, enemy.shelter + 1):
                 p = enemy.shelter - i
-                if p < 5 and al33.state[p] != 0:
-                    print(f"----->{self.state[p]} |q]>{future[p]}")
-                elif p < 5 and al33.state[p] == 0 and future[p] != 0:
+                if p < 5 and al33.state[ASI.OTHER][p] != 0:
+                    print(f"----->{self.state[ASI.OTHER][p]} |q]>{future[p]}")
+                elif p < 5 and al33.state[ASI.OTHER][p] == 0 and future[p] != 0:
                     print(f"-----    |q]>{future[p]}")
                 else:
                     print("-----")
@@ -2166,7 +2168,7 @@ class Al33(Al_general):  # 蛊
         return []
 
     def suggest(self):
-        now = self.state.copy()
+        now = self.state[ASI.OTHER].copy()
         if self.ship.missile > 0 and enemy.shelter >= 5:
             pre_poi_list = [60, 40, 30, 10, 10]
             return f"[q]射线粒子炮发射|估计破损{pre_poi_list}|加成中"
@@ -2186,55 +2188,85 @@ class Al34(Al_general):  # 风间浦
         self.state = [0, 0]
 
     def react(self):
-        if self.state[0] == 0:
-            self.state[0] = 9
+#        if self.state[0] == 0:
+#            self.state[0] = 9
+#            self.ship.attack(1, DamageType.ORDINARY_ATTACK)
+#            self.report("激进模式启动")
+        if self.state[ASI.WORKING] == 0 and self.state[ASI.COOLING] == 0:
+            self.state[ASI.WORKING] = 4
             self.ship.attack(1, DamageType.ORDINARY_ATTACK)
             self.report("激进模式启动")
 
     def add_hp(self, hp):
+#        if not self.is_on_one_ship():
+#            return hp
+#        if self.state[0] == 0 and dice.probability(0.5):
+#            self.report("保守模式治疗加成")
+#            return hp + 1
+#        elif self.state[0] == 0 and self.ship.shelter == 0:
+#            self.report("保守模式治疗加成")
+#            return hp + 1
+#        else:
+#            return hp
+
         if not self.is_on_one_ship():
             return hp
-        if self.state[0] == 0 and dice.probability(0.5):
-            self.report("保守模式治疗加成")
-            return hp + 1
-        elif self.state[0] == 0 and self.ship.shelter == 0:
-            self.report("保守模式治疗加成")
-            return hp + 1
-        else:
-            return hp
+        if self.state[ASI.WORKING] == 0 and self.state[ASI.COOLING] == 0:
+            if dice.probability(0.5) or self.ship.shelter == 0:
+                self.report("保守模式治疗加成")
+                return hp + 1
+        return hp
 
     def operate_in_afternoon(self):
-        BEGIN_COOLING = 6
-        if self.state[0] > BEGIN_COOLING:
-            if self.ship.shelter <= 0:
-                self.ship.shelter = 1
-                self.report("激进模式保护")
-        elif self.state[0] == BEGIN_COOLING and self.state[1] != 0:
-            self.ship.heal(self.state[1])
-            self.state[1] = 0
+#        BEGIN_COOLING = 6
+#        if self.state[0] > BEGIN_COOLING:
+#            if self.ship.shelter <= 0:
+#                self.ship.shelter = 1
+#                self.report("激进模式保护")
+#        elif self.state[0] == BEGIN_COOLING and self.state[1] != 0:
+#            self.ship.heal(self.state[1])
+#            self.state[1] = 0
+#            self.report("安全港就位")
+#            self.state[0] -= 1
+#
+#        if self.state[0] > BEGIN_COOLING and dice.current_who == Side.ENEMY:
+#            self.state[0] -= 1
+#        elif 0 < self.state[0] <= BEGIN_COOLING and dice.current_who == Side.PLAYER:
+#            self.state[0] -= 1
+        if self.state[ASI.WORKING] > 0: # 激进模式下
+             if self.ship.shelter <= 0:
+                 self.ship.shelter = 1
+                 self.report("激进模式保护")
+        elif self.state[ASI.WORKING] == 1: # 脱离激进模式瞬间
+            self.state[ASI.WORKING] = 0
+            self.state[ASI.LOGGING] = 0
+            self.state[ASI.COOLING] = -6
             self.report("安全港就位")
-            self.state[0] -= 1
+            if self.state[ASI.LOGGING] != 0:
+                self.ship.heal(self.state[ASI.LOGGING])
 
-        if self.state[0] > BEGIN_COOLING and dice.current_who == Side.ENEMY:
-            self.state[0] -= 1
-        elif 0 < self.state[0] <= BEGIN_COOLING and dice.current_who == Side.PLAYER:
-            self.state[0] -= 1
+        if self.state[ASI.WORKING] > 0 and dice.current_who == Side.ENEMY:
+            self.state[ASI.WORKING] -= 1
+        if self.state[ASI.COOLING] < 0:
+            self.state[ASI.COOLING] += 1
 
     def reduce_enemy_attack(self, atk):  #实则不然
-        if self.state[0] > 5 and atk > 0:
-            self.state[1] += atk
+#        if self.state[0] > 5 and atk > 0:
+#            self.state[1] += atk
+#            self.inject_and_report("记录伤害", {"atk": atk})
+#        return atk
+        if self.state[ASI.WORKING] > 0 and atk > 0:
+            self.state[ASI.LOGGING] += atk
             self.inject_and_report("记录伤害", {"atk": atk})
         return atk
 
-
     def suggest(self):
-        BEGIN_COOLING = 6
-        if self.state[0] > BEGIN_COOLING:
-            return f"[激进模式]剩余{self.state[0] - BEGIN_COOLING}天|{self.state[1]}伤害计入"
-        elif self.state[0] == BEGIN_COOLING:
+        if self.state[ASI.WORKING] > 0:
+            return f"[激进模式]剩余{self.state[ASI.WORKING]}天|{self.state[ASI.LOGGING]}伤害计入"
+        elif self.state[ASI.WORKING] == 1:
             return f"[脱离激进模式]{self.state[1]}护盾即将回充"
-        elif self.state[0] > 0:
-            return f"[充能中]剩余{self.state[0]}天"
+        elif self.state[ASI.COOLING] < 0:
+            return f"[充能中]剩余{-self.state[ASI.COOLING]}天"
         else:
             return "[w]进入激进模式|[保守模式]>[2]回盾加成中"
 
