@@ -2617,7 +2617,7 @@ al39 = Al39(39)
 class Al40(Al_general):  # 冷水
 
     def get_equivalent_shelter(self):
-        return self.state
+        return self.state[ASI.LOGGING]
 
     def react(self):
         if self.ship.shelter < 1:
@@ -2625,22 +2625,22 @@ class Al40(Al_general):  # 冷水
             self.ship.heal(1)
             return
         self.ship.shelter -= 1
-        self.state += 1
+        self.state[ASI.LOGGING] += 1
         self.report("冷水盾上线")
 
     def print_self_before_shelter(self,return_list = False):
         print_list = []
         if return_list:
-            for _ in range(self.state):
+            for _ in range(self.state[ASI.LOGGING]):
                 print_list += [self.skin_list[0]]
         else:
-            for _ in range(self.state):
+            for _ in range(self.state[ASI.LOGGING]):
                 print(self.skin_list[0])
         return print_list
     def reduce_enemy_attack(self, atk):
-        while self.state != 0 and atk != 0:
+        while self.state[ASI.LOGGING] != 0 and atk != 0:
             if dice.probability(0.33):
-                self.state -= 1
+                self.state[ASI.LOGGING] -= 1
                 self.ship.attack(1, DamageType.ORDINARY_ATTACK)
                 atk -= 1
                 self.report("破碎")
