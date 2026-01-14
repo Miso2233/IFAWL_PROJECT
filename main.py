@@ -3536,6 +3536,7 @@ class MainLoops:
         another_ship.al_list = [al15,al14,al19]
         fast_choi = False##员工通道
         inp_position = 0
+        fclist = [0,0,0]
         while 1:
             station_trees_manager.all_tree_list["终焉结信息"].inject({
             "total_al_rank": another_ship.total_al_rank,
@@ -3563,9 +3564,6 @@ class MainLoops:
                 fast_choi = True
                 inp_position = 0
                 inp = "q"
-            else:
-                fclist = []
-
             match inp:
                 case "q"|"w"|"e":
                     al_position = {"q": 0, "w": 1, "e": 2}[inp]
