@@ -1,7 +1,7 @@
 from typing import Literal
 import random
 
-from core.Module0_enums import Modes
+from core.Module0_enums_exceptions import Modes
 from core.Module1_txt import print_plus,Tree
 from core.Module2_json_loader import json_loader
 from core.Module5_dice import dice

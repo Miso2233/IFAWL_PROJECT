@@ -18,7 +18,7 @@ class StorageManager:
         self.username:str = ""
         # 建立模板
         self.template:dict[str,dict[str,str|int|dict[str,int]]] = json_loader.load("storage_template")
-        for al_str in AL_META_DATA.keys():
+        for al_str in AL_META_DATA:
             self.template["als"][al_str] = 0
         for entry_str in ENTRY_META_DATA:
             self.template["metadata"]["entry_rank"][entry_str] = 0
@@ -161,6 +161,12 @@ class StorageManager:
         self.repository_for_all_users[self.username][key][item] = val
     
     def transaction(self,give_list:dict[str,int],get_list:dict[str,int]):
+        """
+        进行一次交易|核心业务封装
+        :param give_list: 交付 字典
+        :param get_list: 得到 字典
+        :return: 无
+        """
         for item in give_list:
             self.modify(item,-give_list[item])
         for item in get_list:

@@ -1,5 +1,5 @@
 """
-Module0_enums.py - 枚举类定义模块
+Module0_enums_exceptions.py - 枚举类定义模块
 
 该模块包含项目中使用的所有枚举类，便于统一管理和使用。
 """
@@ -25,3 +25,13 @@ class Side:
     """阵营枚举，用于标识敌我双方"""
     PLAYER = 1  # 玩家方
     ENEMY = 0   # 敌方
+
+class AlStateIndex:
+    """Al state列表索引枚举"""
+    STRUCTURE = 0
+    WORKING = 1
+    COOLING = 2
+    OTHER = 3
+
+class IFAWL_ConnectionCancel(Exception):
+    pass
