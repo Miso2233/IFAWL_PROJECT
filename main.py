@@ -1040,25 +1040,25 @@ al5 = Al5(5)
 
 class Al6(Al_general):  # 白金
     def react(self):
-        if self.state == 0:
+        if self.state[AlStateIndex.STRUCTURE] == 0:
             if self.ship.shelter > 0:
-                self.state = 1
+                self.state[AlStateIndex.STRUCTURE] = 1
                 self.report("收到")
             else:
-                self.state = 2
+                self.state[AlStateIndex.STRUCTURE] = 2
                 self.report("生之帝国")
-        elif self.state == 1:
-            self.state = 2
+        elif self.state[AlStateIndex.STRUCTURE] == 1:
+            self.state[AlStateIndex.STRUCTURE] = 2
             self.report("准备好")
 
     def operate_in_afternoon(self):
-        if self.state == 2 and self.ship.shelter <= 0:
-            self.state = 0
+        if self.state[AlStateIndex.STRUCTURE] == 2 and self.ship.shelter <= 0:
+            self.state[AlStateIndex.STRUCTURE] = 0
             self.ship.heal(2)
             self.report("急救")
 
     def suggest(self):
-        return ["[w]建立安全屋1/2", "[w]派遣维修小队2/2", "[保护中]急救已就绪"][self.state]
+        return ["[w]建立安全屋1/2", "[w]派遣维修小队2/2", "[保护中]急救已就绪"][self.state[AlStateIndex.STRUCTURE]]
 
 
 al6 = Al6(6)
@@ -1066,22 +1066,18 @@ al6 = Al6(6)
 
 class Al7(Al_general):  # 奶油
     def react(self):
-        if self.state == 0:
-            if dice.probability(0.7):
-                if enemy.missile > 0:
-                    self.state = 1
-                    enemy.missile -= 1
-                    self.report("骇入成功")
-            else:
-                self.report("骇入失败")
-
-        if self.state == 1:
+        if enemy.missile <= 0:
+            return
+        if dice.probability(0.7):
+            self.report("骇入成功")
+            enemy.missile -= 1
             if dice.probability(0.6):
                 self.ship.attack(1, DamageType.ENEMY_MISSILE_BOOM)
                 self.report("引爆成功")
             else:
                 self.report("引爆失败")
-        self.state = 0
+        else:
+            self.report("骇入失败")
 
     def suggest(self):
         if enemy.missile == 0:
