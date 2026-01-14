@@ -1092,32 +1092,50 @@ al7 = Al7(7)
 class Al8(Al_general):  # 维多利亚
 
     def react(self):
-        if self.state < 2:
-            self.state += 1
-            self.report("收到")
-            if self.state == 2:
-                self.state = 3
-                self.report("准备好")
-        elif self.state == 2:
-            self.state = 3
+#        if self.state < 2:
+#            self.state += 1
+#            self.report("收到")
+#            if self.state == 2:
+#                self.state = 3
+#                self.report("准备好")
+#        elif self.state == 2:
+#            self.state = 3
+#            self.report("续杯")
+        if self.state[AlStateIndex.WORKING] == 1:
+            self.state[AlStateIndex.WORKING] += 1
             self.report("续杯")
+            return
+        if self.state[AlStateIndex.WORKING] == 2:
+            return
+        self.state[AlStateIndex.STRUCTURE] += 1
+        self.report("收到")
+        if self.state[AlStateIndex.STRUCTURE] >= 2:
+            self.state[AlStateIndex.STRUCTURE] = 0
+            self.state[AlStateIndex.WORKING] = 2
+            self.report("准备好")
 
     def add_atk(self, atk, type):
         if type != DamageType.MISSILE_LAUNCH:
+            return atk
+        if self.state[AlStateIndex.WORKING] == 0:
             return atk
         if dice.probability(0.8):
             atk += 1
             self.report("成功")
         else:
             self.report("失败")
-        self.state -= 1
-        if self.state == 1:
-            self.state = 0
+        self.state[AlStateIndex.WORKING] -= 1
         return atk
 
     def suggest(self):
-        return ["[q]建造发射架基础 1/2", "[q]建成发射架炮管 2/2", "[q]续杯|导弹伤害加成中", "[已建立]导弹伤害加成中"][
-            self.state]
+        if self.state[AlStateIndex.WORKING] == 2:
+            return "[已建立]导弹伤害加成中"
+        elif self.state[AlStateIndex.WORKING] == 1:
+            return "[q]续杯|导弹伤害加成中"
+        elif self.state[AlStateIndex.STRUCTURE] == 0:
+            return "[q]建造发射架基础 1/2"
+        elif self.state[AlStateIndex.STRUCTURE] == 1:
+            return "[q]建成发射架炮管 2/2"
 
 
 al8 = Al8(8)
@@ -1126,22 +1144,22 @@ al8 = Al8(8)
 class Al9(Al_general):  # 修械师
 
     def react(self):
-        if self.state == 0:
+        if self.state[AlStateIndex.STRUCTURE] == 0:
             if self.ship.shelter <= 1:
                 self.ship.heal(1)
                 self.report("护盾学急救")
-            self.state += 1
+            self.state[AlStateIndex.STRUCTURE] += 1
             self.report("收到")
 
     def add_hp(self, hp):
-        if self.state == 1:
+        if self.state[AlStateIndex.STRUCTURE] == 1:
             hp += 2
-            self.state = 0
+            self.state[AlStateIndex.STRUCTURE] = 0
             self.report("急救")
         return hp
 
     def suggest(self):
-        if self.state == 0:
+        if self.state[AlStateIndex.STRUCTURE] == 0:
             if self.ship.shelter <= 1:
                 return "[w]建立吊舱|护盾学急救就绪"
             else:
