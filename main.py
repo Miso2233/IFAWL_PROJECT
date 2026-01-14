@@ -2542,73 +2542,79 @@ al38 = Al38(38)
 
 class Al39(Al_general):  # 黎明维多利亚
     """
-    黎明维多利亚的state转移过程是：0 2 4 6 8 10->11 9 7 5 3 1->0
+    黎明维多利亚的state转移过程是：
+    BUILDING: 0 1 2 3 4 5->0
+    WORKING: 5 4 3 2 1 0->0
     """
 
     def adjust_operation(self, raw: str) -> str:
-        if self.state in [11, 9] and raw == "q":
+        if self.state[ASI.WORKING] >= 4 and raw == "q":
             return "1"
         return raw
 
     def add_num(self, num: int):
-        if self.state % 2 == 1:
+        if self.state[ASI.WORKING] > 0:
             return num
         if num <= 0:
             return num
-        self.state += num * 2
-        if self.state > 10:
-            self.state = 10
+        self.state[ASI.BUILDING] += num
+        if self.state[ASI.BUILDING] > 5:
+            self.state[ASI.BUILDING] = 5
         self.report("建造中")
         return num
 
     def operate_in_afternoon(self):
-        if self.state == 10 or self.state > 11:
-            self.state = 11
+        if self.state[ASI.BUILDING] == 5:
+            self.state[ASI.BUILDING] = 0
+            self.state[ASI.WORKING] = 5
             self.report("准备好")
-        if self.state == 1 or self.state < 0:
-            self.state = 0
+        if self.state[ASI.WORKING] == 1:
+            self.state[ASI.WORKING] = 0
             self.report("下线")
 
     def add_atk(self, atk: int, type: str):
         if type != DamageType.MISSILE_LAUNCH:
             return atk
-        if self.state % 2 == 0 or self.state <= 1:
+        if self.state[ASI.WORKING] <= 0:
             return atk
         atk += 1
         self.report("增伤")
-        self.state -= 2
+        self.state[ASI.WORKING] -= 1
         return atk
 
     def react(self):
-        if self.state % 2 == 0:
+        if self.state[ASI.WORKING] > 0:
+            # 工作状态：发射增强导弹
+            if self.state[ASI.WORKING] >= 4:
+                result = self.ship.attack(1, DamageType.MISSILE_LAUNCH)
+                self.ship.load(-1)
+                if result > 0:
+                    voices.report(self.ship.platform, "发射")
+            else:
+                # 爆发状态：全弹发射
+                launch_num = min(self.state[ASI.WORKING], self.ship.missile)
+                if launch_num <= 0:
+                    self.report("导弹不足")
+                    return
+                for _ in range(launch_num):
+                    self.ship.attack(2, DamageType.MISSILE_LAUNCH)
+                    self.ship.load(-1)
+                self.state[ASI.WORKING] = 0
+                self.report("下线")
+                enemy.attack(launch_num - 1, self.ship)
+        else:
+            # 建造状态：上弹
             self.ship.load(1)
             voices.report(self.ship.platform, "上弹")
-        elif self.state in [11, 9]:
-            result = self.ship.attack(1, DamageType.MISSILE_LAUNCH)
-            self.ship.load(-1)
-            if result > 0:
-                voices.report(self.ship.platform, "发射")
-        else:
-            rest = (self.state - 1) // 2
-            self.state = 0
-            launch_num = min(rest, self.ship.missile)
-            if launch_num <= 0:
-                self.report("导弹不足")
-                return
-            for _ in range(launch_num):
-                self.ship.attack(2, DamageType.MISSILE_LAUNCH)
-                self.ship.load(-1)
-            self.report("下线")
-            enemy.attack(launch_num - 1,self.ship)
             
 
     def suggest(self):
-        if self.state % 2 == 0:
-            return f"[充能中]当前层数>{int(self.state / 2)}/5|[0/任意方式]获得弹药以充能"
-        elif self.state in [11, 9]:
-            return f"[保守状态]剩余层数>{int((self.state - 1) / 2)}/5|[1/q]发射增强导弹"
+        if self.state[ASI.WORKING] == 0:
+            return f"[充能中]当前层数>{self.state[ASI.BUILDING]}/5|[0/任意方式]获得弹药以充能"
+        elif self.state[ASI.WORKING] >= 4:
+            return f"[保守状态]剩余层数>{self.state[ASI.WORKING]}/5|[1/q]发射增强导弹"
         else:
-            return f"[爆发状态]剩余层数>{int((self.state - 1) / 2)}|[1]发射增强导弹|[q]全弹发射 扣除{int(min((self.state - 1) // 2, self.ship.missile))-1}点护盾"
+            return f"[爆发状态]剩余层数>{self.state[ASI.WORKING]}|[1]发射增强导弹|[q]全弹发射 扣除{int(min(self.state[ASI.WORKING], self.ship.missile))-1}点护盾"
 
 
 al39 = Al39(39)
