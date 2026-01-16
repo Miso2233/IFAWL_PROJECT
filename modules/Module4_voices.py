@@ -36,25 +36,25 @@ class Voices:
     def clear_server(self):
         self.server = None
 
-    def send_and_report(self, who:str, theme:str,server:Server,print_who=True):
-        """
-        展示voices.json中记录的语音内容
-        :param who: 语音发出者
-        :param theme: 语音主题
-        :param print_who: 是否打印语音发出者
-        :param server: 语音发送服务器
-        :return:
-        """
-        try:
-            if print_who:
-                txt = f"[{who}]" + random.choice(self.voices[who][theme])
-            else:
-                txt = random.choice(self.voices[who][theme])
-            server.send_str(txt)
-            Txt.print_plus(txt,should_wait=False)
-        except KeyError:
-            print(f"语音未定义-[{who}]{theme}")
-            server.send_str(f"语音未定义-[{who}]{theme}")
+    #def send_and_report(self, who:str, theme:str,server:Server,print_who=True):
+    #    """
+    #    展示voices.json中记录的语音内容
+    #    :param who: 语音发出者
+    #    :param theme: 语音主题
+    #    :param print_who: 是否打印语音发出者
+    #    :param server: 语音发送服务器
+    #    :return:
+    #    """
+    #    try:
+    #        if print_who:
+    #            txt = f"[{who}]" + random.choice(self.voices[who][theme])
+    #        else:
+    #            txt = random.choice(self.voices[who][theme])
+    #        server.send_str(txt)
+    #        Txt.print_plus(txt,should_wait=False)
+    #    except KeyError:
+    #        print(f"语音未定义-[{who}]{theme}")
+    #        server.send_str(f"语音未定义-[{who}]{theme}")
 
     def inject_and_report(self, who:str, theme:str, data_injected=None, print_who=True):
         """

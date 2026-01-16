@@ -99,6 +99,7 @@ class Tree:#打印用tree对象
             print("|")
             print("|>>[已折叠]")
             print("")
+
         else:
             for i in self.body:
                 print("|")

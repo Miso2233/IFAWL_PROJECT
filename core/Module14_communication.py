@@ -2,7 +2,7 @@ import socket
 import time
 
 from core.Module0_enums_exceptions import IFAWL_ConnectionCancel
-from core.Module1_txt import input_plus, print_plus
+from core.Module1_txt import input_plus, print_plus,Tree
 
 HOST = "0.0.0.0"  # 服务端-本机
 PORT = 50000        # 任意未占用端口
@@ -63,6 +63,11 @@ class Server:
         )
         time.sleep(DELAY)
 
+    def send_tree(self,tree:Tree):
+        self.send_long_str(
+            "\n".join(tree.generate_line_list())+"\n"
+        )
+
     def ask(self,prompt:str) -> str:
         #self.connection_socket.setblocking(True)
         self.connection_socket.send(
@@ -73,7 +78,18 @@ class Server:
             response = ""
         #self.connection_socket.setblocking(False)
         return response
-    
+
+    def ask_plus(self,txt: str, kword: list):
+        kword_str = kword.copy()
+        kword_str = [str(j) for j in kword]
+        while 1:
+            response = self.ask(txt)
+            if response in kword_str:
+                break
+            else:
+                self.send_str("请在可选范围内输入")
+        return response
+
     def buffer_append(self,msg:str):
         self.buffer += msg
         self.buffer += "\n"

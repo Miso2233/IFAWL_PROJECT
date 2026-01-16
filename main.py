@@ -232,7 +232,7 @@ class MyShip:
         #自动驾驶
         field_info =  [self.shelter, self.missile, enemy.shelter, enemy.missile, 0]
         for al in self.al_list:
-            if al != None and type(al.state) == int:
+            if al is not None and type(al.state) == int:
                 field_info.append(al.state)
             else:
                 field_info.append(0)
@@ -396,6 +396,7 @@ class EnemyShip:
         """
         根据原始伤害进行加减并对目标造成攻击
         :param atk: 原始伤害
+        :param force_target: 强制行动
         :return: 无
         """
         target_ship = self.target_ship
@@ -403,7 +404,9 @@ class EnemyShip:
             target_ship = force_target
         atk = entry_manager.check_and_add_atk(atk)
         atk = entry_manager.check_and_reduce_missile(atk, target_ship)
-        for al in reversed(target_ship.al_list):
+        reversed_al_list = target_ship.al_list.copy()
+        reversed_al_list[1],reversed_al_list[2] = reversed_al_list[2], reversed_al_list[1]
+        for al in reversed_al_list:
             try:
                 atk = al.reduce_enemy_attack(atk)
             except AttributeError:
@@ -834,14 +837,20 @@ class Al_general:
     def print_self(self):
         pass
 
-    def generate_line_list(self):
-        pass
+    def generate_line_list(self) -> list[str]:
+        print_list = []
+        return print_list
 
     def print_self_behind_shelter(self,return_list = False):
-        if return_list:
-            return []
+        print_list = []
+        if self.type == "none":
+            if return_list:
+                print_list = self.generate_line_list()
+            else:
+                self.print_self()
+        return print_list
 
-    def print_self_before_shelter(self,return_list = False) -> list[str] | None:
+    def print_self_before_shelter(self,return_list = False) -> list[str]:
         print_list = []
         if self.type == "w":
             if return_list:
@@ -850,7 +859,7 @@ class Al_general:
                 self.print_self()
         return print_list
 
-    def print_self_behind_missile(self,return_list = False) -> list[str] | None:
+    def print_self_behind_missile(self,return_list = False) -> list[str]:
         print_list = []
         if self.type in ["q","e"]:
             if return_list:
@@ -1328,8 +1337,7 @@ class Al14(Al_general):  # 信风
         print("\n//\\\\//" * (self.state[ASI.LOGGING] // 3))
 
     def generate_line_list(self):
-        print_list = []
-        print_list.append(self.skin_list[self.state[ASI.LOGGING] % 3])
+        print_list = [self.skin_list[self.state[ASI.LOGGING] % 3]]
         print_list += ["//\\\\//"] * (self.state[ASI.LOGGING] // 3)
         return print_list
 
@@ -1779,8 +1787,16 @@ class Al26(Al_general):  # 眠雀
         if entry_manager.current_mode == Modes.PPVE:
             enemy.target_ship = self.ship
         self.report("控制成功")
-        controlled_operation = Txt.ask_plus("[眠雀]选择敌方操作", ["0", "1", "2"])
-        self.state -= 1
+
+        if self.ship == another_ship:
+            Txt.print_plus("正在等待僚机指挥官操作<<<")
+            controlled_operation = main_loops.server.ask_plus("[眠雀]选择敌方操作", ["0", "1", "2"])
+        else:
+            if entry_manager.current_mode == Modes.PPVE:
+                main_loops.server.send_str("正在等待长机指挥官操作<<<")
+            controlled_operation = Txt.ask_plus("[眠雀]选择敌方操作", ["0", "1", "2"])
+
+        self.state[ASI.WORKING] -= 1
         if operation == controlled_operation:
             self.report("谐振成功")
             self.ship.attack(1, DamageType.ORDINARY_ATTACK)
@@ -1834,9 +1850,9 @@ class Al27(Al_general):  # 瞳猫
 
     def suggest(self):
         if self.state[ASI.BUILDING] < 9:
-            return f"[e]提升层数|{self.state}层|当前闪避率>>{self.state[ASI.BUILDING] * 10 - (self.ship.get_equivalent_shelter_of_ship() - 1) * 12}%"
+            return f"[e]提升层数|{self.state[ASI.BUILDING]}层|当前闪避率>>{self.state[ASI.BUILDING] * 10 - (self.ship.get_equivalent_shelter_of_ship() - 1) * 12}%"
         else:
-            return f"[层数已满]|{self.state}层|当前闪避率>>{self.state[ASI.BUILDING] * 10 - (self.ship.get_equivalent_shelter_of_ship() - 1) * 12}%"
+            return f"[层数已满]|{self.state[ASI.BUILDING]}层|当前闪避率>>{self.state[ASI.BUILDING] * 10 - (self.ship.get_equivalent_shelter_of_ship() - 1) * 12}%"
 
 
 al27 = Al27(27)
@@ -2150,7 +2166,6 @@ class Al33(Al_general):  # 蛊
         return []
 
     def suggest(self):
-        now = self.state[ASI.OTHER].copy()
         if self.ship.missile > 0 and enemy.shelter >= 5:
             pre_poi_list = [60, 40, 30, 10, 10]
             return f"[q]射线粒子炮发射|估计破损{pre_poi_list}|加成中"
@@ -2266,23 +2281,23 @@ class Al35(Al_general):  # 青鹄
             self.state[ASI.LOGGING] += 2
             self.report("充能")
         else:
-            if my_ship.missile > 1:
-                my_ship.load(-2)
-                my_ship.attack(2, DamageType.ORDINARY_ATTACK)
+            if self.ship.missile > 1:
+                self.ship.load(-2)
+                self.ship.attack(2, DamageType.ORDINARY_ATTACK)
                 self.state[ASI.LOGGING] = 0
                 self.report("攻击")
             else:
-                my_ship.load(1)
+                self.ship.load(1)
                 if dice.current_who == Side.ENEMY:
-                    my_ship.load(1)
+                    self.ship.load(1)
                 self.report("装弹")
 
     def operate_in_morning(self):
         if self.is_on_one_ship():
             self.state[ASI.LOGGING] += 1
         if self.state[ASI.LOGGING] >= 4 and dice.current_who == Side.ENEMY:
-            my_ship.heal(1)
-            my_ship.load(1)
+            self.ship.heal(1)
+            self.ship.load(1)
             self.report("准备")
 
     def check_if_extra_act(self):
@@ -2293,13 +2308,22 @@ class Al35(Al_general):  # 青鹄
         if self.state[ASI.LOGGING] >= 4 and dice.current_who == Side.ENEMY:
             suggestion_tree = field_printer.generate_suggestion_tree(self.ship)
             suggestion_tree.topic = "额外回合操作"
-            suggestion_tree.print_self()
-            inp = Txt.ask_plus("""+[+Extra action+]+>>选择你的操作[q/w/e]立即响应或重置其冷却""", ["q", "w", "e"])
+
+            if self.ship == another_ship:
+                main_loops.server.send_tree(suggestion_tree)
+                Txt.print_plus("正在等待僚机指挥官操作<<<")
+                inp = main_loops.server.ask_plus("""+[+Extra action+]+>>选择你的操作[q/w/e]立即响应或重置其冷却""", ["q", "w", "e"])
+            else:
+                suggestion_tree.print_self()
+                if entry_manager.current_mode == Modes.PPVE:
+                    main_loops.server.send_str("正在等待长机指挥官操作<<<")
+                inp = Txt.ask_plus("""+[+Extra action+]+>>选择你的操作[q/w/e]立即响应或重置其冷却""", ["q", "w", "e"])
+
             d = "qwe".find(inp)
             al_temp: Al_general = self.ship.al_list[d]
             if al_temp:
-                if al_temp.state[ASI.LOGGING] < 0:
-                    al_temp.state[ASI.LOGGING] = 0
+                if al_temp.state[ASI.COOLING] < 0:
+                    al_temp.initialize()
                     self.report_plus(inp, 1)
                     Txt.print_plus(f"[{al_temp.type}] {al_temp.short_name}#{al_temp.index}冷却已重置")
                 else:
@@ -2314,7 +2338,10 @@ class Al35(Al_general):  # 青鹄
             return
         if storage_manager.show_assets()["39"] < 3:
             txt = "[青鹄]" + txt[0:min(len(txt), 4)] + "！"
-            Txt.print_plus(txt)
+        Txt.print_plus(txt)
+        if entry_manager.current_mode == Modes.PPVE:
+            main_loops.server.send_str(txt)
+
 
     def suggest(self):
         if self.state[ASI.LOGGING] < 1:
@@ -2436,7 +2463,7 @@ class Al37(Al_general): # 星尘
         if self.state[ASI.COOLING] < 0:
             self.state[ASI.COOLING] += 1
         if self.is_on_one_ship() and enemy.shelter < -1:
-            my_ship.load(int((-1-enemy.shelter)*0.5))
+            self.ship.load(int((-1-enemy.shelter)*0.5))
             enemy.shelter=-1
             self.report("能量回收")
 
@@ -3114,7 +3141,8 @@ class MainLoops:
             return 1
         return 0
 
-    def is_near_death(self,ship:MyShip) -> bool:
+    @staticmethod
+    def is_near_death(ship:MyShip) -> bool:
         if ship.shelter < 0:
             return True
         if entry_manager.get_rank_of("5") != 0 and ship.get_equivalent_shelter_of_ship() <= 0:
@@ -3538,7 +3566,7 @@ class MainLoops:
                 else "[No Info]"
             })
             station_trees_manager.all_tree_list["终焉结信息"].print_self()
-
+            main_loops.server.send_tree(station_trees_manager.all_tree_list["终焉结信息"])
             if fast_choi:##员工通道
                 inp_position += 1
                 inp = "qwe "[inp_position]
@@ -3555,20 +3583,26 @@ class MainLoops:
                     while 1:
                         al_list = [al for al in al_manager.all_al_list.values() if al.type == inp]
                         al_list.sort(key=lambda al: al.rank_num)
-                        for al in al_list:
+                        al_num = 0
+                        al_info_list = [[],[],[],[],[]]
+                        for al_temp in al_list:
                             if fast_choi:##员工通道
                                 break
-                            al:Al_general
-                            if al in my_ship.al_list:
-                                print(f"{al.short_name}已被装备")
-                            al.print_description(show_num_in_storage=False)
+                            al_temp:Al_general
+                            al_info_list[al_num % 5].append("")
+                            al_info_list[al_num % 5].append(
+                                f"[{al_temp.metadata['rank']}]{al_temp.short_name}#{al_temp.index}"+
+                                ("<已被装备>" if al_temp in my_ship.al_list else "")
+                            )
+                            al_num += 1
+                        main_loops.server.send_long_str(Txt.n_column_generate(al_info_list,26))
                         # Al的选择
                         cn_type = {"q": "主武器", "w": "生存位", "e": "战术装备"}[inp]
                         while 1:
                             if fast_choi:##员工通道
                                 index = fclist[al_position]
                             else:
-                                index = Txt.input_plus(
+                                index = main_loops.server.ask(
                                     f"\n指挥官，请输入数字选择本场战斗的{cn_type}|[-1] 不使用{cn_type}|[enter] 保留原有选择>>>")
                             if index not in al_manager.al_meta_data or al_manager.al_meta_data[index]["type"] != inp:
                                 fast_choi = False
@@ -3577,9 +3611,15 @@ class MainLoops:
                                 elif index == "-1":
                                     another_ship.al_list[al_position] = None
                                     break
+
                                 print(f"请在{cn_type}库中进行选择")
+                                main_loops.server.send_str(f"请在{cn_type}库中进行选择")
                             else:
-                                Txt.print_plus(f"{al_manager.al_meta_data[index]['short_name']}#{al_manager.al_meta_data[index]['index']} 已确认装备")
+                                Txt.print_plus(
+                                    f"{al_manager.al_meta_data[index]['short_name']}#{al_manager.al_meta_data[index]['index']} 已确认装备")
+                                main_loops.server.send_str(
+                                    f"{al_manager.al_meta_data[index]['short_name']}#{al_manager.al_meta_data[index]['index']} 已确认装备\n")
+
                                 another_ship.al_list[al_position] = al_manager.all_al_list[index]
                                 print("")
                                 break
@@ -3699,7 +3739,8 @@ class MainLoops:
         input_plus("[enter]回站")
         return
 
-    def ppve_client_mainloop(self):
+    @staticmethod
+    def ppve_client_mainloop():
         client = Client()
         try:
             client.connect()
