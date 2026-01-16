@@ -21,7 +21,7 @@ from modules.Module11_damage_previewer import damage_previewer
 from modules.Module12_infinity_card_manager import CardManager
 from modules.Module13_plot_manager import plot_manager
 
-__VERSION__ = "IFAWL 1.3.0 'UNITED in DEATH'"
+__VERSION__ = "IFAWL 1.3.0 'UNITED IN DEATH'"
 
 
 
