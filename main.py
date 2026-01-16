@@ -2452,13 +2452,6 @@ al37 = Al37(37)
 
 class Al38(Al_general):  # 澈
 
-    def __init__(self,index):
-        super().__init__(index)
-        self.state = [False,0,0,0,0]
-
-    def initialize(self):
-        self.state = [False,0,0,0,0]
-
     def react(self):
         self.state[ASI.LOGGING] += 3
         self.report("获得锋镝")
@@ -2469,7 +2462,7 @@ class Al38(Al_general):  # 澈
         """
         其实并不会reduce
         """
-        if self.is_on_one_ship() and self.state[ASI.OTHER] == False and dice.probability(0.5):
+        if self.is_on_one_ship() and self.state[ASI.WORKING] == 0 and dice.probability(0.5):
             self.state[ASI.LOGGING] += 1
             self.report("收到")
 
@@ -2483,18 +2476,18 @@ class Al38(Al_general):  # 澈
             self.report("护盾补充")
 
     def operate_in_morning(self):
-        if self.state[ASI.LOGGING] > 9 and self.state[ASI.OTHER] == False:
-            self.state[ASI.OTHER] = True
+        if self.state[ASI.LOGGING] > 9 and self.state[ASI.WORKING] == 0:
+            self.state[ASI.WORKING] = 1
             self.report("激进模式开启")
-        elif self.state[ASI.LOGGING] < 5 and self.state[ASI.OTHER] == True:
-            self.state[ASI.OTHER] = False
+        elif self.state[ASI.LOGGING] < 5 and self.state[ASI.WORKING] == 1:
+            self.state[ASI.WORKING] = 0
             self.report("激进模式关闭")
 
     def add_atk(self, atk, type):
-        if self.state[ASI.OTHER] == False and self.is_on_one_ship() and dice.probability(0.5):
+        if self.state[ASI.WORKING] == 0 and self.is_on_one_ship() and dice.probability(0.5):
             self.state[ASI.LOGGING] += 1
             self.report("收到")
-        if self.state[ASI.OTHER] and self.state[ASI.LOGGING] > 0:
+        if self.state[ASI.WORKING] == 1 and self.state[ASI.LOGGING] > 0:
             self.state[ASI.LOGGING] -= 1
             self.report("牺牲加成")
             return atk + 1
@@ -2515,7 +2508,7 @@ class Al38(Al_general):  # 澈
         return print_list
 
     def suggest(self):
-        if self.state[ASI.OTHER]:
+        if self.state[ASI.WORKING] == 1:
             return f"[w]自伤并获得三点锋镝|[寂]伤害加成中|[锋镝]>{self.state[ASI.LOGGING]}"
         else:
             return f"[w]自伤并获得三点锋镝|[澄]敌我攻击概率获得锋镝|[锋镝]>{self.state[ASI.LOGGING]}"
