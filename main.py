@@ -1667,7 +1667,7 @@ class Al24(Al_general):  # 大奶油
     def react(self):
         if self.state[ASI.WORKING] == 0:
             enemy.missile += 5
-            self.state[ASI.WORKING] += 5
+            self.state[ASI.WORKING] = 5
             while self.state[ASI.WORKING]:
                 enemy.missile -= 1
                 self.ship.attack(1, DamageType.ENEMY_MISSILE_BOOM)
