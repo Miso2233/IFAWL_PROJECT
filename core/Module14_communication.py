@@ -131,9 +131,11 @@ class Client:
     def connect(self):
         while 1:
             try:
-                server_host = input_plus("请输入长机设备的局域网地址|[enter]退出>>>")
+                server_host = input_plus("请输入长机设备的局域网地址|[space]回环地址|[enter]退出>>>")
                 if server_host == "":
                     raise IFAWL_ConnectionCancel
+                elif server_host == " ":
+                    server_host = "127.0.0.1"
                 self.client_socket.connect((server_host, PORT))
             except ConnectionRefusedError:
                 print_plus("连接失败，请检查长机设备是否已启动")
