@@ -204,7 +204,7 @@ class MyShip:
         match operation[0]:
             case "m":
                 if len(operation) > 1 and operation[1].isdigit():
-                    load = min(int(operation[1]),int(self.missile/2))
+                    load = min(int(operation[1]),int(self.missile))
                     my_ship.load(load)
                     another_ship.load(load)
                     self.load(-load*2)
@@ -2848,7 +2848,7 @@ class FieldPrinter:
             except AttributeError:
                 pass
         right += [""]
-        Txt.n_column_print([left,right])
+        Txt.n_column_print([left,right],60)
         damage_previewer.update(me.shelter, opposite.shelter)
 
     @staticmethod
@@ -2913,7 +2913,7 @@ class FieldPrinter:
             except AttributeError:
                 pass
         right += [""]
-        out += Txt.n_column_generate([left,right])
+        out += Txt.n_column_generate([left,right],60)
         return out
 
     @staticmethod
@@ -2969,12 +2969,12 @@ class FieldPrinter:
         Txt.n_column_print(
             [self.generate_suggestion_tree(my_ship).generate_line_list(),
              self.generate_suggestion_tree(another_ship).generate_line_list()]
-        )
+        , 60)
     def generate_suggestion_for_ppve(self) -> str:
         return Txt.n_column_generate(
             [self.generate_suggestion_tree(my_ship).generate_line_list(),
              self.generate_suggestion_tree(another_ship).generate_line_list()]
-        )
+        , 60)
 
     @staticmethod
     def ppve_help_prompt():
@@ -3539,7 +3539,7 @@ class MainLoops:
             main_loops.server.send_tree(station_trees_manager.all_tree_list["终焉结信息"])
             if fast_choi:##员工通道
                 inp_position += 1
-                inp = "qwe "[inp_position]
+                inp = "qwen"[inp_position]
             else:
                 Txt.print_plus("请等待僚机指挥官确认操作<<<")
                 inp = main_loops.server.ask("僚机指挥官请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
@@ -3564,7 +3564,11 @@ class MainLoops:
                             al_info_list[al_num % 5].append("")
                             al_info_list[al_num % 5].append(
                                 f"[{al_temp.metadata['rank']}]{al_temp.short_name}#{al_temp.index}"+
-                                ("<已被装备>" if al_temp in my_ship.al_list else "")
+                                ("<已被装备>" if al_temp in my_ship.al_list else "")+
+                                ("<平台不符>" if (
+                                        not al_temp in my_ship.al_list and al_temp.type == "e" and
+                                        al_temp.platform != "通用" and al_temp.platform != another_ship.al_list[0].platform
+                                ) else "")
                             )
                             al_num += 1
                         main_loops.server.send_long_str(Txt.n_column_generate(al_info_list,26))
@@ -3577,7 +3581,10 @@ class MainLoops:
                                 index = main_loops.server.ask(
                                     f"\n指挥官，请输入数字选择本场战斗的{cn_type}|[-1] 不使用{cn_type}|[enter] 保留原有选择>>>")
                             if (index not in al_manager.al_meta_data or al_manager.al_meta_data[index]["type"] != inp or
-                                    al_manager.all_al_list[index] == my_ship.al_list[al_position]):
+                                    al_manager.all_al_list[index] == my_ship.al_list[al_position] or
+                                    (al_manager.al_meta_data[index]["type"] == "e" and
+                                    al_manager.all_al_list[index].platform != "通用" and
+                                    al_manager.all_al_list[index].platform != another_ship.al_list[0].platform)):
                                 fast_choi = False
                                 if index == "":
                                     break
@@ -3598,11 +3605,14 @@ class MainLoops:
                                 break
                         if another_ship.al_list[al_position] != my_ship.al_list[al_position]:
                             break
-                case ""|" ":
+                case "":
                     break
+                case "n":
+                    fast_choi = False
                 case _:
                     print(f"请输入正确的指令|{inp}不正确")
                     pass
+        another_ship.update_platform()
         for al in another_ship.al_list:
             if al:
                 al.ship = another_ship
@@ -3718,7 +3728,7 @@ class MainLoops:
 
     @staticmethod
     def ppve_client_mainloop():
-        print("[终焉结快捷码（enter以快捷键入）]"+(" ".join([al.index for al in my_ship.al_list])))
+        print("[终焉结快捷码（enter以快捷键入）]"+(" ".join([al.index for al in my_ship.al_list if al])))
         client = Client()
         try:
             client.connect()
