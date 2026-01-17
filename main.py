@@ -2408,45 +2408,26 @@ class Al37(Al_general): # 星尘
         if self.state[ASI.COOLING] < 0:
             self.report("冷却中")
             return
-        try:
-            Txt.input_plus("[星尘]确认后使用[ctrl+C]（请勿多次敲击或长按）锁定目标|[enter]确认>>>")
-        except KeyboardInterrupt:
-            self.report("谁叫你在这里按了？？")
-        #time.sleep(1)
-        run_delta_t = 0.03
-        e = random.randint(33, 66)
-        print(" " * (e - 2) + "[ + ]")
+        result = Txt.qte("星尘") if self.ship == my_ship else main_loops.server.send_qte("星尘")
 
-        pos = -1
-        for i in range(100):
-            try:
-                pos += 1
-                print("|", end="")
-                time.sleep(run_delta_t)
-            except KeyboardInterrupt:
-                break
-
-        if e - 4 <= pos <= e + 4:
-            print("x")
+        if result <= 2:
+            damage = min(10, self.ship.missile)
             self.state[ASI.COOLING] = -7
-            if e - 2 <= pos <= e + 2:
-                print(" " * (e - 10) + r"\\\\   [星尘]   ////")
-                print(" " * (e - 10) + r"   \\\\FIRE!!////")
-                damage = min(10, self.ship.missile)
-            else:
-                print(" " * (e - 10) + r"\\ [星尘]SPLASH!! //")
-                damage = min(4, self.ship.missile)
-                self.state[ASI.COOLING] = -4
-            self.report("锁定成功")
-            self.ship.attack(int(damage * 1.5), DamageType.PARTICLE_CANNON_SHOOTING)
-            #p_c_manager.boom_now()
-            self.ship.load(-damage)
-            Txt.print_plus(
-                f" 有效伤害>{damage_previewer.enemy_shelter - enemy.shelter}.0"
-            )
+        elif result <= 4:
+            damage = min(4, self.ship.missile)
+            self.state[ASI.COOLING] = -4
         else:
             print("?")
             self.report("锁定未成功")
+            return
+        self.report("锁定成功")
+        self.ship.attack(int(damage * 1.5), DamageType.PARTICLE_CANNON_SHOOTING)
+        self.ship.load(-damage)
+        Txt.print_plus(
+            f" 有效伤害>{damage_previewer.enemy_shelter - enemy.shelter}.0"
+        )
+        if self.ship == another_ship:
+            main_loops.server.send_str(f" 有效伤害>{damage_previewer.enemy_shelter - enemy.shelter}.0")
 
     def operate_in_afternoon(self):
         if self.state[ASI.COOLING] < 0:

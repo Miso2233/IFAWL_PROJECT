@@ -2,7 +2,7 @@ import socket
 import time
 
 from core.Module0_enums_exceptions import IFAWL_ConnectionCancel
-from core.Module1_txt import input_plus, print_plus,Tree
+from core.Module1_txt import input_plus, print_plus,Tree,qte
 
 HOST = "0.0.0.0"  # 服务端-本机
 PORT = 50000        # 任意未占用端口
@@ -17,6 +17,7 @@ class HeadTags:
     TEST_TAG = "\tTEST\t"
     LONG_STR_TAG = "\tLONG\t"
     NONE_TAG = "\tNONE\t"
+    QTE_TAG = "\tQTE\t"
 
 class Server:
 
@@ -90,6 +91,20 @@ class Server:
                 self.send_str("请在可选范围内输入")
         return response
 
+    def send_qte(self,who:str, perfect_txt="!FIRE!", good_txt="SPLASH!!") -> int:
+        """
+        发送qte
+        :param who: 发起者
+        :param perfect_txt: perfect文本
+        :param good_txt: good文本
+        :return: qte结算
+        """
+        self.connection_socket.send(
+            f"{HeadTags.QTE_TAG}{who}\n{perfect_txt}\n{good_txt}".encode("utf-8")
+        )
+        response = self.connection_socket.recv(BUFFER_SIZE).decode("utf-8")
+        return int(response)
+
     def buffer_append(self,msg:str):
         self.buffer += msg
         self.buffer += "\n"
@@ -159,6 +174,10 @@ class Client:
                     self.client_socket.send(answer.encode("utf-8"))
                 case HeadTags.TEST_TAG:
                     self.client_socket.send(b"test")
+                case HeadTags.QTE_TAG:
+                    who, perfect_txt, good_txt = content.split("\n")
+                    result = qte(who, perfect_txt, good_txt)
+                    self.client_socket.send(str(result).encode("utf-8"))
                 case _:
                     pass
         print_plus("主循环结束")
