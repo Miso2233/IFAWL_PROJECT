@@ -3543,6 +3543,8 @@ class MainLoops:
             else:
                 Txt.print_plus("请等待僚机指挥官确认操作<<<")
                 inp = main_loops.server.ask("僚机指挥官请输入您的准备操作| [q/w/e]更换终焉结| [enter]进入战斗")
+                if "]" in inp:
+                    inp = inp[inp.find("]")+1:]
             if " " in inp and len(fclist := inp.split(" ")) == 3:
                 fast_choi = True
                 inp_position = 0
@@ -3574,7 +3576,8 @@ class MainLoops:
                             else:
                                 index = main_loops.server.ask(
                                     f"\n指挥官，请输入数字选择本场战斗的{cn_type}|[-1] 不使用{cn_type}|[enter] 保留原有选择>>>")
-                            if index not in al_manager.al_meta_data or al_manager.al_meta_data[index]["type"] != inp:
+                            if (index not in al_manager.al_meta_data or al_manager.al_meta_data[index]["type"] != inp or
+                                    al_manager.all_al_list[index] == my_ship.al_list[al_position]):
                                 fast_choi = False
                                 if index == "":
                                     break
@@ -3715,6 +3718,7 @@ class MainLoops:
 
     @staticmethod
     def ppve_client_mainloop():
+        print("[终焉结快捷码（enter以快捷键入）]"+(" ".join([al.index for al in my_ship.al_list])))
         client = Client()
         try:
             client.connect()
