@@ -43,3 +43,6 @@ class OSI:
 
 class IFAWL_ConnectionCancel(Exception):
     pass
+
+class IFAWL_NoOcpError(Exception):
+    pass

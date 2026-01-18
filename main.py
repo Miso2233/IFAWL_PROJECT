@@ -4,10 +4,9 @@ import random
 import time
 from typing import Literal
 
-from core.Module0_enums_exceptions import DamageType, Modes, Side, ASI, IFAWL_ConnectionCancel
+from core.Module0_enums_exceptions import DamageType, Modes, Side, ASI, IFAWL_ConnectionCancel, IFAWL_NoOcpError
 from core import Module1_txt as Txt
-from core.Module14_communication import Server, Client
-from core.Module1_txt import input_plus
+from core.Module1_txt import input_plus, print_plus
 from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
 from modules.Module4_voices import voices
@@ -20,6 +19,8 @@ from core.Module10_sound_manager import sounds_manager
 from modules.Module11_damage_previewer import damage_previewer
 from modules.Module12_infinity_card_manager import CardManager
 from modules.Module13_plot_manager import plot_manager
+from core.Module14_communication import Server, Client
+from modules.Module15_ocp_manager import OcpManager
 
 __VERSION__ = "IFAWL 1.3.0 'UNITED IN DEATH'"
 
@@ -282,6 +283,11 @@ class MyShip:
                     self.al_list[2].react()
                 except AttributeError:
                     Txt.print_plus("注意·船上没有e系终焉结")
+            case "f":
+                try:
+                    ocp_manager.operate_when_f(self)
+                except IFAWL_NoOcpError:
+                    Txt.print_plus("注意·当前没有活跃事件")
             case "pass":
                 pass
             case _:
@@ -2937,6 +2943,11 @@ class FieldPrinter:
 
     @staticmethod
     def generate_basic_info(days) -> str:
+        """
+        生成战场基本信息字符串
+        :param days: 当前天数
+        :return: 无
+        """
         out = "~~~~~~~~~~~~~~~~~~~~~~~~\n"
         out += f"指挥官，今天是战线展开的第{days}天。\n"
         if days < 5:
@@ -3174,6 +3185,8 @@ class MainLoops:
         dice.set_probability(0.8)
         dice.set_di(0.3)
         dice.set_additional_di(0)
+        # 随机事件初始化
+        ocp_manager.initialize()
         # 自动驾驶初始化
         auto_pilot.refresh()
         # 护盾破碎效果初始化
@@ -3197,6 +3210,7 @@ class MainLoops:
             if self.days >= self.entry_begin_day \
                     and (self.days - self.entry_begin_day) % self.entry_delta == 0:
                 entry_manager.push_up()
+            ocp_manager.try_begin_new_ocp()
             time.sleep(0.4)
 
             # morning
@@ -3205,6 +3219,7 @@ class MainLoops:
                     al.operate_in_morning()
             field_printer.print_basic_info(self.days)
             entry_manager.print_all_flow_rank()
+            print_plus(ocp_manager.generate_current_ocp_prompt())
             field_printer.print_for_fight(my_ship, enemy)
             field_printer.generate_suggestion_tree().print_self()
             field_printer.print_key_prompt()
@@ -3212,9 +3227,11 @@ class MainLoops:
             # noon
             if who == Side.PLAYER:
                 Txt.print_plus("今天由我方行动")
+                ocp_manager.operate_in_my_day()
                 my_ship.react()
             else:
                 Txt.print_plus("今天由敌方行动")
+                ocp_manager.operate_in_enemy_day()
                 enemy.react()
 
             # afternoon
@@ -3225,6 +3242,7 @@ class MainLoops:
                         al.operate_in_our_turn()
 
             # dusk
+            ocp_manager.try_end_old_ocp()
             if (result := self.__is_over()) != 0:
                 break
             self.days += 1
@@ -3912,6 +3930,7 @@ main_loops = MainLoops()
 contract_manager = ContractManager(storage_manager, list(al_manager.all_al_list.keys()))
 infinity_card_manager = CardManager(my_ship,enemy,entry_manager,al_manager)
 plot_manager.set_storage_manager(storage_manager)
+ocp_manager = OcpManager(my_ship, enemy, another_ship)
 
 def hello():
     sounds_manager.switch_to_bgm("login")
