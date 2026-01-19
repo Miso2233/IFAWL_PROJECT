@@ -34,5 +34,15 @@ class ASI:
     LOGGING = 3
     COOLING = 4
 
+class OSI:
+    """OCP state列表索引枚举"""
+    OTHER = 0
+    DAYS_COUNTER = 1
+    LOGGING = 2
+    COOLING = 3
+
 class IFAWL_ConnectionCancel(Exception):
+    pass
+
+class IFAWL_NoOcpError(Exception):
     pass
