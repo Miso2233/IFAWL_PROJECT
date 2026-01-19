@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from core import Module1_txt as Txt
 from core.Module2_json_loader import json_loader
+from core.Module8_al_industry import recipe_for_all_al
 
 AL_META_DATA = json_loader.load("al_meta_data")
 ENTRY_META_DATA = json_loader.load("entries_meta_data")
@@ -144,7 +145,7 @@ class StorageManager:
     def get_value_of(self,item:str) -> int|str:
         """
         查找仓库物品数量或元数据值|核心业务封装
-        :param item:需查找的物品或键
+        :param item: 需查找的物品或键
         :return: 物品在仓库中的数量或元数据值
         """
         key: str = self.item_to_key_table[item]
@@ -185,7 +186,56 @@ class StorageManager:
             ]
         )
         input("[enter]离开仓库>>>")
-    
+
+    def estimate_total_assets(self):
+        out = 0
+        out += self.repository_for_all_users[self.username]["currency"]["联邦信用点"] // 2200
+        out += self.repository_for_all_users[self.username]["currency"]["保险点"]
+        out += sum(self.repository_for_all_users[self.username]["materials"].values()) // 50
+        for al_index,num in self.repository_for_all_users[self.username]["als"].items():
+            out += num * AL_META_DATA[al_index]["rank_num"]
+        return out
+
+    # ==================== 终焉结跟踪器 ======================
+
+    def set_tracing_al(self,al_index:str):
+        self.set_value_of("tracing_al", al_index)
+        self.sync()
+
+    def clear_tracing_al(self):
+        self.set_value_of("tracing_al", "")
+        self.sync()
+
+    def get_the_gap(self) -> dict[str,int]:
+        """
+        计算当前玩家与追踪的终焉结之间的差距
+        :return: 字典。键为物资与信用点，值为差距。若无差距或无跟踪，返回空字典
+        """
+        if not self.get_value_of("tracing_al"):
+            return {}
+        al_index = self.get_value_of("tracing_al")
+        al_recipe = recipe_for_all_al[al_index]
+        gap = {}
+        for item,value in al_recipe.items():
+            if value > self.get_value_of(item):
+                gap[item] = value - self.get_value_of(item)
+        return gap
+
+    def generate_gap_list(self) -> list[str]:
+        """
+        生成追踪终焉结所需的物资字符串列表
+        :return: 字符串列表，描述终焉结所需物资
+        """
+        if not self.get_value_of("tracing_al"):
+            return ["[无跟踪]"]
+        gap = self.get_the_gap()
+        if not gap:
+            return ["[可合成]"]
+        out = []
+        for item,value in gap.items():
+            out.append(f"{Txt.adjust(item,10)}*{value}")
+        return out
+
     # ==================== 终焉结相关功能 ====================
     
     def save_al_on_ship(self,al_on_ship):

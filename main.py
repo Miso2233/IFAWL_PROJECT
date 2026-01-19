@@ -13,7 +13,7 @@ from modules.Module4_voices import voices
 from core.Module5_dice import dice
 from modules.Module6_market_manager import ContractManager, Contract, tools
 from modules.Module7_auto_pilot import auto_pilot
-from modules.Module8_al_industry import recipe_for_all_al
+from core.Module8_al_industry import recipe_for_all_al
 from modules.Module9_entry_manager import entry_manager
 from core.Module10_sound_manager import sounds_manager
 from modules.Module11_damage_previewer import damage_previewer
@@ -3093,6 +3093,15 @@ class StationTreesManager:
             "material": storage_manager.total_materials_num,
             "al_num": storage_manager.total_als_num
         })
+        self.all_tree_list["终焉结工业"].inject({
+            "total_assets": storage_manager.estimate_total_assets()
+        })
+        self.all_tree_list["资源跟踪器"].inject({
+            "short_name": storage_manager.get_value_of("tracing_al")
+        })
+        self.all_tree_list["资源跟踪器"].rewrite_lines(
+            storage_manager.generate_gap_list()
+        )
 
     def generate_all_line_list(self):
         all_line_list = [[] for _ in range(self.column)]
@@ -3770,7 +3779,7 @@ class MainLoops:
         while 1:
             print()
             station_trees_manager.inject_all()
-            Txt.n_column_print(station_trees_manager.generate_all_line_list(), 50)
+            Txt.n_column_print(station_trees_manager.generate_all_line_list(), [50, 70])
             go_to = input(">>>")
             match go_to:
                 case "z":
@@ -3790,6 +3799,8 @@ class MainLoops:
                     main_loops.contract_market_mainloop()
                 case "a1" | "c":
                     main_loops.industry_mainloop()
+                case "a2":
+                    main_loops.al_tracing_mainloop()
                 case "c1":
                     main_loops.entry_choosing_mainloop()
                 case _:
@@ -3831,12 +3842,12 @@ class MainLoops:
             assets = storage_manager.show_assets()
             for al in al_manager.all_al_list.values():
                 al.print_recipe(assets)
-            inp = Txt.input_plus("工业流程正常运转中·请输入要合成的装备代码·[enter]退出>>>")
+            inp = Txt.input_plus("工业流程正常运转中·请输入要合成的终焉结编号·[enter]退出>>>")
             if inp == "":  # 退出
                 Txt.print_plus("正在退出……")
                 break
             if inp not in al_manager.all_al_list:  # 输入无效
-                Txt.print_plus("请输入有效的装备编号")
+                Txt.print_plus("请输入有效的终焉结编号")
                 Txt.input_plus("")
                 continue
             current_al = al_manager.all_al_list[inp]
@@ -3845,8 +3856,35 @@ class MainLoops:
                 Txt.input_plus("")
                 continue
             current_al.craft_self()
-            Txt.print_plus(f"{current_al.len_name}*1 合成完成·已送至装备仓库并铭刻您的代号")
+            Txt.print_plus(f"{current_al.len_name}*1 合成完成·已送至终焉结仓库并铭刻您的代号")
             Txt.input_plus("")
+
+    @staticmethod
+    def al_tracing_mainloop():
+        while 1:
+            for al in al_manager.all_al_list.values():
+                al.refresh_craftable_tag()
+            assets = storage_manager.show_assets()
+            for al in al_manager.all_al_list.values():
+                al.print_recipe(assets)
+            inp = Txt.input_plus("工业流程正常运转中·请输入要跟踪的终焉结编号·[-1]清除跟踪·[enter]退出>>>")
+            if inp == "":  # 退出
+                Txt.print_plus("正在退出……")
+                break
+            if inp == "-1":  # 清除跟踪
+                storage_manager.clear_tracing_al()
+                Txt.print_plus("跟踪已清除")
+                Txt.input_plus("")
+                break
+            if inp not in al_manager.all_al_list:  # 输入无效
+                Txt.print_plus("请输入有效的终焉结编号")
+                Txt.input_plus("")
+                continue
+            current_al = al_manager.all_al_list[inp]
+            storage_manager.set_tracing_al(inp)
+            Txt.print_plus(f"{current_al.len_name} 已加入终焉结工业追踪器")
+            Txt.input_plus("")
+            break
 
     @staticmethod
     def entry_choosing_mainloop():
