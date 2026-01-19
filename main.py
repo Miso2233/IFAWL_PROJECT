@@ -411,8 +411,12 @@ class EnemyShip:
         target_ship = self.target_ship
         if force_target:
             target_ship = force_target
+        # 词条
         atk = entry_manager.check_and_add_atk(atk)
         atk = entry_manager.check_and_reduce_missile(atk, target_ship)
+        # 事件
+        atk = ocp_manager.adjust_enemy_atk(atk)
+        # 终焉结
         reversed_al_list = target_ship.al_list.copy()
         reversed_al_list[1],reversed_al_list[2] = reversed_al_list[2], reversed_al_list[1]
         for al in reversed_al_list:
@@ -420,7 +424,6 @@ class EnemyShip:
                 atk = al.reduce_enemy_attack(atk)
             except AttributeError:
                 pass
-        atk = ocp_manager.adjust_enemy_atk(atk)
         target_ship.shelter -= atk
         if atk <= 0:
             voices.report("护盾", "未受伤")

@@ -6,6 +6,8 @@ from core.Module2_json_loader import json_loader
 from core.Module5_dice import dice
 from core.Module14_communication import Server
 
+OCP_PROBABILITY_FOR_EACH_DAY = 0.2
+
 ALL_OCP_METADATA = json_loader.load("ocps_metadata")
 
 
@@ -16,6 +18,8 @@ class OcpGeneral:
         self.index: str = str(index)
         self.metadata = ALL_OCP_METADATA[self.index]
         self.txt_list = self.metadata["txt_list"]
+        self.min_day = self.metadata["min_day"]
+        self.weight = self.metadata["weight"]
         # 战场字段
         self.state = [None, 0, 0, 0]
         self.my_ship = my_ship
@@ -36,10 +40,12 @@ class OcpGeneral:
 
     def is_available(self) -> bool:
         """
-        基于天数和冷却判断本事件是否处于空闲状态
+        基于天数、战场天数和冷却判断本事件是否处于空闲状态
         :return: 是否空闲
         """
-        return self.state[OSI.DAYS_COUNTER] == 0 and self.state[OSI.COOLING] == 0
+        return self.state[OSI.DAYS_COUNTER] == 0 \
+            and self.state[OSI.COOLING] == 0 \
+            and self.main_loops.days >= self.min_day
 
     def is_end(self) -> bool:
         """
@@ -120,7 +126,7 @@ class Ocp2(OcpGeneral):
 
     def adjust_enemy_atk(self, atk: int) -> int:
         if self.state[OSI.DAYS_COUNTER] > 0:
-            return atk * 2
+            return atk + 1
         return atk
 
 
@@ -155,7 +161,7 @@ class OcpManager:
         for ocp in self.ocp_list.values():
             ocp.clear_server()
 
-    def try_begin_new_ocp(self, probability: float = 0.9):
+    def try_begin_new_ocp(self, probability: float = OCP_PROBABILITY_FOR_EACH_DAY):
         """
         at dawn
         审视每个ocp的available()状态，并随机启动一个空闲的
@@ -169,7 +175,12 @@ class OcpManager:
         available_list = [ocp for ocp in self.ocp_list.values() if ocp.is_available()]
         if not available_list:
             return
-        new_ocp = random.choice(available_list)
+        weight_list = [ocp.weight for ocp in available_list]
+        new_ocp = random.choices(
+            available_list,
+            weights=weight_list,
+            k=1
+        )[0]
         self.current_ocp = new_ocp
         self.current_ocp.begin()
 
