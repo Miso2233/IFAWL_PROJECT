@@ -1,6 +1,6 @@
 import random
 
-from core.Module0_enums_exceptions import OSI, IFAWL_NoOcpError
+from core.Module0_enums_exceptions import OSI, IFAWL_NoOcpError, DamageType
 from core.Module1_txt import print_plus
 from core.Module2_json_loader import json_loader
 from core.Module5_dice import dice
@@ -64,7 +64,7 @@ class OcpGeneral:
 
     def is_end(self) -> bool:
         """
-        基于天数和冷却判断本事件是否已经结束
+        基于天数判断本事件是否已经结束
         :return: 是否结束
         """
         return self.state[OSI.DAYS_COUNTER] == 0
@@ -78,6 +78,11 @@ class OcpGeneral:
             self.state[OSI.COOLING] += 1
 
     def print_and_send(self, txt: str):
+        """
+        打印并发送（如server属性不为None）文本
+        :param txt: 文本
+        :return:
+        """
         print_plus(txt)
         if self.server:
             self.server.send_str(txt)
@@ -98,11 +103,12 @@ class OcpGeneral:
         self.print_and_send(txt_for_today)
 
     def operate_in_my_day(self):
-        if self.state[OSI.DAYS_COUNTER] > 0:
-            self.print_plot()
-            self.state[OSI.DAYS_COUNTER] -= 1
-            if self.state[OSI.DAYS_COUNTER] == 0:
-                self.end()
+        if self.state[OSI.DAYS_COUNTER] <= 0: # 防御性语句 理论上不会出现这种情况 Miso 26.1.21
+            return
+        self.print_plot()
+        self.state[OSI.DAYS_COUNTER] -= 1
+        if self.state[OSI.DAYS_COUNTER] == 0:
+            self.end()
 
     def operate_when_f(self, ship_calling):
         ...
@@ -168,6 +174,33 @@ class Ocp4(OcpGeneral):
 
     def adjust_me_hp(self, hp: int) -> int:
         return hp + 1
+
+class Ocp5(OcpGeneral):
+
+    def operate_in_my_day(self):
+        if self.state[OSI.DAYS_COUNTER] <= 0:
+            return
+        self.print_plot()
+        self.my_ship.attack(1,DamageType.ORDINARY_ATTACK)
+        self.enemy_ship.attack(1)
+        self.state[OSI.DAYS_COUNTER] -= 1
+        if self.state[OSI.DAYS_COUNTER] == 0:
+            self.end()
+
+class Ocp6(OcpGeneral):
+
+    def operate_in_my_day(self):
+        if self.state[OSI.DAYS_COUNTER] <= 0:
+            return
+        self.print_plot()
+        heal = random.randint(1,3)
+        load = random.randint(1,3)
+        self.print_and_send(f"我们发现了{heal}个护盾回充器和{load}组弹药")
+        self.my_ship.heal(heal)
+        self.my_ship.load(load)
+        self.state[OSI.DAYS_COUNTER] -= 1
+        if self.state[OSI.DAYS_COUNTER] == 0:
+            self.end()
 
 class OcpManager:
 
