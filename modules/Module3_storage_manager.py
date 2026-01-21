@@ -181,8 +181,8 @@ class StorageManager:
                 al_list[AL_META_DATA[al]["len_name"]] = num
         Txt.n_column_print(
             [
-                Txt.Tree("基本物资", self.repository_for_all_users[self.username]["materials"]).generate_line_list(),
-                Txt.Tree("终焉结", al_list).generate_line_list()
+                Txt.Tree("基本物资 Basic Materials", self.repository_for_all_users[self.username]["materials"]).generate_line_list(),
+                Txt.Tree("终焉结 Apocalypse-Linked", al_list).generate_line_list()
             ]
         )
         input("[enter]离开仓库>>>")
