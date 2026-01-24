@@ -139,7 +139,7 @@
 		],
 		"summary": "敌方攻击将拆除我方导弹",
 		"reaction": "导弹被拆除",
-		"type": "r",
+		"type": "e",
 		"can_flow": true
 	},
 	"13": {
@@ -152,7 +152,7 @@
 		],
 		"summary": "战斗将拥有时间限制",
 		"reaction": "护盾受损",
-		"type": "p",
+		"type": "q",
 		"can_flow": false
 	},
 	"14": {
@@ -165,7 +165,20 @@
 		],
 		"summary": "敌方导弹充足时可以连续发射导弹",
 		"reaction": "连续发射导弹",
-		"type": "r",
+		"type": "q",
+		"can_flow": true
+	},
+	"15": {
+		"title": "死斗",
+		"points": [0, 40, 70],
+		"description_txt": [
+			"",
+			"敌方导弹大于7时不再上弹",
+			"敌方导弹大于5时不再上弹"
+		],
+		"summary": "敌方导弹充足时提升攻击欲望",
+		"reaction": "提升攻击欲望",
+		"type": "q",
 		"can_flow": true
 	}
 }

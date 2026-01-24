@@ -277,4 +277,11 @@ class EntryManager:
             num = 1
         return num
 
+    def check_and_change_operation(self,operation:str,missile:int):
+        """死斗"""
+        if operation == "0" and (self.get_rank_of("15") == 1 and missile > 7 or self.get_rank_of("15") == 2 and missile > 5):
+            operation = "1"
+            self.all_entries["15"].print_when_react()
+        return operation
+
 entry_manager = EntryManager()
