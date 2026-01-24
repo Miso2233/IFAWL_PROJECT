@@ -38,7 +38,7 @@ class MyShip:
         self.al_list: list[Al_general | None] = [None, None, None]
         self.total_al_rank = 0
         self.platform = "导弹"
-        self.life_for_ppve = 0
+        self.life_for_ppve = 0 #魔法数字最新力作：为0时濒死时值变为当前天数加5，该值当天判定死亡；期间被救起变为-1；无法再触发濒死
 
     def load_al(self):
         al_str_list = storage_manager.get_al_on_ship()
@@ -478,8 +478,7 @@ class EnemyShip:
             else:
                 self.target_ship = random.choice([my_ship,another_ship])
             if target_ship_before != self.target_ship:
-                Txt.print_plus("敌方目标改变，注意警戒！")
-                main_loops.server.send_str("敌方目标改变，注意警戒！")
+                main_loops.print_with_send("敌方目标改变，注意警戒！")
         ##
 
     def react(self):
@@ -494,6 +493,7 @@ class EnemyShip:
             operation = random.choice(["0", "1", "2"])  # 正常情况下随机选择操作
         if dice.probability(0.4):
             operation = random.choice(["0", "1", "2"])
+        operation = entry_manager.check_and_change_operation(operation,self.missile)  # 词条控制
         operation = al26.get_controlled_operation(operation)  # 眠雀控制
         if self.missile < 1 and operation == "1":
             operation = "0"
@@ -3140,8 +3140,7 @@ class MainLoops:
             return 1
         return 0
 
-    @staticmethod
-    def is_near_death(ship:MyShip) -> bool:
+    def is_near_death(self, ship:MyShip) -> bool:
         if ship.shelter < 0:
             return True
         if entry_manager.get_rank_of("5") != 0 and ship.get_equivalent_shelter_of_ship() <= 0:
@@ -3160,13 +3159,13 @@ class MainLoops:
             return 0, 0
         shelter = random.randint(1, total)
         return shelter, total - shelter
-
-    @staticmethod
-    def __get_force_advance() -> Literal[-1, 0, 1]:
+    def get_force_advance(self) -> Literal[-1, 0, 1]:
         """
         判定是否强制使某一方行动
         :return: 1代表我方，-1代表敌方，0代表不强制
         """
+        if self.days == 1:
+            return 1
         if al26.is_my_turn():
             return 1
         return 0
@@ -3190,7 +3189,10 @@ class MainLoops:
                         return -1
         return 0
 
-
+    def print_with_send(self,message:str):
+        Txt.print_plus(message)
+        if self.server:
+            self.server.send_str(message)
 
     def initialize_before_fight(self):
         # 舰船初始化
@@ -3224,7 +3226,7 @@ class MainLoops:
             # dawn
             if (rank := entry_manager.get_rank_of("11")) != 0:
                 dice.set_additional_di(rank * 0.1)
-            who = dice.decide_who(force_advance=self.__get_force_advance())
+            who = dice.decide_who(force_advance=self.get_force_advance())
             if self.days >= self.entry_begin_day \
                     and (self.days - self.entry_begin_day) % self.entry_delta == 0:
                 entry_manager.push_up()
@@ -3324,7 +3326,7 @@ class MainLoops:
         while 1:
             # dawn
             time.sleep(0.4)
-            who = dice.decide_who(force_advance=self.__get_force_advance())
+            who = dice.decide_who(force_advance=self.get_force_advance())
             ocp_manager.try_begin_new_ocp()
 
             # morning
@@ -3495,7 +3497,7 @@ class MainLoops:
                 # dawn
                 if (rank := entry_manager.get_rank_of("11")) != 0:
                     dice.set_additional_di(rank * 0.1)
-                who = dice.decide_who(force_advance=self.__get_force_advance())
+                who = dice.decide_who(force_advance=self.get_force_advance())
                 time.sleep(0.4)
 
                 # morning
@@ -3700,15 +3702,14 @@ class MainLoops:
         while 1:
             # dawn
             time.sleep(0.4)
-            who = dice.decide_who(force_advance=self.__get_force_advance())
+            who = dice.decide_who(force_advance=self.get_force_advance())
 
             # morning
             for al in my_ship.al_list+another_ship.al_list:
                 if al:
                     al.operate_in_morning()
 
-            field_printer.print_basic_info(self.days)
-            self.server.send_str(field_printer.generate_basic_info(self.days))
+            self.print_with_send(field_printer.generate_basic_info(self.days))
 
             entry_manager.print_all_selected_rank()
             field_printer.print_for_ppve(my_ship,another_ship,enemy)
@@ -3720,28 +3721,27 @@ class MainLoops:
 
             # noon
             if who == 1:
-                Txt.print_plus("今天由我方行动")
-                self.server.send_str("今天由我方行动")
-                field_printer.ppve_help_prompt()
+                self.print_with_send("今天由我方行动")
+                self.print_with_send("[m1~m9]转移1~9枚弹药 [s]转移一层护盾 [c]救援")
                 if not self.is_near_death(my_ship):
                     field_printer.print_key_prompt(my_ship)
                     self.server.send_str("正在等待长机指挥官操作<<<")
                     my_ship.react_for_ppve()
                     self.server.send_str("长机指挥官操作完毕>>>")
                 if not self.is_near_death(another_ship):
-                    Txt.print_plus("正在等待僚机指挥官操作<<<")
                     field_printer.print_key_prompt(another_ship)
+                    Txt.print_plus("正在等待僚机指挥官操作<<<")
                     another_ship.react_for_ppve(self.server)
                     Txt.print_plus("僚机指挥官操作完毕>>>")
             else:
-                Txt.print_plus("今天由敌方行动")
-                self.server.send_str("今天由敌方行动")
+                self.print_with_send("今天由敌方行动")
                 enemy.react()
 
             # afternoon
             if entry_manager.get_rank_of("13") != 0 and self.days > 100 - 20 * entry_manager.get_rank_of("13"):
                 enemy.attack(1)
                 entry_manager.all_entries["13"].print_when_react()
+
             for al in my_ship.al_list+another_ship.al_list:
                 if al:
                     al.operate_in_afternoon()
@@ -3751,17 +3751,13 @@ class MainLoops:
             # dusk
             if (result := self.is_over_for_ppve()) != 0:
                 break
-
             #self.server.buffer_send()
             self.days += 1
         sounds_manager.stop_bgm()
         for al in another_ship.al_list:
             if al:
                 al.ship = my_ship
-        print()
-        Txt.print_plus("=========我方胜利=========" if result == 1 else"=========敌方胜利=========")
-        print()
-        self.server.send_str("\n=========我方胜利=========\n" if result == 1 else"\n=========敌方胜利=========\n")
+        self.print_with_send("\n=========我方胜利=========\n" if result == 1 else"\n=========敌方胜利=========\n")
         #damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
         self.server.send_exit("作战已结束")
         self.server.close()
