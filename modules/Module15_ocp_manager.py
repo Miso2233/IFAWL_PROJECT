@@ -150,7 +150,10 @@ class OcpGeneral:
 class Ocp1(OcpGeneral):
 
     def operate_when_f(self, ship_calling):
-        ship_calling.heal(2)
+        if ship_calling.al_list[1] and ship_calling.al_list[1].index == "21":
+            ship_calling.al_list[1].react_for_ocp1()
+        else:
+            ship_calling.heal(2)
         self.end()
 
 class Ocp2(OcpGeneral):
