@@ -2765,6 +2765,101 @@ class Al42(Al_general): # 百里香
 al42=Al42(42)
 
 
+class Al43(Al_general): # 守岸人
+
+    ORIGIN = 0
+    QE_NEEDING = 1
+    Q_NEEDING = 2
+    E_NEEDING = 3
+    W_NEEDING = 4
+
+    def react(self):
+        if self.state[ASI.COOLING] < 0:
+            self.report("冷却中")
+            return
+        if self.state[ASI.LOGGING] != self.ORIGIN:
+            return
+        if self.state[ASI.WORKING] == 0:
+            self.state[ASI.LOGGING] = self.QE_NEEDING
+            self.state[ASI.WORKING] = 3
+            self.report("启动")
+        else:
+            self.state[ASI.LOGGING] = self.ORIGIN
+            self.state[ASI.COOLING] = -3
+            self.state[ASI.WORKING] = 0
+            self.ship.attack(3, DamageType.ORDINARY_ATTACK)
+            self.report("爆发")
+
+    def adjust_operation(self, raw: str) -> str:
+        if raw == "f" or raw == "w":
+            return raw
+        requirement = {
+            self.ORIGIN: (),
+            self.QE_NEEDING: ("q","e"),
+            self.Q_NEEDING: ("q",),
+            self.E_NEEDING: ("e",),
+        }[self.state[ASI.LOGGING]]
+        if raw not in requirement:
+            return raw
+        self.report("下一阶段")
+        self.state[ASI.WORKING] = 3
+        match raw:
+            case "q":
+                self.state[ASI.LOGGING] = self.E_NEEDING
+            case "e":
+                self.state[ASI.LOGGING] = self.Q_NEEDING
+            case _:
+                pass
+        if len(requirement) == 1:
+            self.state[ASI.LOGGING] = self.W_NEEDING
+        return raw
+
+    def operate_in_our_turn(self):
+        if self.state[ASI.WORKING] > 0:
+            self.state[ASI.WORKING] -= 1
+            if self.state[ASI.WORKING] == 0:
+                self.report("结束")
+                self.state[ASI.LOGGING] = self.ORIGIN
+                self.state[ASI.COOLING] = -3
+
+    def add_hp(self, hp: int):
+        if self.state[ASI.LOGGING] != self.ORIGIN:
+            self.report("回盾加成")
+            return hp + 1
+        return hp
+
+    def add_num(self, num: int):
+        if self.state[ASI.LOGGING] in (self.Q_NEEDING, self.W_NEEDING):
+            self.report("上弹加成")
+            return num + 1
+        return num
+
+    def add_atk(self, atk: int, dmg_type: str):
+        if self.state[ASI.LOGGING] in (self.E_NEEDING, self.W_NEEDING):
+            self.report("伤害加成")
+            return atk + 1
+        return atk
+
+    def suggest(self):
+        match self.state[ASI.LOGGING]:
+            case self.ORIGIN:
+                if self.state[ASI.COOLING] == 0:
+                    return "[w]启动"
+                else:
+                    return f"[冷却中]{-self.state[ASI.COOLING]}天"
+            case self.QE_NEEDING:
+                return f"[q]激活伤害加成|[e]激活上弹加成|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+            case self.Q_NEEDING:
+                return f"[q]激活伤害加成|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+            case self.E_NEEDING:
+                return f"[e]激活上弹加成|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+            case self.W_NEEDING:
+                return f"[w]爆发|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+
+
+al43 = Al43(43)
+
+
 class FieldPrinter:
 
     @staticmethod

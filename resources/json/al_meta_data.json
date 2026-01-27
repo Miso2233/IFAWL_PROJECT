@@ -492,5 +492,17 @@
     "rank_num": 3,
     "origin": "浅草寺重工",
     "platform": "粒子炮"
+  },
+    "43": {
+    "len_name": "“守岸人宫城奶油”协同式一体化能量转移平台",
+    "short_name": "守岸人",
+    "short_name_en": "MilkyTheShoreKeeper",
+    "description_txt": "-\n-\n-\n-",
+    "index": 43,
+    "type": "w",
+    "rank": "IX",
+    "rank_num": 9,
+    "origin": "浅草寺重工",
+    "platform": "通用"
   }
 }

@@ -222,6 +222,7 @@ class OcpManager:
     def initialize(self):
         for ocp in self.ocp_list.values():
             ocp.initialize()
+        self.current_ocp = None
 
     def set_server(self, server: Server):
         self.server = server
