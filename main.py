@@ -2777,7 +2777,7 @@ class Al43(Al_general): # 守岸人
         if self.state[ASI.COOLING] < 0:
             self.report("冷却中")
             return
-        if self.state[ASI.LOGGING] != self.ORIGIN:
+        if self.state[ASI.LOGGING] not in  (self.ORIGIN, self.W_NEEDING):
             return
         if self.state[ASI.WORKING] == 0:
             self.state[ASI.LOGGING] = self.QE_NEEDING
@@ -2793,11 +2793,13 @@ class Al43(Al_general): # 守岸人
     def adjust_operation(self, raw: str) -> str:
         if raw == "f" or raw == "w":
             return raw
+        if self.state[ASI.LOGGING] == self.W_NEEDING:
+            return raw
         requirement = {
             self.ORIGIN: (),
             self.QE_NEEDING: ("q","e"),
             self.Q_NEEDING: ("q",),
-            self.E_NEEDING: ("e",),
+            self.E_NEEDING: ("e",)
         }[self.state[ASI.LOGGING]]
         if raw not in requirement:
             return raw
