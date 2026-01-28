@@ -746,6 +746,13 @@ class Al_general:
             return
         voices.report(self.short_name, theme)
 
+    def get_random_voice(self):
+        """
+        随机拿一条帅气的语音出来（存疑）
+        :return: 随机语音
+        """
+        return random.choice(voices.voices[self.short_name][random.choice(list(voices.voices[self.short_name].keys()))])
+
     def inject_and_report(self, theme: str, data_injected: dict[str, str | int]):
         """
         Al所包装的注入数据说话函数，省去了说话者名字
@@ -1758,6 +1765,12 @@ class Al25(Al_general):  # 阿贾克斯
             print(self.skin_list[4])
         elif self.is_on_one_ship():
             print(self.skin_list[self.state[ASI.WORKING]])
+
+    def generate_line_list(self) -> list[str]:
+        if self.state[ASI.COOLING] < 0:
+            return [self.skin_list[4]]
+        elif self.is_on_one_ship():
+            return [self.skin_list[self.state[ASI.WORKING]]]
 
     def suggest(self):
         if self.state[ASI.COOLING] < 0:
@@ -3054,7 +3067,6 @@ class FieldPrinter:
         elif days > 20:
             Txt.print_plus("当前舰船位置>>敌方腹地危险区域")
         print()
-
     @staticmethod
     def generate_basic_info(days) -> str:
         """
@@ -3121,6 +3133,48 @@ class FieldPrinter:
             return
         print(key_prompt)
 
+    def print_ending_pic(self,ship_calling:MyShip,shipname:str,username:str,mode:str):
+        #shipname = storage_manager.get_value_of("ship_name")
+        #username = storage_manager.username
+        left = ["-" * 70, "|"]
+        for index in range(3):
+            al_temp = ship_calling.al_list[index]
+            text = "|" + "   "*index + "\\"
+            if al_temp:
+                text += f"""[{al_temp.type}] {al_temp.short_name}#{al_temp.index}|{al_temp.get_random_voice()}"""
+            else:
+                text += "[None]|"
+            left += [text,"|","|"]
+        left.append(f"|最终战况>>[{my_ship.shelter},{my_ship.missile},{enemy.shelter},{enemy.missile}] 使用天数>>{main_loops.days}")
+        left.append(f"|危机合约#3")
+        left.append(f"|战死之地  我们的身后，天灾的面前，即是浅草寺寂静的穹顶")
+        left.append("-" * 70)
+        right = []
+        p = max([17, Txt.get_shell_len(f"  {username}-{shipname}  ")])
+        right.append("-" * (p + 1))
+        right.append("            ".center(p, " ") + "|")
+        right.append(r"  |\        ".center(p, " ") + "|")
+        right.append(r"  |\        ".center(p, " ") + "|")
+        right.append(r"  |\========".center(p, " ") + "|")
+        right.append(("  |\\" + f"{entry_manager.count_total_points()}".center(4, " ") + r"\|  ").center(p, " ") + "|")
+        right.append(r"========\|  ".center(p, " ") + "|")
+        right.append(r"        \|  ".center(p, " ") + "|")
+        right.append(r"        \|  ".center(p, " ") + "|")
+        right.append("            ".center(p, " ") + "|")
+        right.append("            ".center(p, " ") + "|")
+        right.append(time.strftime("%m-%d %H:%M", time.localtime()).center(p, " ") + "|")
+        if p == 17:
+            right.append(f"  {username}-{shipname}  " + " " * (17 - Txt.get_shell_len(f"  {username}-{shipname}  ")) + "|")
+        else:
+            right.append(f"  {username}-{shipname}  " + "|")
+        right.append("   IFAWL   ".center(p, " ") + "|")
+        right.append("-" * (p + 1))
+        if mode == "p":
+            Txt.n_column_print([left, right], di_list=70)
+        #elif i == "2":
+            #sf = shelve.open("storage")
+            #sf[username + "pic"] = [left, right]
+            #sf.close()
 
 field_printer = FieldPrinter()
 
@@ -3484,6 +3538,9 @@ class MainLoops:
             print()
             damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
             sounds_manager.switch_to_bgm("win")
+            field_printer.print_ending_pic(my_ship,storage_manager.get_value_of("ship_name"),storage_manager.username,"p")
+            entry_manager.print_chosen_as_tree()
+            input_plus("[enter]继续")
             times = (entry_manager.count_total_points() // 100)
             if times == 0:
                 times = 1
