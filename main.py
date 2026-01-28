@@ -1532,8 +1532,8 @@ al19 = Al19(19)
 class Al20(Al_general):  # 长安
     def react(self):
         if self.state[ASI.COOLING] == 0:
-            dice.probability_current += 0.6
-            self.state[ASI.COOLING] = -5
+            dice.probability_current += 0.9
+            self.state[ASI.COOLING] = -6
             self.report("扫描")
         else:
             self.report("冷却中")
@@ -1577,6 +1577,9 @@ class Al21(Al_general):  # 诗岸
             self.report("无屏障")
             self.report("充注")
 
+    def react_for_ocp1(self):
+        self.state[ASI.LOGGING] += 2
+        self.report("生长向死亡")
     def operate_in_afternoon(self):
         if self.ship.get_equivalent_shelter_of_ship() <= 0:
             if self.state[ASI.LOGGING] > 0:
@@ -2266,7 +2269,7 @@ class Al34(Al_general):  # 风间浦
         elif self.state[ASI.WORKING] == 1:
             return f"[脱离激进模式]{self.state[ASI.BUILDING]}护盾即将回充"
         elif self.state[ASI.COOLING] < 0:
-            return f"[充能中]剩余{-self.state[ASI.COOLING]}天|[2]回盾加成中"
+            return f"[冷却中]剩余{-self.state[ASI.COOLING]}天|[2]回盾加成中"
         else:
             return "[w]进入激进模式|[保守模式]>[2]回盾加成中"
 
@@ -2311,7 +2314,7 @@ class Al35(Al_general):  # 青鹄
 
         if self.state[ASI.LOGGING] >= 4 and dice.current_who == Side.ENEMY:
             suggestion_tree = field_printer.generate_suggestion_tree(self.ship)
-            suggestion_tree.topic = "额外回合操作"
+            suggestion_tree.title = "额外回合操作(不触发按键监听)"
 
             if self.ship == another_ship:
                 main_loops.server.send_tree(suggestion_tree)
@@ -2778,6 +2781,7 @@ class Al43(Al_general): # 守岸人
             self.report("冷却中")
             return
         if self.state[ASI.LOGGING] not in  (self.ORIGIN, self.W_NEEDING):
+            self.ship.heal(1)
             return
         if self.state[ASI.WORKING] == 0:
             self.state[ASI.LOGGING] = self.QE_NEEDING
@@ -2817,6 +2821,8 @@ class Al43(Al_general): # 守岸人
         return raw
 
     def operate_in_our_turn(self):
+        if self.state[ASI.COOLING] < 0:
+            self.state[ASI.COOLING] += 1
         if self.state[ASI.WORKING] > 0:
             self.state[ASI.WORKING] -= 1
             if self.state[ASI.WORKING] == 0:
@@ -2843,6 +2849,8 @@ class Al43(Al_general): # 守岸人
         return atk
 
     def suggest(self):
+        if dice.current_who == Side.ENEMY and self.state[ASI.LOGGING] not in  (self.ORIGIN, self.W_NEEDING):
+            return f"[w]回盾|剩余时限>{self.state[ASI.WORKING]}|回盾加成中"
         match self.state[ASI.LOGGING]:
             case self.ORIGIN:
                 if self.state[ASI.COOLING] == 0:
@@ -2850,13 +2858,13 @@ class Al43(Al_general): # 守岸人
                 else:
                     return f"[冷却中]{-self.state[ASI.COOLING]}天"
             case self.QE_NEEDING:
-                return f"[q]激活伤害加成|[e]激活上弹加成|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+                return f"[q]激活伤害加成|[e]激活上弹加成|剩余时限>{self.state[ASI.WORKING]}|回盾加成中"
             case self.Q_NEEDING:
-                return f"[q]激活伤害加成|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+                return f"[q]激活伤害加成|剩余时限>{self.state[ASI.WORKING]}|回盾加成中|上弹加成中"
             case self.E_NEEDING:
-                return f"[e]激活上弹加成|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+                return f"[e]激活上弹加成|剩余时限>{self.state[ASI.WORKING]}|回盾加成中|伤害加成中"
             case self.W_NEEDING:
-                return f"[w]爆发|剩余时限>{self.state[ASI.WORKING]}|[2]回盾加成中"
+                return f"[w]爆发|剩余时限>{self.state[ASI.WORKING]}|全效果加成中"
 
 
 al43 = Al43(43)
@@ -3262,6 +3270,8 @@ class MainLoops:
         :return: 1代表我方，-1代表敌方，0代表不强制
         """
         if self.days == 1:
+            return 1
+        if al20.state[ASI.COOLING] == -6:
             return 1
         if al26.is_my_turn():
             return 1
