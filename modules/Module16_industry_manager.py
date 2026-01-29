@@ -545,7 +545,7 @@ class IndustryManager:
                 "延接 精炼炉|粉碎机|研磨机|设备原件机 从 x"
                 "调整 x",
                 "退出"
-            )
+            ).print_self()
             do_what = input_plus("请输入操作>>>")
             args = self.__extract_number(do_what)
             if "删除" in do_what:
