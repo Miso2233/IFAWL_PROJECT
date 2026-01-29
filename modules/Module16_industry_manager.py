@@ -201,10 +201,12 @@ class Machine: # TODO 自动推导配方
 
     def update_effectiveness(self):
         """
-        维护式更新current_effectiveness
+        维护式更新current_effectiveness，并递归更新所有下游机器的current_effectiveness
         :return: 无
         """
         self.current_effectiveness = self.calculate_effectiveness()
+        if self.output_machines:
+            self.output_machines[0].update_effectiveness()
 
     def calculate_depth(self) -> int:
         """
@@ -503,7 +505,6 @@ class IndustryManager:
         if from_machine.output_machines: # 清除老连接
             origin_to = from_machine.output_machines[0]
             origin_to.remove_input_machine(from_machine)
-            origin_to.update_depth()
         from_machine.switch_output_machine(to_machine)
         to_machine.add_input_machine(from_machine)
 
