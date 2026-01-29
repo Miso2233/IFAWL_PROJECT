@@ -607,7 +607,9 @@ class IndustryManager:
                         if out_name in new_machine.recipes[recipe_index].inputs:
                             new_machine.show_recipe()
                             print()
-                            print_plus(f"已自动识别到您希望{new_machine.machine_type}#{new_machine.id}的配方#{recipe_index}")
+                            print_plus(
+                                f"已自动识别到您可能希望使用{new_machine.machine_type}#{new_machine.id}的配方#{recipe_index}：{new_machine.recipes[recipe_index].name}"
+                            )
                             print()
                             opinion = input_plus("[enter]采纳此建议|[-1]否认并置空配方")
                             if opinion == "":
