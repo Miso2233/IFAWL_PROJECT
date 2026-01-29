@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal
+from xxsubtype import bench
 
 from core.Module1_txt import print_plus, n_column_print, input_plus, Tree
 
@@ -42,7 +43,7 @@ class Machine: # TODO 自动推导配方
     def __init__(self, index):
         self.machine_type = ""
         self.id = index
-        self.recipes = []
+        self.recipes:list[Recipe] = []
 
         self.input_machines:list[Machine] = []
         self.output_machines:list[Machine] = []
@@ -88,7 +89,10 @@ class Machine: # TODO 自动推导配方
         :param recipe_index: 配方代码
         :return:
         """
-        self.current_recipe = self.recipes[recipe_index]
+        if recipe_index == -1:
+            self.current_recipe = None
+        else:
+            self.current_recipe = self.recipes[recipe_index]
         self.update_effectiveness()
 
     def print_info(self):
@@ -595,6 +599,22 @@ class IndustryManager:
                 except KeyError as e:
                     print_plus(f"参数错误-机器{e}不存在")
                     continue
+                else:
+                    if not self.all_machines[args[0]].current_recipe:
+                        continue
+                    out_name = self.all_machines[args[0]].current_recipe.name
+                    for recipe_index in range(len(new_machine.recipes)):
+                        if out_name in new_machine.recipes[recipe_index].inputs:
+                            new_machine.show_recipe()
+                            print()
+                            print_plus(f"已自动识别到您希望{new_machine.machine_type}#{new_machine.id}的配方#{recipe_index}")
+                            print()
+                            opinion = input_plus("[enter]采纳此建议|[-1]否认并置空配方")
+                            if opinion == "":
+                                new_machine.set_recipe(recipe_index)
+                            else:
+                                new_machine.set_recipe(-1)
+                            break
                 continue
             if "调整" in do_what:
                 if len(args) != 1:
@@ -606,9 +626,9 @@ class IndustryManager:
                     print_plus(f"参数错误-机器{e}不存在")
                     continue
                 try:
-                    recipe_index = int(input_plus("请输入要调整到的新配方编号"))
+                    recipe_index = int(input_plus("请输入要调整到的新配方编号|[-1]置空配方"))
                     self.all_machines[args[0]].set_recipe(recipe_index)
-                except TypeError:
+                except ValueError:
                     print_plus("参数错误-配方编号应为整数")
                     continue
                 except IndexError:
