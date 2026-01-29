@@ -2,29 +2,29 @@ from __future__ import annotations
 
 from typing import Literal
 
-from core.Module1_txt import print_plus, n_column_print, input_plus
+from core.Module1_txt import print_plus, n_column_print, input_plus, Tree
 
 import random
 import time
 
 # 所有产物和原材料字典
 ALL_MATERIALS = {
-    "A原矿": 0,
-    "B原矿": 0,
-    "C原矿": 0,
-    "D原矿": 0,
-    "精炼A": 0,
-    "精炼B": 0,
-    "精炼C": 0,
-    "A粉末": 0,
-    "B粉末": 0,
-    "C粉末": 0,
-    "D粉末": 0,
-    "研磨A粉末": 0,
-    "研磨B粉末": 0,
-    "烧结A": 0,
-    "二次烧结A": 0,
-    "烧结B": 0,
+    "凡晶石原矿": 0,
+    "灼烧岩原矿": 0,
+    "长流石原矿": 0,
+    "冰晶砂原矿": 0,
+    "精炼凡晶石": 0,
+    "精炼灼烧岩": 0,
+    "精炼长流石": 0,
+    "凡晶石粉末": 0,
+    "灼烧岩粉末": 0,
+    "长流石粉末": 0,
+    "冰晶砂粉末": 0,
+    "研磨凡晶石粉末": 0,
+    "研磨灼烧岩粉末": 0,
+    "烧结凡晶石": 0,
+    "二次烧结凡晶石": 0,
+    "烧结灼烧岩": 0,
     "终焉结原件I": 0,
     "终焉结原件II": 0,
     "终焉结原件III": 0
@@ -232,34 +232,34 @@ class Furnace(Machine):
         self.machine_type = "精炼炉"
         self.recipes = [
             Recipe(
-                name="精炼A",
-                inputs={"A原矿": 1},
-                outputs={"精炼A": 1}
+                name="精炼凡晶石",
+                inputs={"凡晶石原矿": 1},
+                outputs={"精炼凡晶石": 1}
             ),
             Recipe(
-                name="精炼B",
-                inputs={"B原矿": 1},
-                outputs={"精炼B": 1}
+                name="精炼灼烧岩",
+                inputs={"灼烧岩原矿": 1},
+                outputs={"精炼灼烧岩": 1}
             ),
             Recipe(
-                name="精炼C",
-                inputs={"C原矿": 1},
-                outputs={"精炼C": 1}
+                name="精炼长流石",
+                inputs={"长流石原矿": 1},
+                outputs={"精炼长流石": 1}
             ),
             Recipe(
-                name="烧结A",
-                inputs={"研磨A粉末": 1},
-                outputs={"烧结A": 1}
+                name="烧结凡晶石",
+                inputs={"研磨凡晶石粉末": 1},
+                outputs={"烧结凡晶石": 1}
             ),
             Recipe(
-                name="二次烧结A",
-                inputs={"烧结A": 1},
-                outputs={"二次烧结A": 1}
+                name="二次烧结凡晶石",
+                inputs={"烧结凡晶石": 1},
+                outputs={"二次烧结凡晶石": 1}
             ),
             Recipe(
-                name="烧结B",
-                inputs={"研磨B粉末": 1},
-                outputs={"烧结B": 1}
+                name="烧结灼烧岩",
+                inputs={"研磨灼烧岩粉末": 1},
+                outputs={"烧结灼烧岩": 1}
             )
         ]
 
@@ -269,24 +269,24 @@ class Crusher(Machine):
         self.machine_type = "粉碎机"
         self.recipes = [
             Recipe(
-                name="A粉末",
-                inputs={"A原矿": 1},
-                outputs={"A粉末": 1}
+                name="凡晶石粉末",
+                inputs={"凡晶石原矿": 1},
+                outputs={"凡晶石粉末": 1}
             ),
             Recipe(
-                name="D粉末",
-                inputs={"D原矿": 1},
-                outputs={"D粉末": 3}
+                name="冰晶砂粉末",
+                inputs={"冰晶砂原矿": 1},
+                outputs={"冰晶砂粉末": 3}
             ),
             Recipe(
-                name="B粉末",
-                inputs={"精炼B": 1},
-                outputs={"B粉末": 1}
+                name="灼烧岩粉末",
+                inputs={"精炼灼烧岩": 1},
+                outputs={"灼烧岩粉末": 1}
             ),
             Recipe(
-                name="C粉末",
-                inputs={"精炼C": 1},
-                outputs={"C粉末": 1}
+                name="长流石粉末",
+                inputs={"精炼长流石": 1},
+                outputs={"长流石粉末": 1}
             )
         ]
 
@@ -296,23 +296,23 @@ class Grinder(Machine):
         self.machine_type = "研磨机"
         self.recipes = [
             Recipe(
-                name="研磨A粉末",
+                name="研磨凡晶石粉末",
                 inputs={
-                    "A粉末": 2,
-                    "D粉末": 1
+                    "凡晶石粉末": 2,
+                    "冰晶砂粉末": 1
                 },
                 outputs={
-                    "研磨A粉末": 1
+                    "研磨凡晶石粉末": 1
                 }
             ),
             Recipe(
-                name="研磨B粉末",
+                name="研磨灼烧岩粉末",
                 inputs={
-                    "B粉末": 2,
-                    "D粉末": 1
+                    "灼烧岩粉末": 2,
+                    "冰晶砂粉末": 1
                 },
                 outputs={
-                    "研磨B粉末": 1
+                    "研磨灼烧岩粉末": 1
                 }
             ),
         ]
@@ -325,8 +325,8 @@ class EquipmentMachine(Machine):
             Recipe(
                 name="终焉结原件I",
                 inputs={
-                    "精炼A": 1,
-                    "精炼B": 1,
+                    "精炼凡晶石": 1,
+                    "精炼灼烧岩": 1,
                 },
                 outputs={
                     "终焉结原件I": 0.2
@@ -335,8 +335,8 @@ class EquipmentMachine(Machine):
             Recipe(
                 name="终焉结原件II",
                 inputs={
-                    "精炼A": 2,
-                    "精炼C": 2,
+                    "精炼凡晶石": 2,
+                    "精炼长流石": 2,
                 },
                 outputs={
                     "终焉结原件II": 0.2
@@ -345,8 +345,8 @@ class EquipmentMachine(Machine):
             Recipe(
                 name="终焉结原件III",
                 inputs={
-                    "二次烧结A": 2,
-                    "烧结B": 2,
+                    "二次烧结凡晶石": 2,
+                    "烧结灼烧岩": 2,
                 },
                 outputs={
                     "终焉结原件III": 0.2
@@ -361,31 +361,31 @@ class MiningMachine(Machine):
         self.machine_type = "矿机"
         self.recipes = [
             Recipe(
-                name="A原矿",
+                name="凡晶石原矿",
                 inputs={},
                 outputs={
-                    "A原矿": 1
+                    "凡晶石原矿": 1
                 }
             ),
             Recipe(
-                name="B原矿",
+                name="灼烧岩原矿",
                 inputs={},
                 outputs={
-                    "B原矿": 1
+                    "灼烧岩原矿": 1
                 }
             ),
             Recipe(
-                name="C原矿",
+                name="长流石原矿",
                 inputs={},
                 outputs={
-                    "C原矿": 1
+                    "长流石原矿": 1
                 }
             ),
             Recipe(
-                name="D原矿",
+                name="冰晶砂原矿",
                 inputs={},
                 outputs={
-                    "D原矿": 1
+                    "冰晶砂原矿": 1
                 }
             )
         ]
@@ -537,6 +537,15 @@ class IndustryManager:
         while 1:
             print("\n\n")
             self.print_all_info()
+            Tree(
+                "行星际工业指令集",
+                "新建 矿机|精炼炉|粉碎机|研磨机|设备原件机",
+                "删除 x",
+                "连接 x y",
+                "延接 精炼炉|粉碎机|研磨机|设备原件机 从 x"
+                "调整 x",
+                "退出"
+            )
             do_what = input_plus("请输入操作>>>")
             args = self.__extract_number(do_what)
             if "删除" in do_what:
