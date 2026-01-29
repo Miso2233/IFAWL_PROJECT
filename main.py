@@ -21,6 +21,7 @@ from modules.Module12_infinity_card_manager import CardManager
 from modules.Module13_plot_manager import plot_manager
 from core.Module14_communication import Server, Client
 from modules.Module15_ocp_manager import OcpManager
+from modules.Module16_industry_manager import industry_manager
 
 __VERSION__ = "IFAWL 1.3.0 'UNITED IN DEATH'"
 
