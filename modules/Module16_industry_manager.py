@@ -421,6 +421,85 @@ class MiningMachine(Machine):
         info.append(f"=========================")
         return info
 
+class Collector(Machine):
+
+    def __init__(self, index):
+        super().__init__(index)
+        self.machine_type = "收集口"
+        self.recipes = []
+
+    def calculate_effectiveness(self) -> float:
+        return 1.0
+
+    def generate_info(self) -> list[str]:
+        info = [
+            f"=========================",
+            f"{self.machine_type}#{self.id}"
+        ]
+        # 当前输入
+        if self.input_machines:
+            info.append("当前输入从: [")
+            for machine in self.input_machines:
+                info.append(f"  {machine.machine_type}#{machine.id},")
+            info.append("]")
+        else:
+            info.append("当前输入从: [无]")
+        if self.input_machines:
+            input_dict = {}
+            for machine in self.input_machines: # 累加各输入机器
+                effectiveness = machine.current_effectiveness
+                if not machine.current_recipe:
+                    continue
+                for item, amount in machine.current_recipe.outputs.items():
+                    if item in input_dict:
+                        input_dict[item] += amount * effectiveness
+                    else:
+                        input_dict[item] = amount * effectiveness
+            info.append("当前输入: {")
+            for k, v in input_dict.items():
+                info.append(f"  {k}: {v},")
+            info.append("}")
+        else:
+            info.append("当前输入: [无]")
+        # 当前输出
+        info.append("当前输出到>[仓库]")
+        # 当前工作效率
+        info.append(f"当前工作效率{self.current_effectiveness}")
+        info.append(f"=========================")
+        return info
+
+class Provider(Machine):
+
+    def __init__(self, index):
+        super().__init__(index)
+        self.machine_type = "供货口"
+        self.recipes = [
+            Recipe(item, {}, {item: 1}) for item in ALL_MATERIALS
+        ]
+
+    def calculate_effectiveness(self) -> float:
+        return 1.0
+
+    def calculate_depth(self) -> int:
+        return 0
+
+    def generate_info(self) -> list[str]:
+        # 当前配方
+        info = [
+            f"=========================",
+            f"{self.machine_type}#{self.id}",
+            f"当前取出: {self.current_recipe.name if self.current_recipe else '无'}"
+        ]
+        # 当前输出
+        if self.output_machines:
+            info.append(f"当前输出到>{self.output_machines[0].machine_type}#{self.output_machines[0].id}")
+        else:
+            info.append("当前输出到>[无]")
+        # 当前工作效率
+        info.append(f"当前工作效率{self.current_effectiveness}")
+        info.append(f"=========================")
+        return info
+
 class IndustryManager:
 
     def __init__(self):
@@ -456,12 +535,14 @@ class IndustryManager:
                 new_machine = EquipmentMachine(str(new_index))
             case "矿机":
                 new_machine = MiningMachine(str(new_index))
+            case "收集口":
+                new_machine = Collector(str(new_index))
+            case "供货口":
+                new_machine = Provider(str(new_index))
             case _:
                 raise ValueError(f"Unknown machine type: {machine_type}")
         self.all_machines[new_machine.id] = new_machine
         return new_machine
-
-
 
     def delete_machine(self, index):
         if index not in self.all_machines:
@@ -494,6 +575,12 @@ class IndustryManager:
         """
         from_machine = self.all_machines[from_index]
         to_machine = self.all_machines[to_index]
+        if to_machine.machine_type == "供货口":
+            print_plus(f"连接机器时错误-供货口不能作为终点")
+            return
+        if from_machine.machine_type == "收集口":
+            print_plus(f"连接机器时错误-收集口不能作为起点")
+            return
         if to_machine in from_machine.output_machines:
             print_plus(f"连接机器时错误-重复操作-{from_machine.machine_type}#{from_index}已经正在输出到{to_machine.machine_type}#{to_index}")
             return
@@ -544,10 +631,10 @@ class IndustryManager:
             self.print_all_info()
             Tree(
                 "行星际工业指令集",
-                "新建 矿机|精炼炉|粉碎机|研磨机|设备原件机",
+                "新建 矿机|精炼炉|粉碎机|研磨机|设备原件机|收集口|供货口",
                 "删除 x",
                 "连接 x y",
-                "延接 精炼炉|粉碎机|研磨机|设备原件机 从 x",
+                "延接 精炼炉|粉碎机|研磨机|设备原件机|收集口 从 x",
                 "调整 x",
                 "退出"
             ).print_self()
