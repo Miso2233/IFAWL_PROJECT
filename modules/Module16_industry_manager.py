@@ -615,6 +615,8 @@ class IndustryManager:
                 if columns[i]:
                     columns[i].insert(0,f"第 {current_depth+i} 层机器")
             n_column_print(columns,30)
+        print(f"总需求>>>{self.calculate_input()}")
+        print(f"总产出>>>{self.calculate_output()}")
 
     @staticmethod
     def __extract_number(txt:str) -> list[str]:
@@ -723,6 +725,45 @@ class IndustryManager:
                 except IndexError:
                     print_plus(f"参数错误-不存在这一编号的配方")
                     continue
+
+    def calculate_input(self) -> dict[str,int]:
+        """
+        计算整条生产线运行一周期的所需输入
+        :return: 一个字典，键为物品，值为数量
+        """
+        out = {}
+        active_providers = [
+            machine for machine in self.all_machines.values()
+            if machine.machine_type == "供货口" and machine.current_recipe
+        ]
+        for provider in active_providers:
+            for item, num in provider.current_recipe.outputs.items():
+                if item in out:
+                    out[item] += num
+                else:
+                    out[item] = num
+        return out
+
+    def calculate_output(self):
+        """
+        计算整条生产线运行一周期的生产输出
+        :return: 一个字典，键为物品，值为数量
+        """
+        out = {}
+        active_collectors = [
+            machine for machine in self.all_machines.values()
+            if machine.machine_type == "收集口"
+        ]
+        for collector in active_collectors:
+            for input_machine in collector.input_machines:
+                if not input_machine.current_recipe:
+                    continue
+                for item, num in input_machine.current_recipe.outputs.items():
+                    if item in out:
+                        out[item] += num
+                    else:
+                        out[item] = num
+        return out
 
 industry_manager = IndustryManager()
 
