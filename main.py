@@ -2784,14 +2784,15 @@ class Al43(Al_general): # 守岸人
             self.ship.heal(1)
             return
         if self.state[ASI.WORKING] == 0:
+            self.ship.heal(2)
             self.state[ASI.LOGGING] = self.QE_NEEDING
-            self.state[ASI.WORKING] = 3
+            self.state[ASI.WORKING] = 5
             self.report("启动")
         else:
             self.state[ASI.LOGGING] = self.ORIGIN
             self.state[ASI.COOLING] = -3
             self.state[ASI.WORKING] = 0
-            self.ship.attack(3, DamageType.ORDINARY_ATTACK)
+            self.ship.attack(2, DamageType.ORDINARY_ATTACK)
             self.report("爆发")
 
     def adjust_operation(self, raw: str) -> str:
@@ -2808,7 +2809,7 @@ class Al43(Al_general): # 守岸人
         if raw not in requirement:
             return raw
         self.report("下一阶段")
-        self.state[ASI.WORKING] = 3
+        self.state[ASI.WORKING] = 5
         match raw:
             case "q":
                 self.state[ASI.LOGGING] = self.E_NEEDING
@@ -2831,7 +2832,7 @@ class Al43(Al_general): # 守岸人
                 self.state[ASI.COOLING] = -3
 
     def add_hp(self, hp: int):
-        if self.state[ASI.LOGGING] != self.ORIGIN:
+        if self.state[ASI.LOGGING] != self.ORIGIN and self.state[ASI.COOLING] == 0:
             self.report("回盾加成")
             return hp + 1
         return hp
