@@ -38,7 +38,7 @@ class Recipe:
         self.inputs = inputs
         self.outputs = outputs
 
-class Machine: # TODO 自动推导配方
+class Machine:
 
     def __init__(self, index):
         self.machine_type = ""
@@ -169,11 +169,14 @@ class Machine: # TODO 自动推导配方
         return info
 
     def show_recipe(self):
+        print()
         print(f"{self.machine_type}#{self.id}的配方>>")
+        print()
         for recipe_index in range(len(self.recipes)):
             print(f"[{recipe_index}]>>>{self.recipes[recipe_index].name}")
             print(f"  输入: {self.recipes[recipe_index].inputs}")
             print(f"  输出: {self.recipes[recipe_index].outputs}")
+            print()
 
 
 
@@ -615,8 +618,11 @@ class IndustryManager:
                 if columns[i]:
                     columns[i].insert(0,f"第 {current_depth+i} 层机器")
             n_column_print(columns,30)
-        print(f"总需求>>>{self.calculate_input()}")
-        print(f"总产出>>>{self.calculate_output()}")
+        input_dict = self.calculate_input()
+        output_dict = self.calculate_output()
+        self.remove_duplicates_in(input_dict,output_dict)
+        print(f"总需求>>>{input_dict}")
+        print(f"总产出>>>{output_dict}")
 
     @staticmethod
     def __extract_number(txt:str) -> list[str]:
@@ -646,6 +652,7 @@ class IndustryManager:
                 for arg in args:
                     self.delete_machine(arg)
                     continue
+                continue
             if "连接" in do_what:
                 if len(args) != 2:
                     print_plus(f"参数错误-连接命令需2个参数-收到{len(args)}个")
@@ -664,7 +671,17 @@ class IndustryManager:
                     continue
                 for machine_type_cn in new_types_cn:
                     try:
-                        self.create_new_machine(machine_type_cn)
+                        new_machine = self.create_new_machine(machine_type_cn)
+                        # 如果创建的是矿机或供货口，立即执行"调整"操作让用户选择配方
+                        if new_machine and machine_type_cn in ["矿机", "供货口"]:
+                            new_machine.show_recipe()
+                            try:
+                                recipe_index = int(input_plus("请输入要调整到的新配方编号|[-1]置空配方"))
+                                new_machine.set_recipe(recipe_index)
+                            except ValueError:
+                                print_plus("参数错误-配方编号应为整数")
+                            except IndexError:
+                                print_plus(f"参数错误-不存在这一编号的配方")
                     except ValueError:
                         print_plus(f"机器类型 {machine_type_cn} 不存在")
                 continue
@@ -764,6 +781,26 @@ class IndustryManager:
                     else:
                         out[item] = num
         return out
+
+    @staticmethod
+    def remove_duplicates_in(input_dict: dict[str,int], output_dict: dict[str,int]) -> None:
+        """
+        就地清除输入输出字典中的重复项
+        :param input_dict: 输入字典
+        :param output_dict: 输出字典
+        :return: 无
+        """
+        for item in list(input_dict.keys()):
+            if item in output_dict:
+                if input_dict[item] == output_dict[item]:
+                    input_dict.pop(item)
+                    output_dict.pop(item)
+                elif input_dict[item] > output_dict[item]:
+                    input_dict[item] -= output_dict[item]
+                    output_dict.pop(item)
+                else:
+                    output_dict[item] -= input_dict[item]
+                    input_dict.pop(item)
 
 industry_manager = IndustryManager()
 
