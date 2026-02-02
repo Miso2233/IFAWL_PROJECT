@@ -21,15 +21,9 @@ from modules.Module12_infinity_card_manager import CardManager
 from modules.Module13_plot_manager import plot_manager
 from core.Module14_communication import Server, Client
 from modules.Module15_ocp_manager import OcpManager
-from modules.Module16_industry_manager import industry_manager
+from modules.Module16_industry_manager import IndustryManager
 
 __VERSION__ = "IFAWL 1.3.0 'UNITED IN DEATH'"
-
-
-
-# 枚举类已移至 core.Module0_enums 模块
-
-
 
 class MyShip:
 
@@ -3246,7 +3240,8 @@ class MainLoops:
             return 1
         return 0
 
-    def is_near_death(self, ship:MyShip) -> bool:
+    @staticmethod
+    def is_near_death(ship:MyShip) -> bool:
         if ship.shelter < 0:
             return True
         if entry_manager.get_rank_of("5") != 0 and ship.get_equivalent_shelter_of_ship() <= 0:
@@ -4093,6 +4088,7 @@ contract_manager = ContractManager(storage_manager, list(al_manager.all_al_list.
 infinity_card_manager = CardManager(my_ship,enemy,entry_manager,al_manager)
 plot_manager.set_storage_manager(storage_manager)
 ocp_manager = OcpManager(my_ship, enemy, another_ship, main_loops)
+industry_manager = IndustryManager(storage_manager)
 
 def hello():
     sounds_manager.switch_to_bgm("login")

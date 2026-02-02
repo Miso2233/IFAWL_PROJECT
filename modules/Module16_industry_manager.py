@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
-from xxsubtype import bench
+from typing import Any
 
 from core.Module1_txt import print_plus, n_column_print, input_plus, Tree
 
 import random
-import time
 
 # 所有产物和原材料字典
 ALL_MATERIALS = {
@@ -505,8 +503,9 @@ class Provider(Machine):
 
 class IndustryManager:
 
-    def __init__(self):
+    def __init__(self, storage_manager):
         self.all_machines:dict[str,Machine] = {}
+        self.storage_manager = storage_manager
 
     def clear_all_machines(self):
         """
@@ -634,6 +633,7 @@ class IndustryManager:
         return numbers
 
     def mainloop(self):
+        self.load()
         while 1:
             print("\n\n")
             self.print_all_info()
@@ -663,6 +663,8 @@ class IndustryManager:
                     print_plus(f"参数错误-机器{e}不存在")
                 continue
             if "退出" in do_what:
+                self.save()
+                print_plus("产线已保存")
                 break
             if "新建" in do_what:
                 new_types_cn = do_what.split(" ")[1:]
@@ -802,7 +804,111 @@ class IndustryManager:
                     output_dict[item] -= input_dict[item]
                     input_dict.pop(item)
 
-industry_manager = IndustryManager()
+    @staticmethod
+    def convert_machine_to_dict(machine: Machine) -> dict[str,Any]:
+        """
+        将机器对象转换为字典表示
+        :param machine: 机器对象
+        :return: 包含机器所有属性的字典
+        """
+        machine_dict = {
+            "machine_type": machine.machine_type,
+            "id": machine.id,
+            "current_recipe_index": -1 if machine.current_recipe is None else machine.recipes.index(machine.current_recipe),
+            "input_machines": [m.id for m in machine.input_machines],
+            "output_machines": [m.id for m in machine.output_machines],
+            "current_effectiveness": machine.current_effectiveness,
+            "depth": machine.depth
+        }
+        return machine_dict
+
+    @staticmethod
+    def convert_dict_to_machine(machine_dict: dict[str,Any]) -> Machine:
+        """
+        将字典转换回机器对象
+        :param machine_dict: 包含机器属性的字典
+        :return: 机器对象
+        """
+        machine_type = machine_dict["machine_type"]
+        machine_id = machine_dict["id"]
+        
+        # 根据机器类型创建相应的机器实例
+        match machine_type:
+            case "精炼炉":
+                machine = Furnace(machine_id)
+            case "粉碎机":
+                machine = Crusher(machine_id)
+            case "研磨机":
+                machine = Grinder(machine_id)
+            case "设备原件机":
+                machine = EquipmentMachine(machine_id)
+            case "矿机":
+                machine = MiningMachine(machine_id)
+            case "收集口":
+                machine = Collector(machine_id)
+            case "供货口":
+                machine = Provider(machine_id)
+            case _:
+                raise ValueError(f"Unknown machine type: {machine_type}")
+        
+        # 设置当前配方
+        current_recipe_index = machine_dict["current_recipe_index"]
+        if current_recipe_index >= 0:
+            machine.set_recipe(current_recipe_index)
+        
+        # 设置其他属性
+        machine.current_effectiveness = machine_dict["current_effectiveness"]
+        machine.depth = machine_dict["depth"]
+        
+        # 注意：input_machines和output_machines需要在所有机器创建后单独设置
+        # 这里只存储机器ID，实际的连接关系需要在所有机器创建后建立
+        return machine
+
+    def save(self):
+        """
+        将所有机器对象保存到硬盘中
+        :return: 无
+        """
+        # 将所有机器对象转换为字典列表
+        machines_dict = {}
+        for machine_id, machine in self.all_machines.items():
+            machines_dict[machine_id] = self.convert_machine_to_dict(machine)
+        
+        # 保存到存储管理器
+        self.storage_manager.set_value_of("industry", machines_dict)
+
+    def load(self):
+        """
+        从硬盘中加载所有机器对象并恢复整条产线的组织关系
+        :return: 无
+        """
+        # 从存储管理器加载机器字典
+        machines_dict = self.storage_manager.get_value_of("industry")
+        
+        if not machines_dict:
+            self.all_machines = {}
+            return
+        
+        # 第一步：创建所有机器对象
+        self.all_machines = {}
+        for machine_id, machine_dict in machines_dict.items():
+            self.all_machines[machine_id] = self.convert_dict_to_machine(machine_dict)
+        
+        # 第二步：恢复机器之间的连接关系
+        for machine_id, machine_dict in machines_dict.items():
+            machine = self.all_machines[machine_id]
+            
+            # 恢复输入机器连接
+            for input_id in machine_dict["input_machines"]:
+                if input_id in self.all_machines:
+                    input_machine = self.all_machines[input_id]
+                    machine.input_machines.append(input_machine)
+            
+            # 恢复输出机器连接
+            for output_id in machine_dict["output_machines"]:
+                if output_id in self.all_machines:
+                    output_machine = self.all_machines[output_id]
+                    machine.output_machines.append(output_machine)
 
 if __name__ == "__main__":
-    industry_manager.mainloop()
+    pass
