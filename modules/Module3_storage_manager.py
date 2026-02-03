@@ -160,6 +160,7 @@ class StorageManager:
         """
         key: str = self.item_to_key_table[item]
         self.repository_for_all_users[self.username][key][item] = val
+        self.sync()
     
     def transaction(self,give_list:dict[str,int],get_list:dict[str,int]):
         """
@@ -172,7 +173,6 @@ class StorageManager:
             self.modify(item,-give_list[item])
         for item in get_list:
             self.modify(item,get_list[item])
-        self.sync()
     
     def print_storage(self):
         al_list = {}
@@ -200,11 +200,9 @@ class StorageManager:
 
     def set_tracing_al(self,al_index:str):
         self.set_value_of("tracing_al", al_index)
-        self.sync()
 
     def clear_tracing_al(self):
         self.set_value_of("tracing_al", "")
-        self.sync()
 
     def get_the_gap(self) -> dict[str,int]:
         """
