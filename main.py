@@ -2228,11 +2228,11 @@ class Al34(Al_general):  # 风间浦
         if not self.is_on_one_ship():
             return hp
         if self.state[ASI.WORKING] == 0 and self.state[ASI.COOLING] == 0:
-            if dice.probability(0.7) or self.ship.shelter == 0:
+            if dice.probability(0.5) or self.ship.shelter == 0:
                 self.report("保守模式治疗加成")
                 return hp + 1
         if self.state[ASI.COOLING] < 0:
-            if dice.probability(0.5) or self.ship.shelter == 0:
+            if dice.probability(0.3) or self.ship.shelter == 0:
                 self.report("保守模式治疗加成")
                 return hp + 1
         return hp
@@ -2300,7 +2300,8 @@ class Al35(Al_general):  # 青鹄
                 "e": ["", ""]}
 
     def react(self):
-        main_loops.days -= 1
+        if main_loops.days > 1:
+            main_loops.days -= 1
         if self.state[ASI.LOGGING] < 4:
             self.state[ASI.LOGGING] += 2
             self.report("充能")
@@ -2347,13 +2348,14 @@ class Al35(Al_general):  # 青鹄
             al_temp: Al_general = self.ship.al_list[d]
             if al_temp:
                 if al_temp.state[ASI.COOLING] < 0:
+                    self.state[ASI.LOGGING] = al_temp.state[ASI.COOLING]
                     al_temp.initialize()
                     self.report_plus(inp, 1)
                     Txt.print_plus(f"[{al_temp.type}] {al_temp.short_name}#{al_temp.index}冷却已重置")
                 else:
                     self.report_plus(inp, 0)
                     al_temp.react()
-            if self.state[ASI.LOGGING] != 0:
+            if self.state[ASI.LOGGING] > 0:
                 self.state[ASI.LOGGING] -= 4
 
     def report_plus(self, selected_type, num):
@@ -2803,11 +2805,11 @@ class Al43(Al_general): # 守岸人
         if self.state[ASI.WORKING] == 0:
             self.ship.heal(2)
             self.state[ASI.LOGGING] = self.QE_NEEDING
-            self.state[ASI.WORKING] = 5
+            self.state[ASI.WORKING] = 4
             self.report("启动")
         else:
             self.state[ASI.LOGGING] = self.ORIGIN
-            self.state[ASI.COOLING] = -3
+            self.state[ASI.COOLING] = -4
             self.state[ASI.WORKING] = 0
             self.ship.attack(2, DamageType.ORDINARY_ATTACK)
             self.report("爆发")
@@ -2826,7 +2828,7 @@ class Al43(Al_general): # 守岸人
         if raw not in requirement:
             return raw
         self.report("下一阶段")
-        self.state[ASI.WORKING] = 5
+        self.state[ASI.WORKING] = 4
         match raw:
             case "q":
                 self.state[ASI.LOGGING] = self.E_NEEDING
@@ -2846,7 +2848,7 @@ class Al43(Al_general): # 守岸人
             if self.state[ASI.WORKING] == 0:
                 self.report("结束")
                 self.state[ASI.LOGGING] = self.ORIGIN
-                self.state[ASI.COOLING] = -3
+                self.state[ASI.COOLING] = -4
 
     def add_hp(self, hp: int):
         if self.state[ASI.LOGGING] != self.ORIGIN and self.state[ASI.COOLING] == 0:
