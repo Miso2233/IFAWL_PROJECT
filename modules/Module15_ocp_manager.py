@@ -184,7 +184,7 @@ class Ocp5(OcpGeneral):
         if self.state[OSI.DAYS_COUNTER] <= 0:
             return
         self.print_plot()
-        self.my_ship.attack(1,DamageType.ORDINARY_ATTACK)
+        self.my_ship.attack(1,DamageType.Mudslide_Impact)
         self.enemy_ship.attack(1)
         self.state[OSI.DAYS_COUNTER] -= 1
         if self.state[OSI.DAYS_COUNTER] == 0:

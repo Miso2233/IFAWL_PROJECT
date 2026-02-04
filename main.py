@@ -1239,7 +1239,7 @@ class Al12(Al_general):  # 晴空
         self.atk_list: list[int] = [0, 0, 1, 2, 4, 5, 7, 8]
 
     def adjust_operation(self, raw: str) -> str:
-        if self.state[ASI.BUILDING] != 0 and raw != "q" and not (al16.is_on_one_ship() and raw in ["w", "2"]):
+        if self.state[ASI.BUILDING] != 0 and raw not in ["q","f"] and not (al16.is_on_one_ship() and raw in ["w", "2"]):
             self.attack()
         return raw
 
@@ -1459,15 +1459,15 @@ class Al17(Al_general):  # 白夜
 
     def react(self):
         if self.ship.missile == 0:
-            self.ship.missile += 1
+            self.ship.load(1)
             self.report("无导弹")
         elif self.ship.shelter <= 0:
             self.ship.heal(1)
             self.report("护盾不足")
         else:
+            self.ship.load(-1)
             enemy.attack(1,self.ship)
             self.ship.attack(2, DamageType.MISSILE_LAUNCH)
-            self.ship.missile -= 1
             self.report("攻击成功")
 
     def suggest(self):
@@ -1584,6 +1584,8 @@ class Al21(Al_general):  # 诗岸
             self.report("无屏障")
             self.report("充注")
 
+    def get_random_voice(self):
+        return random.choice(voices.voices[self.short_name]["生长向死亡"])
     def react_for_ocp1(self):
         self.state[ASI.LOGGING] += 2
         self.report("生长向死亡")
@@ -1852,9 +1854,11 @@ class Al27(Al_general):  # 瞳猫
 
     def add_atk(self, atk, dmg_type):
         """
-        瞳猫只是一只小猫，他不会对你的攻击造成加成
+        瞳猫只是一只小猫，他不会对你的攻击造成加成(并非)
         只是我需要写在这里方便在atk时调用罢了
         """
+        if dmg_type == DamageType.Mudslide_Impact:
+            return atk
         if self.is_on_one_ship() and self.state[ASI.BUILDING] > 0:
             self.state[ASI.BUILDING] = 0
             self.report("层数清空")
@@ -2735,7 +2739,7 @@ class Al42(Al_general): # 百里香
 #            self.state += 1
 #            self.report("启动")
 #        return raw
-        if self.state[ASI.BUILDING] != 0 and raw != "q":
+        if self.state[ASI.BUILDING] != 0 and raw not in ["q","f"]:
             self.state[ASI.WORKING] = self.state[ASI.BUILDING]
             self.state[ASI.BUILDING] = 0
             self.report("启动")
@@ -3133,7 +3137,7 @@ class FieldPrinter:
             return
         print(key_prompt)
 
-    def print_ending_pic(self,ship_calling:MyShip,shipname:str,username:str,mode:str):
+    def print_ending_pic(self,ship_calling:MyShip,shipname:str,username:str,mode:str = "p"):
         #shipname = storage_manager.get_value_of("ship_name")
         #username = storage_manager.username
         left = ["-" * 70, "|"]
@@ -3538,7 +3542,7 @@ class MainLoops:
             print()
             damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
             sounds_manager.switch_to_bgm("win")
-            field_printer.print_ending_pic(my_ship,storage_manager.get_value_of("ship_name"),storage_manager.username,"p")
+            field_printer.print_ending_pic(my_ship,storage_manager.get_value_of("ship_name"),storage_manager.username)
             entry_manager.print_chosen_as_tree()
             input_plus("[enter]继续")
             times = (entry_manager.count_total_points() // 100)
