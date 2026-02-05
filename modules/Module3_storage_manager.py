@@ -58,11 +58,11 @@ class StorageManager:
                     self.template[key][item] = self.repository_for_all_users[self.username][key][item]
         else:
             Txt.print_plus("初次登录|欢迎指挥官")
+            self.template = self.template_empty
         self.repository_for_all_users[self.username] = self.template
         # hello
         Txt.print_plus(f"指挥官代号识别成功·{self.get_value_of('ship_name')}号护卫舰正在启动·欢迎来到浅草寺")
         # 更新统计字段
-        self.update_statistical_data()
         self.sync()
     
     def logout(self):
@@ -160,6 +160,7 @@ class StorageManager:
         """
         key: str = self.item_to_key_table[item]
         self.repository_for_all_users[self.username][key][item] = val
+        self.sync()
     
     def transaction(self,give_list:dict[str,int],get_list:dict[str,int]):
         """
