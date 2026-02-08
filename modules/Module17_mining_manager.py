@@ -3,6 +3,7 @@ import random
 
 from core.Module1_txt import print_plus
 from core.Module2_json_loader import json_loader
+from modules.Module3_storage_manager import storage_manager
 
 
 class Mining:
