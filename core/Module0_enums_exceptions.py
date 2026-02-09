@@ -9,6 +9,7 @@ class DamageType:
     MISSILE_LAUNCH = "missile_launch"  # 导弹射击
     PARTICLE_CANNON_SHOOTING = "particle_cannon_shooting"  # 粒子炮射击
     ENEMY_MISSILE_BOOM = "enemy_missile_boom"  # 敌方导弹殉爆
+    Mudslide_Impact = "mudslide_impact"  # 泥石流冲击
     ORDINARY_ATTACK = "ordinary_attack"  # 杂项攻击
 
 

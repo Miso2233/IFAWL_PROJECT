@@ -746,6 +746,13 @@ class Al_general:
             return
         voices.report(self.short_name, theme)
 
+    def get_random_voice(self):
+        """
+        随机拿一条帅气的语音出来（存疑）
+        :return: 随机语音
+        """
+        return random.choice(voices.voices[self.short_name][random.choice(list(voices.voices[self.short_name].keys()))])
+
     def inject_and_report(self, theme: str, data_injected: dict[str, str | int]):
         """
         Al所包装的注入数据说话函数，省去了说话者名字
@@ -1232,7 +1239,7 @@ class Al12(Al_general):  # 晴空
         self.atk_list: list[int] = [0, 0, 1, 2, 4, 5, 7, 8]
 
     def adjust_operation(self, raw: str) -> str:
-        if self.state[ASI.BUILDING] != 0 and raw != "q" and not (al16.is_on_one_ship() and raw in ["w", "2"]):
+        if self.state[ASI.BUILDING] != 0 and raw not in ["q","f"] and not (al16.is_on_one_ship() and raw in ["w", "2"]):
             self.attack()
         return raw
 
@@ -1452,15 +1459,15 @@ class Al17(Al_general):  # 白夜
 
     def react(self):
         if self.ship.missile == 0:
-            self.ship.missile += 1
+            self.ship.load(1)
             self.report("无导弹")
         elif self.ship.shelter <= 0:
             self.ship.heal(1)
             self.report("护盾不足")
         else:
+            self.ship.load(-1)
             enemy.attack(1,self.ship)
             self.ship.attack(2, DamageType.MISSILE_LAUNCH)
-            self.ship.missile -= 1
             self.report("攻击成功")
 
     def suggest(self):
@@ -1577,6 +1584,8 @@ class Al21(Al_general):  # 诗岸
             self.report("无屏障")
             self.report("充注")
 
+    def get_random_voice(self):
+        return random.choice(voices.voices[self.short_name]["生长向死亡"])
     def react_for_ocp1(self):
         self.state[ASI.LOGGING] += 2
         self.report("生长向死亡")
@@ -1759,6 +1768,12 @@ class Al25(Al_general):  # 阿贾克斯
         elif self.is_on_one_ship():
             print(self.skin_list[self.state[ASI.WORKING]])
 
+    def generate_line_list(self) -> list[str]:
+        if self.state[ASI.COOLING] < 0:
+            return [self.skin_list[4]]
+        elif self.is_on_one_ship():
+            return [self.skin_list[self.state[ASI.WORKING]]]
+
     def suggest(self):
         if self.state[ASI.COOLING] < 0:
             return f"[冷却中]剩余{-self.state[ASI.COOLING]}天"
@@ -1839,9 +1854,11 @@ class Al27(Al_general):  # 瞳猫
 
     def add_atk(self, atk, dmg_type):
         """
-        瞳猫只是一只小猫，他不会对你的攻击造成加成
+        瞳猫只是一只小猫，他不会对你的攻击造成加成(并非)
         只是我需要写在这里方便在atk时调用罢了
         """
+        if dmg_type == DamageType.Mudslide_Impact:
+            return atk
         if self.is_on_one_ship() and self.state[ASI.BUILDING] > 0:
             self.state[ASI.BUILDING] = 0
             self.report("层数清空")
@@ -2211,11 +2228,11 @@ class Al34(Al_general):  # 风间浦
         if not self.is_on_one_ship():
             return hp
         if self.state[ASI.WORKING] == 0 and self.state[ASI.COOLING] == 0:
-            if dice.probability(0.7) or self.ship.shelter == 0:
+            if dice.probability(0.5) or self.ship.shelter == 0:
                 self.report("保守模式治疗加成")
                 return hp + 1
         if self.state[ASI.COOLING] < 0:
-            if dice.probability(0.5) or self.ship.shelter == 0:
+            if dice.probability(0.3) or self.ship.shelter == 0:
                 self.report("保守模式治疗加成")
                 return hp + 1
         return hp
@@ -2283,7 +2300,8 @@ class Al35(Al_general):  # 青鹄
                 "e": ["", ""]}
 
     def react(self):
-        main_loops.days -= 1
+        if main_loops.days > 1:
+            main_loops.days -= 1
         if self.state[ASI.LOGGING] < 4:
             self.state[ASI.LOGGING] += 2
             self.report("充能")
@@ -2330,13 +2348,14 @@ class Al35(Al_general):  # 青鹄
             al_temp: Al_general = self.ship.al_list[d]
             if al_temp:
                 if al_temp.state[ASI.COOLING] < 0:
+                    self.state[ASI.LOGGING] = al_temp.state[ASI.COOLING]
                     al_temp.initialize()
                     self.report_plus(inp, 1)
                     Txt.print_plus(f"[{al_temp.type}] {al_temp.short_name}#{al_temp.index}冷却已重置")
                 else:
                     self.report_plus(inp, 0)
                     al_temp.react()
-            if self.state[ASI.LOGGING] != 0:
+            if self.state[ASI.LOGGING] > 0:
                 self.state[ASI.LOGGING] -= 4
 
     def report_plus(self, selected_type, num):
@@ -2722,7 +2741,7 @@ class Al42(Al_general): # 百里香
 #            self.state += 1
 #            self.report("启动")
 #        return raw
-        if self.state[ASI.BUILDING] != 0 and raw != "q":
+        if self.state[ASI.BUILDING] != 0 and raw not in ["q","f"]:
             self.state[ASI.WORKING] = self.state[ASI.BUILDING]
             self.state[ASI.BUILDING] = 0
             self.report("启动")
@@ -2786,11 +2805,11 @@ class Al43(Al_general): # 守岸人
         if self.state[ASI.WORKING] == 0:
             self.ship.heal(2)
             self.state[ASI.LOGGING] = self.QE_NEEDING
-            self.state[ASI.WORKING] = 5
+            self.state[ASI.WORKING] = 4
             self.report("启动")
         else:
             self.state[ASI.LOGGING] = self.ORIGIN
-            self.state[ASI.COOLING] = -3
+            self.state[ASI.COOLING] = -4
             self.state[ASI.WORKING] = 0
             self.ship.attack(2, DamageType.ORDINARY_ATTACK)
             self.report("爆发")
@@ -2809,7 +2828,7 @@ class Al43(Al_general): # 守岸人
         if raw not in requirement:
             return raw
         self.report("下一阶段")
-        self.state[ASI.WORKING] = 5
+        self.state[ASI.WORKING] = 4
         match raw:
             case "q":
                 self.state[ASI.LOGGING] = self.E_NEEDING
@@ -2829,7 +2848,7 @@ class Al43(Al_general): # 守岸人
             if self.state[ASI.WORKING] == 0:
                 self.report("结束")
                 self.state[ASI.LOGGING] = self.ORIGIN
-                self.state[ASI.COOLING] = -3
+                self.state[ASI.COOLING] = -4
 
     def add_hp(self, hp: int):
         if self.state[ASI.LOGGING] != self.ORIGIN and self.state[ASI.COOLING] == 0:
@@ -3055,7 +3074,6 @@ class FieldPrinter:
         elif days > 20:
             Txt.print_plus("当前舰船位置>>敌方腹地危险区域")
         print()
-
     @staticmethod
     def generate_basic_info(days) -> str:
         """
@@ -3122,6 +3140,48 @@ class FieldPrinter:
             return
         print(key_prompt)
 
+    def print_ending_pic(self,ship_calling:MyShip,shipname:str,username:str,mode:str = "p"):
+        #shipname = storage_manager.get_value_of("ship_name")
+        #username = storage_manager.username
+        left = ["-" * 70, "|"]
+        for index in range(3):
+            al_temp = ship_calling.al_list[index]
+            text = "|" + "   "*index + "\\"
+            if al_temp:
+                text += f"""[{al_temp.type}] {al_temp.short_name}#{al_temp.index}|{al_temp.get_random_voice()}"""
+            else:
+                text += "[None]|"
+            left += [text,"|","|"]
+        left.append(f"|最终战况>>[{my_ship.shelter},{my_ship.missile},{enemy.shelter},{enemy.missile}] 使用天数>>{main_loops.days}")
+        left.append(f"|危机合约#3")
+        left.append(f"|战死之地  我们的身后，天灾的面前，即是浅草寺寂静的穹顶")
+        left.append("-" * 70)
+        right = []
+        p = max([17, Txt.get_shell_len(f"  {username}-{shipname}  ")])
+        right.append("-" * (p + 1))
+        right.append("            ".center(p, " ") + "|")
+        right.append(r"  |\        ".center(p, " ") + "|")
+        right.append(r"  |\        ".center(p, " ") + "|")
+        right.append(r"  |\========".center(p, " ") + "|")
+        right.append(("  |\\" + f"{entry_manager.count_total_points()}".center(4, " ") + r"\|  ").center(p, " ") + "|")
+        right.append(r"========\|  ".center(p, " ") + "|")
+        right.append(r"        \|  ".center(p, " ") + "|")
+        right.append(r"        \|  ".center(p, " ") + "|")
+        right.append("            ".center(p, " ") + "|")
+        right.append("            ".center(p, " ") + "|")
+        right.append(time.strftime("%m-%d %H:%M", time.localtime()).center(p, " ") + "|")
+        if p == 17:
+            right.append(f"  {username}-{shipname}  " + " " * (17 - Txt.get_shell_len(f"  {username}-{shipname}  ")) + "|")
+        else:
+            right.append(f"  {username}-{shipname}  " + "|")
+        right.append("   IFAWL   ".center(p, " ") + "|")
+        right.append("-" * (p + 1))
+        if mode == "p":
+            Txt.n_column_print([left, right], di_list=70)
+        #elif i == "2":
+            #sf = shelve.open("storage")
+            #sf[username + "pic"] = [left, right]
+            #sf.close()
 
 field_printer = FieldPrinter()
 
@@ -3485,6 +3545,9 @@ class MainLoops:
             print()
             damage_previewer.show_total_dmg(my_ship.shelter, enemy.shelter)
             sounds_manager.switch_to_bgm("win")
+            field_printer.print_ending_pic(my_ship,storage_manager.get_value_of("ship_name"),storage_manager.username)
+            entry_manager.print_chosen_as_tree()
+            input_plus("[enter]继续")
             times = (entry_manager.count_total_points() // 100)
             if times == 0:
                 times = 1
