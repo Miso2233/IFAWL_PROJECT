@@ -13,7 +13,7 @@ class Mining:
     EXTRA_PREFIX = ["流体", "致密", "固态", "折射", "光学", "熔融"]
     NAMES = ["凡晶石", "灼烧岩", "干焦岩", "长流石", "铱金"]
 
-    def __init__(self, index:str):
+    def __init__(self, index: str):
         # 设置产出量
         self.richness = random.randint(0, 2)
         self.output_quantity = random.randint(20 + self.richness * 40, 100 + self.richness * 40)
@@ -77,16 +77,17 @@ class Mining:
         else:  # 其它
             return [f"[已被开采]{basic_info}"]
 
-    def print_self(self,is_watched=False) -> None:
+    def print_self(self, is_watched=False) -> None:
         line_list = self.generate_line_list(is_watched)
         for line in line_list:
             print(line)
+
 
 class MiningManager:
 
     def __init__(self):
         self.all_mining = {
-            index:Mining(index) for index in [
+            index: Mining(index) for index in [
                 str(i) for i in range(MINING_AMOUNT)
             ]
         }
@@ -94,12 +95,11 @@ class MiningManager:
 
     def re_generate_all_mining(self):
         self.all_mining = {
-            index:Mining(index) for index in [
+            index: Mining(index) for index in [
                 str(i) for i in range(MINING_AMOUNT)
             ]
         }
 
     def print_all_mining(self):
         for index, mining in self.all_mining.items():
-            mining.print_self(index==self.current_watching)
-            
+            mining.print_self(index == self.current_watching)
