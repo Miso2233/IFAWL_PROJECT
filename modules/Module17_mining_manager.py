@@ -1,7 +1,7 @@
 from abc import abstractmethod, abstractproperty
 import random
 
-from core.Module1_txt import print_plus, Tree
+from core.Module1_txt import print_plus, Tree, input_plus
 from core.Module2_json_loader import json_loader
 from modules.Module3_storage_manager import storage_manager
 
@@ -52,7 +52,7 @@ class Mining:
         :param is_watched: 是否正在被注视
         :return: 行切片，与其他同名方法一致
         """
-        basic_info = f"[{self.index}]{self.name}({self.mining_distance}km)"
+        basic_info = f"[{self.index}]{self.title}({self.mining_distance}km)"
         if not self.is_exploited:  # 对于未被开采的小行星
             if is_watched:  # 临时锁定
                 return Tree(
@@ -63,19 +63,20 @@ class Mining:
                 ).generate_line_list()
 
             elif self.is_locked:  # 主锁定
-                return [f"+[主雷达已锁定]{basic_info}+"]
+                return [f"+[主雷达已锁定]{basic_info}+",""]
             else:  # 其它
-                return [f"{basic_info}"]
+                return [f"{basic_info}",""]
         # 对于已被开采的小行星
         if is_watched:  # 临时锁定
             out = [
                 f"-[临时锁定]{basic_info}-",
                 "|",
-                "|-[已被开采]"
+                "|-[已被开采]",
+                ""
             ]
             return out
         else:  # 其它
-            return [f"[已被开采]{basic_info}"]
+            return [f"[已被开采]{basic_info}",""]
 
     def print_self(self, is_watched=False) -> None:
         line_list = self.generate_line_list(is_watched)
@@ -103,3 +104,43 @@ class MiningManager:
     def print_all_mining(self):
         for index, mining in self.all_mining.items():
             mining.print_self(index == self.current_watching)
+
+    def mainloop(self):
+        while True:
+            self.print_all_mining()
+            command = input_plus("请输入操作")
+            match command:
+                case "q":
+                    if self.current_watching == "-1":
+                        for index, mining in self.all_mining.items():
+                            if mining.is_locked:
+                                result = mining.exploit_waiting()
+                                storage_manager.transaction({}, result)
+                    else:
+                        try:
+                            result = self.all_mining[self.current_watching].exploit_waiting()
+                        except KeyError:
+                            print_plus("未选择小行星")
+                        else:
+                            storage_manager.transaction({}, result)
+                        finally:
+                            self.current_watching = "-1"
+                case "w":
+                    ...
+                case "e":
+                    try:
+                        self.all_mining[self.current_watching].is_locked = not self.all_mining[
+                            self.current_watching].is_locked
+                    except KeyError:
+                        print_plus("未选择小行星")
+                    finally:
+                        self.current_watching = "-1"
+                case _:
+                    if command == self.current_watching:
+                        self.current_watching = "-1"
+                        continue
+                    if command in self.all_mining.keys():
+                        self.current_watching = command
+
+
+mining_manager = MiningManager()
